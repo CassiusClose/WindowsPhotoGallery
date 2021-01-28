@@ -40,11 +40,38 @@
             </Setter>
         </Style>
 
+        <!-- Wrapping, horizontal collection of current tags, each of which is a clickable string -->
+        <Style x:Key="CurrentTagsList" BasedOn="{StaticResource HorizontalWrapItemsControl}" TargetType="ItemsControl">
+            <Setter Property="ItemTemplate">
+                <Setter.Value>
+                    <DataTemplate>
+                        <Button Content="{Binding}"
+                                Command="{Binding Path=DataContext.RemoveTagCommand, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType={x:Type local:Gallery}}}"
+                                CommandParameter="{Binding}"/>
+                    </DataTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <!-- Drop down list of all tags to choose from-->
+        <Style x:Key="AllTagsSelector" TargetType="ComboBox">
+            <Setter Property="ItemTemplate">
+                <Setter.Value>
+                    <DataTemplate>
+                        <Button Content="{Binding}"
+                                Command="{Binding Path=DataContext.AddTagCommand, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType={x:Type local:Gallery}}}"
+                                CommandParameter="{Binding}"/>
+                    </DataTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
     </UserControl.Resources>
     
     
     <Grid>
         <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto"/>
             <RowDefinition/>
         </Grid.RowDefinitions>
@@ -52,8 +79,17 @@
         <!-- Gallery's name -->
         <Label Grid.Row="0" FontSize="20" Content="{Binding GalleryName}"/>
 
+        <!-- Tag Filtering panel -->
+        <StackPanel Grid.Row="1" Orientation="Horizontal">
+            <!-- Drop down list of all tags, selecting adds them to filter -->
+            <ComboBox ItemsSource="{Binding AllTags}" Style="{StaticResource AllTagsSelector}"/>
+            
+            <!-- A list of all currently selected tags, clicking removes them -->
+            <ItemsControl ItemsSource="{Binding Path=CurrentTags, Mode=OneWay}" Style="{StaticResource CurrentTagsList}"/>
+        </StackPanel>
+
         <!-- Display the images -->
-        <ScrollViewer Grid.Row="1" HorizontalScrollBarVisibility="Disabled">
+        <ScrollViewer Grid.Row="2" HorizontalScrollBarVisibility="Disabled">
             <ItemsControl
                  Style="{StaticResource GalleryBox}"
                  ItemsSource="{Binding Path=GalleryView, Mode=OneWay}"/>

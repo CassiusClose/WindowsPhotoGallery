@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -12,6 +13,8 @@ namespace PhotoGalleryApp.ViewModels
     /// </summary>
     class NavigatorViewModel : ViewModelBase
     {
+        #region Constructors
+
         public NavigatorViewModel()
         {
             // Set up commands
@@ -20,8 +23,14 @@ namespace PhotoGalleryApp.ViewModels
             _history = new Stack<ViewModelBase>();
         }
 
+        #endregion Constructors
+
+
+        #region Members
+
         // Holds past pages. Does not contain the current page.
         private Stack<ViewModelBase> _history;
+
 
         private ViewModelBase _currentPage;
         /// <summary>
@@ -36,6 +45,11 @@ namespace PhotoGalleryApp.ViewModels
                 OnPropertyChanged();
             }
         }
+
+        #endregion Members
+
+
+        #region Methods
 
         /// <summary>
         /// Adds a ViewModel as the new current page. The previously current page is saved in the history.
@@ -64,8 +78,11 @@ namespace PhotoGalleryApp.ViewModels
                 _goBackPageCommand.InvokeCanExecuteChanged();
             }
         }
-                
 
+        #endregion Methods
+
+
+        #region Commands
 
         private readonly RelayCommand _goBackPageCommand;
         /// <summary>
@@ -73,9 +90,16 @@ namespace PhotoGalleryApp.ViewModels
         /// </summary>
         public ICommand GoBackPageCommand => _goBackPageCommand;
         
-        private bool CanGoBackPage(object parameter)
+        /// <summary>
+        /// Returns whether or not there is a page in the history to return to.
+        /// </summary>
+        /// <param name="parameter">Unused command parameter</param>
+        /// <returns>Whether or not there is page that can be returned to.</returns>
+        public bool CanGoBackPage(object parameter)
         {
             return _history.Count != 0;
         }
+
+        #endregion Commands
     }
 }
