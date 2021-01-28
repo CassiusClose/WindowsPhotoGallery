@@ -1,0 +1,62 @@
+﻿<UserControl x:Class="PhotoGalleryApp.Views.Gallery"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             xmlns:local="clr-namespace:PhotoGalleryApp.Views"
+             mc:Ignorable="d" 
+             d:DesignHeight="450" d:DesignWidth="800">
+
+    <UserControl.Resources>
+
+        <!-- Horizontal, wrapping collection of items -->
+        <Style x:Key="HorizontalWrapItemsControl" TargetType="ItemsControl">
+            <!-- Items stored in a wrap panel -->
+            <Setter Property="ItemsPanel">
+                <Setter.Value>
+                    <ItemsPanelTemplate>
+                        <WrapPanel Orientation="Horizontal" IsItemsHost="True"/>
+                    </ItemsPanelTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+        
+        
+        <!-- Horizontal, wrapping list of images -->
+        <Style x:Key="GalleryBox" BasedOn="{StaticResource HorizontalWrapItemsControl}" TargetType="ItemsControl">
+            <!-- Each item is a clickable image. Clicking on the image will open it as a new page in the Navigator. -->
+            <Setter Property="ItemTemplate">
+                <Setter.Value>
+                    <DataTemplate>
+                        <Border MaxHeight="170" Margin="3">
+                            <Image Source="{Binding Path, Mode=OneWay, IsAsync=True}" RenderOptions.BitmapScalingMode="HighQuality"/>
+                        </Border>
+                        <!--<Button Command="{Binding Path=DataContext.OpenImageCommand, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType={x:Type local:Gallery}}}"
+                                CommandParameter="{Binding}" MaxHeight="170">
+                            <Image Source="{Binding Path, Mode=OneWay, IsAsync=True}" RenderOptions.BitmapScalingMode="HighQuality"/>
+                        </Button>-->
+                    </DataTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+    </UserControl.Resources>
+    
+    
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition/>
+        </Grid.RowDefinitions>
+
+        <!-- Gallery's name -->
+        <Label Grid.Row="0" FontSize="20" Content="{Binding GalleryName}"/>
+
+        <!-- Display the images -->
+        <ScrollViewer Grid.Row="1" HorizontalScrollBarVisibility="Disabled">
+            <ItemsControl
+                 Style="{StaticResource GalleryBox}"
+                 ItemsSource="{Binding Path=GalleryView, Mode=OneWay}"/>
+        </ScrollViewer>
+    </Grid>
+</UserControl>

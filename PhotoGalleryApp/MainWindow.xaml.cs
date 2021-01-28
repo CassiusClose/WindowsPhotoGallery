@@ -12,6 +12,9 @@ using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
+using PhotoGalleryApp.ViewModels;
+using PhotoGalleryApp.Models;
+using System.Collections.ObjectModel;
 
 namespace PhotoGalleryApp
 {
@@ -22,6 +25,22 @@ namespace PhotoGalleryApp
     {
         public MainWindow()
         {
+            NavigatorViewModel nav = new NavigatorViewModel();
+
+            PhotoGallery gallery = new PhotoGallery("Gallery 1");
+            gallery.Add(new Photo("B:/Projects/WindowsPhotoGallery/images/Lightship.jpg", new ObservableCollection<string> { "boat" }));
+            gallery.Add(new Photo("B:/Projects/WindowsPhotoGallery/images/LuperonSunset.jpg", new ObservableCollection<string> { "boat", "harbor" }));
+            gallery.Add(new Photo("B:/Projects/WindowsPhotoGallery/images/MtPeleeHike.jpg", new ObservableCollection<string> { "land" }));
+            gallery.Add(new Photo("B:/Projects/WindowsPhotoGallery/images/Saba1.jpg", new ObservableCollection<string> { "land", "harbor" }));
+            gallery.Add(new Photo("B:/Projects/WindowsPhotoGallery/images/Saba2.jpg", new ObservableCollection<string> { "land", "harbor" }));
+            gallery.Add(new Photo("B:/Projects/WindowsPhotoGallery/images/Wicked.jpg", new ObservableCollection<string> { "boat" }));
+            gallery.Add(new Photo("B:/Projects/WindowsPhotoGallery/images/Cover.png", new ObservableCollection<string> { "music" }));
+            gallery.Add(new Photo("B:/Projects/WindowsPhotoGallery/images/Tire.jpg", new ObservableCollection<string> { "land" }));
+            gallery.Add(new Photo("B:/Projects/WindowsPhotoGallery/images/Lightship2.jpg", new ObservableCollection<string> { "boat" }));
+
+            nav.NewPage(new GalleryViewModel(nav, gallery));
+            DataContext = nav;
+
             InitializeComponent();
         }
     }

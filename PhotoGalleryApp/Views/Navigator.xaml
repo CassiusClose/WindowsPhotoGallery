@@ -11,6 +11,9 @@
     <UserControl.Resources>
         <!-- The below ContentControl is bound to a ViewModel, so to use a certain View in the Navigator, you must
              declare a DataTemplate here that links the binding of that ViewModel to display the desired view. -->
+        <DataTemplate DataType="{x:Type vms:GalleryViewModel}">
+            <local:Gallery/>
+        </DataTemplate>
     </UserControl.Resources>
     
     <Grid>
