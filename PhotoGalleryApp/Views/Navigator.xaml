@@ -1,0 +1,28 @@
+﻿<UserControl x:Class="PhotoGalleryApp.Views.Navigator"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             xmlns:local="clr-namespace:PhotoGalleryApp.Views"
+             xmlns:vms="clr-namespace:PhotoGalleryApp.ViewModels"
+             mc:Ignorable="d" 
+             d:DesignHeight="450" d:DesignWidth="800">
+
+    <UserControl.Resources>
+        <!-- The below ContentControl is bound to a ViewModel, so to use a certain View in the Navigator, you must
+             declare a DataTemplate here that links the binding of that ViewModel to display the desired view. -->
+    </UserControl.Resources>
+    
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition/>
+        </Grid.RowDefinitions>
+
+        <!-- Go back to previous page -->
+        <Button Grid.Row="0" Command="{Binding GoBackPageCommand}">Back</Button>
+        
+        <!-- Displays the content of the current page-->
+        <ContentControl Grid.Row="1" Content="{Binding CurrentPage}"/>
+    </Grid>
+</UserControl>
