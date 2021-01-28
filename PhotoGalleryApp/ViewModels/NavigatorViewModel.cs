@@ -15,7 +15,9 @@ namespace PhotoGalleryApp.ViewModels
         public NavigatorViewModel()
         {
             // Set up commands
-            _goBackPageCommand = new RelayCommand(GoBackPage, null);
+            _goBackPageCommand = new RelayCommand(GoBackPage, CanGoBackPage);
+
+            _history = new Stack<ViewModelBase>();
         }
 
         // Holds past pages. Does not contain the current page.
@@ -44,6 +46,7 @@ namespace PhotoGalleryApp.ViewModels
             if(CurrentPage != null)
             {
                 _history.Push(CurrentPage);
+                _goBackPageCommand.InvokeCanExecuteChanged();
             }
 
             CurrentPage = vm;
@@ -52,14 +55,16 @@ namespace PhotoGalleryApp.ViewModels
         /// <summary>
         /// Goes back one page in the history, making the previous page the current one.
         /// </summary>
-        /// <param name="commandParameter">Unused command parameter</param>
-        public void GoBackPage(object commandParameter)
+        /// <param name="parameter">Unused command parameter</param>
+        public void GoBackPage(object parameter)
         {
-            ViewModelBase page = _history.Pop();
-
-            if (page != null)
-                CurrentPage = page;
+            if(_history.Count != 0)
+            {
+                CurrentPage = _history.Pop();
+                _goBackPageCommand.InvokeCanExecuteChanged();
+            }
         }
+                
 
 
         private readonly RelayCommand _goBackPageCommand;
@@ -67,5 +72,10 @@ namespace PhotoGalleryApp.ViewModels
         /// A command that goes back one page in the history, making the previous page the current one.
         /// </summary>
         public ICommand GoBackPageCommand => _goBackPageCommand;
+        
+        private bool CanGoBackPage(object parameter)
+        {
+            return _history.Count != 0;
+        }
     }
 }
