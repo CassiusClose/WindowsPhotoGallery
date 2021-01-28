@@ -7,12 +7,27 @@ using System.Windows.Input;
 
 namespace PhotoGalleryApp.ViewModels
 {
+    /// <summary>
+    /// An implemenation of the ICommand interface.
+    /// </summary>
+    /// <remarks>
+    /// Implementation taken from
+    /// <see href="https://docs.microsoft.com/en-us/archive/msdn-magazine/2009/february/patterns-wpf-apps-with-the-model-view-viewmodel-design-pattern"/>
+    /// and
+    /// <see href="https://intellitect.com/getting-started-model-view-viewmodel-mvvm-pattern-using-windows-presentation-framework-wpf/"/>
+    /// </remarks>
     class RelayCommand : ICommand
     {
-        // The function that executes the command
+
+        /// <summary>
+        /// The function that actually executes the command.
+        /// </summary>
         private readonly Action<object> _execute;
 
         // The function that determines whether or not the command can be executed
+        /// <summary>
+        /// 
+        /// </summary>
         private readonly Func<object, bool> _canExecuteAction;
 
 
@@ -25,17 +40,20 @@ namespace PhotoGalleryApp.ViewModels
         public RelayCommand(Action<object> execute) : this(execute, null) { }
 
 
-        /*
-         * Execute the command
-         */
+        /// <summary>
+        /// Executes the command.
+        /// </summary>
+        /// <param name="parameter">Argument to the command's execution function</param>
         public void Execute(object parameter)
         {
             _execute(parameter);
         }
 
-        /*
-         * Returns whether or not the command can be executed
-         */
+        /// <summary>
+        /// Returns whether or not the command can be executed.
+        /// </summary>
+        /// <param name="parameter">Argument to the function that determines executable status.</param>
+        /// <returns>Whether or not this command can be executed.</returns>
         public bool CanExecute(object parameter)
         {
             if (_canExecuteAction != null)
@@ -45,11 +63,14 @@ namespace PhotoGalleryApp.ViewModels
 
         public event EventHandler CanExecuteChanged;
 
-        /*
-         * Tell the ICommand interface that the conditions that affect whether or not
-         * the command can execute have changed. Any classes that use this class should
-         * call this when changing those conditions.
-         */
+
+        /// <summary>
+        /// Signals that the conditions for <c>CanExecute</c> have changed.
+        /// </summary>
+        /// <remarks>
+        /// Users of this class should call this function whenever executability conditions
+        /// have changed for that change to be reflected to the command's bindings.
+        /// </remarks>
         public void InvokeCanExecuteChanged()
         {
             CanExecuteChanged?.Invoke(this, EventArgs.Empty);
