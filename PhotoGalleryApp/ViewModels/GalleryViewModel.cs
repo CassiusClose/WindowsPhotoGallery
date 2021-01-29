@@ -8,6 +8,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Data;
 using System.Windows.Input;
+using PhotoGalleryApp.Models;
 
 namespace PhotoGalleryApp.ViewModels
 {
@@ -155,10 +156,18 @@ namespace PhotoGalleryApp.ViewModels
         /// <summary>
         /// Opens the given Photo in a new page.
         /// </summary>
-        /// <param name="parameter">The given Models.Photo instance to open.</param>
+        /// <param name="parameter">The Models.Photo instance to open.</param>
         private void OpenImage(object parameter)
         {
-            //Open image
+            Photo p = parameter as Photo;
+            List<Photo> list = GalleryView.OfType<Photo>().ToList();
+            int index = 0;
+            for (int i = 0; i < list.Count; i++)
+                if (p == list[i])
+                    index = i;
+
+            ImageViewModel imagePage = new ImageViewModel(list, index);
+            _navigator.NewPage(imagePage);
         }
 
 

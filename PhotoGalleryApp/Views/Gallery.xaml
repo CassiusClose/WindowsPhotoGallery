@@ -29,12 +29,13 @@
                 <Setter.Value>
                     <DataTemplate>
                         <Border MaxHeight="170" Margin="3">
+                            <Border.InputBindings>
+                                <MouseBinding MouseAction="LeftClick"
+                                              Command="{Binding Path=DataContext.OpenImageCommand, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType={x:Type local:Gallery}}}"
+                                              CommandParameter="{Binding}"/>
+                            </Border.InputBindings>
                             <Image Source="{Binding Path, Mode=OneWay, IsAsync=True}" RenderOptions.BitmapScalingMode="HighQuality"/>
                         </Border>
-                        <!--<Button Command="{Binding Path=DataContext.OpenImageCommand, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType={x:Type local:Gallery}}}"
-                                CommandParameter="{Binding}" MaxHeight="170">
-                            <Image Source="{Binding Path, Mode=OneWay, IsAsync=True}" RenderOptions.BitmapScalingMode="HighQuality"/>
-                        </Button>-->
                     </DataTemplate>
                 </Setter.Value>
             </Setter>
