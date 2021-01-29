@@ -60,17 +60,7 @@ namespace PhotoGalleryApp.Models
                 // For each tag in the photo
                 foreach (string tag in p.Tags)
                 {
-                    bool found = false;
-                    // Has the tag already been added to our compiled list
-                    foreach (string t in tags)
-                    {
-                        if (t == tag)
-                        {
-                            found = true;
-                            break;
-                        }
-                    }
-                    if (!found)
+                    if (!tags.Contains(tag))
                         tags.Add(tag);
                 }
             }
