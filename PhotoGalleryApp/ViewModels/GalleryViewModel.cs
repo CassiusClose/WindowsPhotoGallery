@@ -121,6 +121,12 @@ namespace PhotoGalleryApp.ViewModels
 
         #region Methods
 
+        /// <summary>
+        /// Filters the gallery's collection of images based on the selected tags.
+        /// If no tags are selected, all images are accepted.
+        /// </summary>
+        /// <param name="item">The Models.Photo object to accept or reject.</param>
+        /// <returns>bool, whether the photo was accepted or not.</returns>
         public bool ImageFilter(object item)
         {
             if (CurrentTags.Count == 0)
