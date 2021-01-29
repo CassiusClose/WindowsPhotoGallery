@@ -3,11 +3,13 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Collections.Specialized;
 using System.ComponentModel;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Data;
 using System.Windows.Input;
+using System.Xml.Serialization;
 using Microsoft.Win32;
 using PhotoGalleryApp.Models;
 
@@ -19,10 +21,6 @@ namespace PhotoGalleryApp.ViewModels
     class GalleryViewModel : ViewModelBase
     {
         #region Constructors
-
-        // A reference to the navigator so we can add pages to it
-        private NavigatorViewModel _navigator;
-
         public GalleryViewModel(NavigatorViewModel navigator, Models.PhotoGallery gallery)
         {
             _navigator = navigator;
@@ -32,6 +30,7 @@ namespace PhotoGalleryApp.ViewModels
             _openImageCommand = new RelayCommand(OpenImage);
             _addTagCommand = new RelayCommand(AddTag);
             _removeTagCommand = new RelayCommand(RemoveTag);
+            _saveGalleryCommand = new RelayCommand(SaveGallery);
 
 
             _gallery = gallery;
@@ -47,6 +46,11 @@ namespace PhotoGalleryApp.ViewModels
 
 
         #region Members
+
+        // A reference to the navigator so we can add pages to it
+        private NavigatorViewModel _navigator;
+
+
         private Models.PhotoGallery _gallery;
 
         /// <summary>
@@ -239,6 +243,17 @@ namespace PhotoGalleryApp.ViewModels
             CurrentTags.Remove(parameter as string);
         }
 
+
+        private RelayCommand _saveGalleryCommand;
+        public ICommand SaveGalleryCommand => _saveGalleryCommand;
+
+        public void SaveGallery(object parameter)
+        {
+            XmlSerializer serializer = new XmlSerializer(typeof(PhotoGallery));
+            TextWriter writer = new StreamWriter("gallery.xml");
+            serializer.Serialize(writer, _gallery);
+            writer.Close();
+        }
 
         #endregion Commands
     }

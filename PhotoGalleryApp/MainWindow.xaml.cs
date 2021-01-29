@@ -27,16 +27,7 @@ namespace PhotoGalleryApp
         {
             NavigatorViewModel nav = new NavigatorViewModel();
 
-            PhotoGallery gallery = new PhotoGallery("Gallery 1");
-            /*gallery.Add(new Photo("B:/Projects/WindowsPhotoGallery/images/Lightship.jpg", new ObservableCollection<string> { "boat" }));
-            gallery.Add(new Photo("B:/Projects/WindowsPhotoGallery/images/LuperonSunset.jpg", new ObservableCollection<string> { "boat", "harbor" }));
-            gallery.Add(new Photo("B:/Projects/WindowsPhotoGallery/images/MtPeleeHike.jpg", new ObservableCollection<string> { "land" }));
-            gallery.Add(new Photo("B:/Projects/WindowsPhotoGallery/images/Saba1.jpg", new ObservableCollection<string> { "land", "harbor" }));
-            gallery.Add(new Photo("B:/Projects/WindowsPhotoGallery/images/Saba2.jpg", new ObservableCollection<string> { "land", "harbor" }));
-            gallery.Add(new Photo("B:/Projects/WindowsPhotoGallery/images/Wicked.jpg", new ObservableCollection<string> { "boat" }));
-            gallery.Add(new Photo("B:/Projects/WindowsPhotoGallery/images/Cover.png", new ObservableCollection<string> { "music" }));
-            gallery.Add(new Photo("B:/Projects/WindowsPhotoGallery/images/Tire.jpg", new ObservableCollection<string> { "land" }));
-            gallery.Add(new Photo("B:/Projects/WindowsPhotoGallery/images/Lightship2.jpg", new ObservableCollection<string> { "boat" }));*/
+            PhotoGallery gallery = PhotoGallery.LoadGallery("gallery.xml");
 
             nav.NewPage(new GalleryViewModel(nav, gallery));
             DataContext = nav;

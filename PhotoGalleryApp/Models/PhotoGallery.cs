@@ -2,22 +2,36 @@
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Collections.Specialized;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Xml.Serialization;
 
 namespace PhotoGalleryApp.Models
 {
     /// <summary>
     /// A collection of Photos.
     /// </summary>
-    class PhotoGallery : ObservableCollection<Photo>
+    public class PhotoGallery : ObservableCollection<Photo>
     {
+        #region Constructors
+
+        /*
+         * Used for XMl de-serialization
+         */
+        private PhotoGallery() : this("Gallery") { }
+
         public PhotoGallery(string name)
         {
             Name = name;
             Tags = new ObservableCollection<string>();
         }
+
+        #endregion Constructors
+
+
+        #region Members
 
         /// <summary>
         /// The gallery's name.
@@ -29,6 +43,10 @@ namespace PhotoGalleryApp.Models
         /// </summary>
         public ObservableCollection<string> Tags { get; private set; }
 
+        #endregion Members
+
+
+        #region Methods
 
         /*
          * Compiles the list of all tags from the images in the gallery.
@@ -91,5 +109,28 @@ namespace PhotoGalleryApp.Models
             UpdateTags();
         }
 
+
+        #endregion Methods
+
+
+
+        #region Static
+
+
+        /// <summary>
+        /// De-serializes and creates a PhotoGallery instance from the given XML file
+        /// </summary>
+        /// <param name="filename">The XMl file's name</param>
+        /// <returns>The constructed PhotoGallery object.</returns>
+        public static PhotoGallery LoadGallery(string filename)
+        {
+            XmlSerializer serializer = new XmlSerializer(typeof(PhotoGallery));
+            FileStream fs = new FileStream(filename, FileMode.Open);
+
+            return (PhotoGallery)serializer.Deserialize(fs);
+        }
+
+
+        #endregion Static
     }
 }
