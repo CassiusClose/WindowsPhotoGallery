@@ -56,7 +56,7 @@ namespace PhotoGalleryApp.ViewModels
         /// <summary>
         /// A command that switches the display to the image before (or to the left of) the current image.
         /// </summary>
-        public RelayCommand LeftCommand => _leftCommand;
+        public ICommand LeftCommand => _leftCommand;
 
         /// <summary>
         /// Switches the display to the image before (or to the left of) the current image.
@@ -77,7 +77,7 @@ namespace PhotoGalleryApp.ViewModels
         /// <summary>
         /// A command that switches the display to the image after (or to the right of) the current image.
         /// </summary>
-        public RelayCommand RightCommand => _rightCommand;
+        public ICommand RightCommand => _rightCommand;
 
         /// <summary>
         /// Switches the display to the image after (or to the right of) the current image.
