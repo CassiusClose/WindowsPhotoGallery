@@ -8,6 +8,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Data;
 using System.Windows.Input;
+using Microsoft.Win32;
 using PhotoGalleryApp.Models;
 
 namespace PhotoGalleryApp.ViewModels
@@ -27,6 +28,7 @@ namespace PhotoGalleryApp.ViewModels
             _navigator = navigator;
 
             // Init commands
+            _addFilesCommand = new RelayCommand(AddFiles);
             _openImageCommand = new RelayCommand(OpenImage);
             _addTagCommand = new RelayCommand(AddTag);
             _removeTagCommand = new RelayCommand(RemoveTag);
@@ -157,6 +159,26 @@ namespace PhotoGalleryApp.ViewModels
 
         #region Commands
 
+
+        private RelayCommand _addFilesCommand;
+        public ICommand AddFilesCommand => _addFilesCommand;
+
+        public void AddFiles(object parameter)
+        {
+            OpenFileDialog fileDialog = new OpenFileDialog();
+            fileDialog.Multiselect = true;
+            fileDialog.Filter = "Image files (*.png;*.jpeg;*.jpg)|*.png;*.jpeg;*.jpg";
+            if(fileDialog.ShowDialog() == true)
+            {
+                foreach (string filename in fileDialog.FileNames)
+                {
+                    Photo p = new Photo(filename);
+                    _gallery.Add(p);
+                }
+            }
+        }
+
+
         private RelayCommand _openImageCommand;
         /// <summary>
         /// A command which opens the specified Photo in a new page. Must pass the specified Photo as an argument.
@@ -167,7 +189,7 @@ namespace PhotoGalleryApp.ViewModels
         /// Opens the given Photo in a new page.
         /// </summary>
         /// <param name="parameter">The Models.Photo instance to open.</param>
-        private void OpenImage(object parameter)
+        public void OpenImage(object parameter)
         {
             Photo p = parameter as Photo;
             List<Photo> list = GalleryView.OfType<Photo>().ToList();

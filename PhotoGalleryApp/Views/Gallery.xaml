@@ -74,14 +74,17 @@
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
             <RowDefinition/>
         </Grid.RowDefinitions>
 
         <!-- Gallery's name -->
         <Label Grid.Row="0" FontSize="20" Content="{Binding GalleryName}"/>
 
+        <Button Grid.Row="1" Command="{Binding AddFilesCommand}">Add Images</Button>
+
         <!-- Tag Filtering panel -->
-        <StackPanel Grid.Row="1" Orientation="Horizontal">
+        <StackPanel Grid.Row="2" Orientation="Horizontal">
             <!-- Drop down list of all tags, selecting adds them to filter -->
             <ComboBox ItemsSource="{Binding AllTags}" Style="{StaticResource AllTagsSelector}"/>
             
@@ -90,7 +93,7 @@
         </StackPanel>
 
         <!-- Display the images -->
-        <ScrollViewer Grid.Row="2" HorizontalScrollBarVisibility="Disabled">
+        <ScrollViewer Grid.Row="3" HorizontalScrollBarVisibility="Disabled">
             <ItemsControl
                  Style="{StaticResource GalleryBox}"
                  ItemsSource="{Binding Path=GalleryView, Mode=OneWay}"/>
