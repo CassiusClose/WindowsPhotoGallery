@@ -43,6 +43,7 @@ namespace PhotoGalleryApp.ViewModels
         #endregion Constructors
 
 
+
         #region Members
         private Models.PhotoGallery _gallery;
 
@@ -122,6 +123,9 @@ namespace PhotoGalleryApp.ViewModels
 
         public bool ImageFilter(object item)
         {
+            if (CurrentTags.Count == 0)
+                return true;
+
             var image = item as Models.Photo;
             foreach (string tag in image.Tags)
             {
