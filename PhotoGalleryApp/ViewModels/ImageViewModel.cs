@@ -28,7 +28,7 @@ namespace PhotoGalleryApp.ViewModels
 
         
 
-        #region Members
+        #region Fields and Properties
 
         /// <summary>
         /// The filepath of the current image to display
@@ -47,7 +47,7 @@ namespace PhotoGalleryApp.ViewModels
          */
         private int CurrentIndex;
 
-        #endregion Members
+        #endregion Fields and Properties
 
 
 
@@ -63,7 +63,7 @@ namespace PhotoGalleryApp.ViewModels
         /// Switches the display to the image before (or to the left of) the current image.
         /// </summary>
         /// <param name="parameter">Unused command parameter.</param>
-        public void Left(object parameter)
+        public void Left()
         {
             CurrentIndex--;
             // Wrap to end
@@ -84,7 +84,7 @@ namespace PhotoGalleryApp.ViewModels
         /// Switches the display to the image after (or to the right of) the current image.
         /// </summary>
         /// <param name="parameter">Unused command parameter.</param>
-        public void Right(object parameter)
+        public void Right()
         {
             CurrentIndex++;
             // Wrap to beginning

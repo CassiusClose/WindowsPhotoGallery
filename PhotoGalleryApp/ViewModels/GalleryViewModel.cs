@@ -45,7 +45,7 @@ namespace PhotoGalleryApp.ViewModels
 
 
 
-        #region Members
+        #region Fields and Properties
 
         // A reference to the navigator so we can add pages to it
         private NavigatorViewModel _navigator;
@@ -121,7 +121,7 @@ namespace PhotoGalleryApp.ViewModels
         }
 
 
-        #endregion Members
+        #endregion Fields and Properties
 
 
 
@@ -135,13 +135,16 @@ namespace PhotoGalleryApp.ViewModels
         /// <returns>bool, whether the photo was accepted or not.</returns>
         public bool ImageFilter(object item)
         {
+            // If no tags picked, show all of the images 
             if (CurrentTags.Count == 0)
                 return true;
 
             var image = item as Models.Photo;
+            // For each tag in the image
             foreach (string tag in image.Tags)
             {
                 bool found = false;
+                // See if the tag has been selected by the user
                 foreach (string t in CurrentTags)
                 {
                     if (t == tag)
@@ -150,6 +153,7 @@ namespace PhotoGalleryApp.ViewModels
                         break;
                     }
                 }
+                // If it has, accept the image
                 if (found)
                     return true;
             }
@@ -165,9 +169,15 @@ namespace PhotoGalleryApp.ViewModels
 
 
         private RelayCommand _addFilesCommand;
+        /// <summary>
+        /// A command that opens a dialog box and adds the selected image files to the gallery.
+        /// </summary>
         public ICommand AddFilesCommand => _addFilesCommand;
 
-        public void AddFiles(object parameter)
+        /// <summary>
+        /// Opens a dialog box and adds the selected image files to the gallery.
+        /// </summary>
+        public void AddFiles()
         {
             OpenFileDialog fileDialog = new OpenFileDialog();
             fileDialog.Multiselect = true;
@@ -197,6 +207,8 @@ namespace PhotoGalleryApp.ViewModels
         {
             Photo p = parameter as Photo;
             List<Photo> list = GalleryView.OfType<Photo>().ToList();
+            
+            // Get photo's index in the above list
             int index = 0;
             for (int i = 0; i < list.Count; i++)
                 if (p == list[i])
@@ -244,10 +256,17 @@ namespace PhotoGalleryApp.ViewModels
         }
 
 
+
         private RelayCommand _saveGalleryCommand;
+        /// <summary>
+        /// A command which saves the gallery's state to disk.
+        /// </summary>
         public ICommand SaveGalleryCommand => _saveGalleryCommand;
 
-        public void SaveGallery(object parameter)
+        /// <summary>
+        /// Saves the gallery's state to disk.
+        /// </summary>
+        public void SaveGallery()
         {
             XmlSerializer serializer = new XmlSerializer(typeof(PhotoGallery));
             TextWriter writer = new StreamWriter("gallery.xml");

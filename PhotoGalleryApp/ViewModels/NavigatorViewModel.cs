@@ -26,7 +26,8 @@ namespace PhotoGalleryApp.ViewModels
         #endregion Constructors
 
 
-        #region Members
+
+        #region Fields and Properties
 
         // Holds past pages. Does not contain the current page.
         private Stack<ViewModelBase> _history;
@@ -46,7 +47,8 @@ namespace PhotoGalleryApp.ViewModels
             }
         }
 
-        #endregion Members
+        #endregion Fields and Properties
+
 
 
         #region Methods
@@ -82,6 +84,7 @@ namespace PhotoGalleryApp.ViewModels
         #endregion Methods
 
 
+
         #region Commands
 
         private readonly RelayCommand _goBackPageCommand;
@@ -93,9 +96,8 @@ namespace PhotoGalleryApp.ViewModels
         /// <summary>
         /// Returns whether or not there is a page in the history to return to.
         /// </summary>
-        /// <param name="parameter">Unused command parameter</param>
         /// <returns>Whether or not there is page that can be returned to.</returns>
-        public bool CanGoBackPage(object parameter)
+        public bool CanGoBackPage()
         {
             return _history.Count != 0;
         }
