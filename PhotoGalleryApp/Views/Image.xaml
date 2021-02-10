@@ -4,8 +4,14 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
              xmlns:local="clr-namespace:PhotoGalleryApp.Views"
+             xmlns:converters="clr-namespace:PhotoGalleryApp.Converters"
              mc:Ignorable="d" 
              d:DesignHeight="450" d:DesignWidth="800">
+
+    <UserControl.Resources>
+        <!-- Converter to display the image -->
+        <converters:ImageConverter x:Key="ImageConverter"/>
+    </UserControl.Resources>
     
     <Grid>
         <Grid.ColumnDefinitions>
@@ -18,10 +24,16 @@
         <Button Grid.Column="0" Command="{Binding LeftCommand}" HorizontalAlignment="Left">Left</Button>
         
         <!-- Image display -->
-        <Image Grid.Column="1" RenderOptions.BitmapScalingMode="HighQuality"
-            Source="{Binding Path, Mode=OneWay, IsAsync=True}"
-            Stretch="Uniform" StretchDirection="DownOnly"/>
-        
+        <Image Grid.Column="1" RenderOptions.BitmapScalingMode="HighQuality">
+            <Image.Source>
+                <!-- Path and rotation information is converted into a BitmapImage -->
+                <MultiBinding Converter="{StaticResource ImageConverter}">
+                    <Binding Path="Path" Mode="OneWay"/>
+                    <Binding Path="Rotation" Mode="OneWay"/>
+                </MultiBinding>
+            </Image.Source>
+        </Image>
+
         <!-- Right Button -->
         <Button Grid.Column="2" Command="{Binding RightCommand}" HorizontalAlignment="Right">Right</Button>
     </Grid>

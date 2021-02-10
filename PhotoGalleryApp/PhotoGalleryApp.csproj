@@ -55,6 +55,8 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </ApplicationDefinition>
+    <Compile Include="Converters\ImageConverter.cs" />
+    <Compile Include="Converters\ImageThumbnailConverter.cs" />
     <Compile Include="Models\Photo.cs" />
     <Compile Include="Models\PhotoGallery.cs" />
     <Compile Include="ViewModels\GalleryViewModel.cs" />

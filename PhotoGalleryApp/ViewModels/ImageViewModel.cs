@@ -1,9 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Input;
+using System.Windows.Media;
+using System.Windows.Media.Imaging;
 using PhotoGalleryApp.Models;
 
 namespace PhotoGalleryApp.ViewModels
@@ -21,12 +24,13 @@ namespace PhotoGalleryApp.ViewModels
             _rightCommand = new RelayCommand(Right);
 
             GalleryItems = galleryItems;
+            Console.WriteLine(galleryItems[index]);
             CurrentIndex = index;
         }
 
         #endregion Constructors
 
-        
+
 
         #region Fields and Properties
 
@@ -34,6 +38,12 @@ namespace PhotoGalleryApp.ViewModels
         /// The filepath of the current image to display
         /// </summary>
         public string Path => GalleryItems[CurrentIndex].Path;
+
+        /// <summary>
+        /// How much the current image should be rotated.
+        /// </summary>
+        public Rotation Rotation => GalleryItems[CurrentIndex].Rotation;
+
 
         /*
          * List of images from the gallery that spawned this page. Let's the user cycle between images in the gallery.
@@ -71,7 +81,9 @@ namespace PhotoGalleryApp.ViewModels
                 CurrentIndex = GalleryItems.Count - 1;
 
             OnPropertyChanged("Path");
+            OnPropertyChanged("Rotation");
         }
+
 
 
         private RelayCommand _rightCommand;
@@ -92,6 +104,7 @@ namespace PhotoGalleryApp.ViewModels
                 CurrentIndex = 0;
 
             OnPropertyChanged("Path");
+            OnPropertyChanged("Rotation");
         }
 
         #endregion Commands

@@ -4,10 +4,13 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
              xmlns:local="clr-namespace:PhotoGalleryApp.Views"
+             xmlns:converters="clr-namespace:PhotoGalleryApp.Converters"
              mc:Ignorable="d" 
              d:DesignHeight="450" d:DesignWidth="800">
 
     <UserControl.Resources>
+        <!-- Converter for displaying the image thumbnails -->
+        <converters:ImageThumbnailConverter x:Key="ImageThumbnailConverter"/>
 
         <!-- Horizontal, wrapping collection of items -->
         <Style x:Key="HorizontalWrapItemsControl" TargetType="ItemsControl">
@@ -23,7 +26,25 @@
         
         
         <!-- Horizontal, wrapping list of images -->
-        <Style x:Key="GalleryBox" BasedOn="{StaticResource HorizontalWrapItemsControl}" TargetType="ItemsControl">
+        <Style x:Key="GalleryBox" TargetType="ListBox">
+            <Setter Property="ScrollViewer.HorizontalScrollBarVisibility" Value="Disabled"/>
+            <Setter Property="SelectionMode" Value="Multiple"/> 
+
+            <Setter Property="ItemContainerStyle">
+                <Setter.Value>
+                    <Style TargetType="ListBoxItem"> 
+                    </Style>
+                </Setter.Value>
+            </Setter>
+
+            <Setter Property="ItemsPanel">
+                <Setter.Value>
+                    <ItemsPanelTemplate>
+                        <WrapPanel Orientation="Horizontal" IsItemsHost="True"/>
+                    </ItemsPanelTemplate>
+                </Setter.Value>
+            </Setter>
+            
             <!-- Each item is a clickable image. Clicking on the image will open it as a new page in the Navigator. -->
             <Setter Property="ItemTemplate">
                 <Setter.Value>
@@ -34,7 +55,22 @@
                                               Command="{Binding Path=DataContext.OpenImageCommand, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType={x:Type local:Gallery}}}"
                                               CommandParameter="{Binding}"/>
                             </Border.InputBindings>
-                            <Image Source="{Binding Path, Mode=OneWay, IsAsync=True}" RenderOptions.BitmapScalingMode="HighQuality"/>
+                            <Grid>
+                                <!--<Image Grid.ZIndex="0"  Source="{Binding Path, Mode=OneWay, IsAsync=True}" RenderOptions.BitmapScalingMode="HighQuality"/>-->
+                                <Image Grid.ZIndex="0" RenderOptions.BitmapScalingMode="HighQuality">
+                                    <Image.Source>
+                                        <!-- Convert path & rotation data into a BitmapImage -->
+                                        <MultiBinding Converter="{StaticResource ImageThumbnailConverter}">
+                                            <Binding Path="Path" Mode="OneWay"/>
+                                            <Binding Path="Rotation" Mode="OneWay"/>
+                                        </MultiBinding>
+                                    </Image.Source>
+                                </Image>
+                                <ToggleButton Grid.ZIndex="1" Width="50" Height="50" HorizontalAlignment="Left" VerticalAlignment="Top" 
+                                              Command="{Binding Path=DataContext.SelectImageCommand, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType={x:Type local:Gallery}}}" 
+                                              CommandParameter="{Binding}"
+                                              IsChecked="{Binding Path=IsSelected, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType={x:Type ListBoxItem}}}">Sel</ToggleButton>
+                            </Grid>
                         </Border>
                     </DataTemplate>
                 </Setter.Value>
@@ -81,9 +117,11 @@
         <!-- Gallery's name -->
         <Label Grid.Row="0" FontSize="20" Content="{Binding GalleryName}"/>
 
+        <!-- Gallery Options -->
         <StackPanel Grid.Row="1" Orientation="Horizontal">
             <Button Command="{Binding AddFilesCommand}">Add Images</Button>
             <Button Command="{Binding SaveGalleryCommand}">Save Gallery</Button>
+            <Button CommandParameter="{Binding SelectedItems, ElementName=GalleryImageListBox}" Command="{Binding RemoveImagesCommand}">Remove Selected</Button>
         </StackPanel>
 
         <!-- Tag Filtering panel -->
@@ -97,7 +135,8 @@
 
         <!-- Display the images -->
         <ScrollViewer Grid.Row="3" HorizontalScrollBarVisibility="Disabled">
-            <ItemsControl
+            <ListBox
+                 x:Name="GalleryImageListBox" 
                  Style="{StaticResource GalleryBox}"
                  ItemsSource="{Binding Path=GalleryView, Mode=OneWay}"/>
         </ScrollViewer>

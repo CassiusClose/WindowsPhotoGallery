@@ -9,6 +9,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Data;
 using System.Windows.Input;
+using System.Windows.Controls;
 using System.Xml.Serialization;
 using Microsoft.Win32;
 using PhotoGalleryApp.Models;
@@ -27,6 +28,8 @@ namespace PhotoGalleryApp.ViewModels
 
             // Init commands
             _addFilesCommand = new RelayCommand(AddFiles);
+            _selectImageCommand = new RelayCommand(SelectImage);
+            _removeImagesCommand = new RelayCommand(RemoveImages, AreImagesSelected);
             _openImageCommand = new RelayCommand(OpenImage);
             _addTagCommand = new RelayCommand(AddTag);
             _removeTagCommand = new RelayCommand(RemoveTag);
@@ -72,6 +75,8 @@ namespace PhotoGalleryApp.ViewModels
                 OnPropertyChanged();
             }
         }
+
+
 
 
 
@@ -193,6 +198,7 @@ namespace PhotoGalleryApp.ViewModels
         }
 
 
+
         private RelayCommand _openImageCommand;
         /// <summary>
         /// A command which opens the specified Photo in a new page. Must pass the specified Photo as an argument.
@@ -207,7 +213,7 @@ namespace PhotoGalleryApp.ViewModels
         {
             Photo p = parameter as Photo;
             List<Photo> list = GalleryView.OfType<Photo>().ToList();
-            
+
             // Get photo's index in the above list
             int index = 0;
             for (int i = 0; i < list.Count; i++)
@@ -220,6 +226,91 @@ namespace PhotoGalleryApp.ViewModels
 
 
 
+        private RelayCommand _saveGalleryCommand;
+        /// <summary>
+        /// A command which saves the gallery's state to disk.
+        /// </summary>
+        public ICommand SaveGalleryCommand => _saveGalleryCommand;
+
+        /// <summary>
+        /// Saves the gallery's state to disk.
+        /// </summary>
+        public void SaveGallery()
+        {
+            XmlSerializer serializer = new XmlSerializer(typeof(PhotoGallery));
+            TextWriter writer = new StreamWriter("gallery.xml");
+            serializer.Serialize(writer, _gallery);
+            writer.Close();
+        }
+
+
+
+        #region Selected Image Commands
+
+        /*
+         * Notifies all commands that deal with selected images that 
+         * the selection has changed.
+         */
+        private void UpdateSelectedCommandsCanExecute()
+        {
+            _removeImagesCommand.InvokeCanExecuteChanged();
+        }
+
+        /*
+         * A CanExecuteAction function for any command that deals with selected images.
+         * The command will be allowed to execute if at least one image in the gallery
+         * is selected.
+         */
+        private bool AreImagesSelected(object parameter)
+        {
+            System.Collections.IList list = parameter as System.Collections.IList;
+            if (list.Count > 0)
+                return true;
+            return false;
+        }
+
+
+
+        private RelayCommand _selectImageCommand;
+        /// <summary>
+        /// A command which should be called when an image is selected.
+        /// </summary>
+        public ICommand SelectImageCommand => _selectImageCommand;
+
+        /// <summary>
+        /// Notifies the gallery that the selection of images has changed.
+        /// </summary>
+        public void SelectImage()
+        {
+            UpdateSelectedCommandsCanExecute();
+        }
+
+
+
+        private RelayCommand _removeImagesCommand;
+        /// <summary>
+        /// A command which removes the given Photos from the gallery.
+        /// </summary>
+        public ICommand RemoveImagesCommand => _removeImagesCommand;
+
+        /// <summary>
+        /// Removes the given images from the gallery.
+        /// </summary>
+        /// <param name="parameter">The list of images to remove, of type System.Windows.Controls.SelectedItemCollection (from ListBox SelectedItems).</param>
+        public void RemoveImages(object parameter)
+        {
+            System.Collections.IList list = parameter as System.Collections.IList;
+            List<Photo> photos = list.Cast<Photo>().ToList();
+            foreach (Photo p in photos)
+                _gallery.Remove(p);
+        }
+
+
+        #endregion Selected Image Commands
+
+
+
+        #region Tag Commands
 
         private RelayCommand _addTagCommand;
         /// <summary>
@@ -255,24 +346,7 @@ namespace PhotoGalleryApp.ViewModels
             CurrentTags.Remove(parameter as string);
         }
 
-
-
-        private RelayCommand _saveGalleryCommand;
-        /// <summary>
-        /// A command which saves the gallery's state to disk.
-        /// </summary>
-        public ICommand SaveGalleryCommand => _saveGalleryCommand;
-
-        /// <summary>
-        /// Saves the gallery's state to disk.
-        /// </summary>
-        public void SaveGallery()
-        {
-            XmlSerializer serializer = new XmlSerializer(typeof(PhotoGallery));
-            TextWriter writer = new StreamWriter("gallery.xml");
-            serializer.Serialize(writer, _gallery);
-            writer.Close();
-        }
+        #endregion Tag Commands
 
         #endregion Commands
     }
