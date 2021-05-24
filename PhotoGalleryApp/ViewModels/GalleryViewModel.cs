@@ -126,6 +126,15 @@ namespace PhotoGalleryApp.ViewModels
         }
 
 
+        /// <summary>
+        /// Stores the size of the gallery's thumbnails. Right now, this is a hard coded value. Later, it will
+        /// be an adjustable slider.
+        /// </summary>
+        public int ThumbnailHeight
+        {
+            get { return 200; }
+        }
+
         #endregion Fields and Properties
 
 

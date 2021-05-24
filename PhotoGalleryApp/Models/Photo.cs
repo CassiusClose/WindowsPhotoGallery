@@ -19,7 +19,6 @@ namespace PhotoGalleryApp.Models
         public Photo(string path, ObservableCollection<string> tags)
         {
             Path = path;
-            //LoadImage();
 
             if (tags == null)
                 Tags = new ObservableCollection<string>();
@@ -81,7 +80,7 @@ namespace PhotoGalleryApp.Models
 
             // By default, don't rotate the image
             Rotation = Rotation.Rotate0;
-
+    
             FileStream fs = new FileStream(Path, FileMode.Open, FileAccess.Read);
             BitmapFrame frame = BitmapFrame.Create(fs, BitmapCreateOptions.DelayCreation, BitmapCacheOption.None);
             BitmapMetadata meta = frame.Metadata as BitmapMetadata;

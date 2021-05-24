@@ -49,7 +49,7 @@
             <Setter Property="ItemTemplate">
                 <Setter.Value>
                     <DataTemplate>
-                        <Border MaxHeight="170" Margin="3">
+                        <Border MaxHeight="{Binding Path=DataContext.ThumbnailHeight, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType={x:Type local:Gallery}}}" Margin="3">
                             <Border.InputBindings>
                                 <MouseBinding MouseAction="LeftClick"
                                               Command="{Binding Path=DataContext.OpenImageCommand, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType={x:Type local:Gallery}}}"
@@ -59,10 +59,11 @@
                                 <!--<Image Grid.ZIndex="0"  Source="{Binding Path, Mode=OneWay, IsAsync=True}" RenderOptions.BitmapScalingMode="HighQuality"/>-->
                                 <Image Grid.ZIndex="0" RenderOptions.BitmapScalingMode="HighQuality">
                                     <Image.Source>
-                                        <!-- Convert path & rotation data into a BitmapImage -->
+                                        <!-- Convert path, height, & rotation data into a BitmapImage thumbnail -->
                                         <MultiBinding Converter="{StaticResource ImageThumbnailConverter}">
                                             <Binding Path="Path" Mode="OneWay"/>
                                             <Binding Path="Rotation" Mode="OneWay"/>
+                                            <Binding Path="DataContext.ThumbnailHeight" RelativeSource="{RelativeSource Mode=FindAncestor, AncestorType={x:Type local:Gallery}}"/>
                                         </MultiBinding>
                                     </Image.Source>
                                 </Image>
@@ -77,7 +78,7 @@
             </Setter>
         </Style>
 
-        <!-- Wrapping, horizontal collection of current tags, each of which is a clickable string -->
+        <!-- Wrapping, horizontal collection of current tags, each of which is a clickable string. Clicking removes the tag from the image filter -->
         <Style x:Key="CurrentTagsList" BasedOn="{StaticResource HorizontalWrapItemsControl}" TargetType="ItemsControl">
             <Setter Property="ItemTemplate">
                 <Setter.Value>

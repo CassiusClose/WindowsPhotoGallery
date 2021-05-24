@@ -10,7 +10,7 @@
 
     <UserControl.Resources>
         <!-- Converter to display the image -->
-        <converters:ImageConverter x:Key="ImageConverter"/>
+        <converters:ImageConverter x:Key="imc"/>
     </UserControl.Resources>
     
     <Grid>
@@ -27,7 +27,7 @@
         <Image Grid.Column="1" RenderOptions.BitmapScalingMode="HighQuality">
             <Image.Source>
                 <!-- Path and rotation information is converted into a BitmapImage -->
-                <MultiBinding Converter="{StaticResource ImageConverter}">
+                <MultiBinding Converter="{StaticResource imc}">
                     <Binding Path="Path" Mode="OneWay"/>
                     <Binding Path="Rotation" Mode="OneWay"/>
                 </MultiBinding>

@@ -11,12 +11,12 @@ using System.Windows.Media.Imaging;
 namespace PhotoGalleryApp.Converters
 {
     /// <summary>
-    /// A multi-value convert that converts image information into a BitmapImage object.
+    /// A multi-value convert that converts image information into a fully-sized BitmapImage object.
     /// </summary>
     class ImageConverter : IMultiValueConverter
     {
         /// <summary>
-        /// Converts image information into a BitmapImage object. The image information
+        /// Converts image information into a fully-sized BitmapImage object. The image information
         /// consists of the filepath and rotation data.
         /// </summary>
         /// <param name="values">
@@ -30,18 +30,22 @@ namespace PhotoGalleryApp.Converters
         /// <returns>A BitmapImage object for rendering the image.</returns>
         public object Convert(object[] values, Type targetType, object parameter, CultureInfo culture)
         {
+            // Get image path
             string path = values[0] as string;
             if (path == null)
                 return null;
 
-            Rotation r = Rotation.Rotate0;
-            if (values[1] is Rotation)
-                r = (Rotation)values[1];
-            
+            // Initialize image
             BitmapImage image = new BitmapImage();
             image.BeginInit();
             image.UriSource = new Uri(path);
+
+            // Apply rotation data if passed
+            Rotation r = Rotation.Rotate0;
+            if (values[1] is Rotation)
+                r = (Rotation)values[1];
             image.Rotation = r;
+
             image.EndInit();
             return image;
         }
