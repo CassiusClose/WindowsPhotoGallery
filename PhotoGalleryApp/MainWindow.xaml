@@ -6,7 +6,7 @@
         xmlns:local="clr-namespace:PhotoGalleryApp"
         xmlns:views="clr-namespace:PhotoGalleryApp.Views"
         mc:Ignorable="d"
-        Title="MainWindow" Height="450" Width="800">
+        Title="MainWindow" Height="800" Width="900">
     
     <Grid>
         <views:Navigator/>

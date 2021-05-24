@@ -68,6 +68,8 @@ namespace PhotoGalleryApp.ViewModels
             CurrentPage = vm;
         }
 
+
+
         /// <summary>
         /// Goes back one page in the history, making the previous page the current one.
         /// </summary>
@@ -76,6 +78,9 @@ namespace PhotoGalleryApp.ViewModels
         {
             if(_history.Count != 0)
             {
+                // Trigger cleanup on the page being removed
+                CurrentPage.NavigatorLostFocus();
+
                 CurrentPage = _history.Pop();
                 _goBackPageCommand.InvokeCanExecuteChanged();
             }
@@ -93,6 +98,7 @@ namespace PhotoGalleryApp.ViewModels
         /// </summary>
         public ICommand GoBackPageCommand => _goBackPageCommand;
         
+
         /// <summary>
         /// Returns whether or not there is a page in the history to return to.
         /// </summary>

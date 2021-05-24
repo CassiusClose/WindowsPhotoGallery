@@ -46,5 +46,12 @@ namespace PhotoGalleryApp.ViewModels
             }
             return false;
         }
+
+        /// <summary>
+        /// Called by NavigatorViewModel when this ViewModel page is popped from the history stack.
+        /// In other words, when the page is on top and the 'back' button is pressed. Used to clean
+        /// up anything that should end when a page is destroyed, such as cancelling asynchronous tasks.
+        /// </summary>
+        public virtual void NavigatorLostFocus() { }
     }
 }

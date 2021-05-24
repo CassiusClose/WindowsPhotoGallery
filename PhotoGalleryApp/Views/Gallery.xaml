@@ -4,13 +4,10 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
              xmlns:local="clr-namespace:PhotoGalleryApp.Views"
-             xmlns:converters="clr-namespace:PhotoGalleryApp.Converters"
              mc:Ignorable="d" 
              d:DesignHeight="450" d:DesignWidth="800">
 
     <UserControl.Resources>
-        <!-- Converter for displaying the image thumbnails -->
-        <converters:ImageThumbnailConverter x:Key="ImageThumbnailConverter"/>
 
         <!-- Horizontal, wrapping collection of items -->
         <Style x:Key="HorizontalWrapItemsControl" TargetType="ItemsControl">
@@ -53,24 +50,21 @@
                             <Border.InputBindings>
                                 <MouseBinding MouseAction="LeftClick"
                                               Command="{Binding Path=DataContext.OpenImageCommand, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType={x:Type local:Gallery}}}"
-                                              CommandParameter="{Binding}"/>
+                                              CommandParameter="{Binding Photo}"/>
                             </Border.InputBindings>
                             <Grid>
-                                <!--<Image Grid.ZIndex="0"  Source="{Binding Path, Mode=OneWay, IsAsync=True}" RenderOptions.BitmapScalingMode="HighQuality"/>-->
-                                <Image Grid.ZIndex="0" RenderOptions.BitmapScalingMode="HighQuality">
+                                <!-- Display the image -->
+                                <Image>
                                     <Image.Source>
-                                        <!-- Convert path, height, & rotation data into a BitmapImage thumbnail -->
-                                        <MultiBinding Converter="{StaticResource ImageThumbnailConverter}">
-                                            <Binding Path="Path" Mode="OneWay"/>
-                                            <Binding Path="Rotation" Mode="OneWay"/>
-                                            <Binding Path="DataContext.ThumbnailHeight" RelativeSource="{RelativeSource Mode=FindAncestor, AncestorType={x:Type local:Gallery}}"/>
-                                        </MultiBinding>
+                                        <Binding Path="Image" Mode="OneWay"/>
                                     </Image.Source>
                                 </Image>
+                                <!-- Display a selection button on top of the image -->
                                 <ToggleButton Grid.ZIndex="1" Width="50" Height="50" HorizontalAlignment="Left" VerticalAlignment="Top" 
                                               Command="{Binding Path=DataContext.SelectImageCommand, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType={x:Type local:Gallery}}}" 
                                               CommandParameter="{Binding}"
                                               IsChecked="{Binding Path=IsSelected, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType={x:Type ListBoxItem}}}">Sel</ToggleButton>
+                                
                             </Grid>
                         </Border>
                     </DataTemplate>
@@ -181,7 +175,7 @@
             <ListBox
                  x:Name="GalleryImageListBox" 
                  Style="{StaticResource GalleryBox}"
-                 ItemsSource="{Binding Path=GalleryView, Mode=OneWay}"/>
+                 ItemsSource="{Binding Path=ImagesView, Mode=OneWay}"/>
         </ScrollViewer>
     </Grid>
 </UserControl>

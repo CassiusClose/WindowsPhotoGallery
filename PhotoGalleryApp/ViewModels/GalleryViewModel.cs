@@ -13,6 +13,8 @@ using System.Windows.Controls;
 using System.Xml.Serialization;
 using Microsoft.Win32;
 using PhotoGalleryApp.Models;
+using System.Windows.Media;
+using System.Windows.Media.Imaging;
 
 namespace PhotoGalleryApp.ViewModels
 {
@@ -22,7 +24,7 @@ namespace PhotoGalleryApp.ViewModels
     class GalleryViewModel : ViewModelBase
     {
         #region Constructors
-        public GalleryViewModel(NavigatorViewModel navigator, Models.PhotoGallery gallery)
+        public GalleryViewModel(NavigatorViewModel navigator, PhotoGallery gallery)
         {
             _navigator = navigator;
 
@@ -37,15 +39,22 @@ namespace PhotoGalleryApp.ViewModels
 
 
             _gallery = gallery;
-            GalleryView = CollectionViewSource.GetDefaultView(_gallery);
+            _images = new ObservableCollection<ImageViewModel>();
+
+            ImagesView = CollectionViewSource.GetDefaultView(_images);
             CurrentTags = new ObservableCollection<string>();
 
-            GalleryView.Filter += ImageFilter;
+
+            ImagesView.Filter += ImageFilter;
             CurrentTags.CollectionChanged += CurrentTags_CollectionChanged;
+
+            UpdateImages();
         }
 
         #endregion Constructors
 
+
+      
 
 
         #region Fields and Properties
@@ -53,13 +62,15 @@ namespace PhotoGalleryApp.ViewModels
         // A reference to the navigator so we can add pages to it
         private NavigatorViewModel _navigator;
 
-
-        private Models.PhotoGallery _gallery;
+        // The collection of photos in the gallery
+        private PhotoGallery _gallery;
+        // The collection of images (image data) to display
+        private ObservableCollection<ImageViewModel> _images;
 
         /// <summary>
         /// The gallery's current items (with any filtering & sorting applied)
         /// </summary>
-        public ICollectionView GalleryView { get; }
+        public ICollectionView ImagesView { get; }
 
 
 
@@ -112,7 +123,7 @@ namespace PhotoGalleryApp.ViewModels
             {
                 _currentTags = value;
                 OnPropertyChanged();
-                GalleryView.Refresh();
+                ImagesView.Refresh();
             }
         }
 
@@ -122,7 +133,7 @@ namespace PhotoGalleryApp.ViewModels
         private void CurrentTags_CollectionChanged(object sender, NotifyCollectionChangedEventArgs e)
         {
             OnPropertyChanged("CurrentTags");
-            GalleryView.Refresh();
+            ImagesView.Refresh();
         }
 
 
@@ -141,11 +152,32 @@ namespace PhotoGalleryApp.ViewModels
 
         #region Methods
 
+        /**
+         * Loads the thumbnails of all the images in the gallery asynchronously.
+         * TODO Depending on how things go, this maybe should be changed so that
+         * only the ones in view are being loaded at any given time.
+         */
+        private async void UpdateImages()
+        {
+            _images.Clear();
+
+            for (int i = 0; i < _gallery.Count; i++)
+            {
+                // 2nd argument is 0 so that it only loads the image once
+                ImageViewModel vm = new ImageViewModel(_gallery[i], 0, ThumbnailHeight);
+                _images.Add(vm);
+
+                await Task.Run(() => { vm.UpdateImage(); });
+            }
+        }
+
+
+
         /// <summary>
         /// Filters the gallery's collection of images based on the selected tags.
         /// If no tags are selected, all images are accepted.
         /// </summary>
-        /// <param name="item">The Models.Photo object to accept or reject.</param>
+        /// <param name="item">The Photo object to accept or reject.</param>
         /// <returns>bool, whether the photo was accepted or not.</returns>
         public bool ImageFilter(object item)
         {
@@ -153,7 +185,8 @@ namespace PhotoGalleryApp.ViewModels
             if (CurrentTags.Count == 0)
                 return true;
 
-            var image = item as Models.Photo;
+            ImageViewModel ivm = item as ImageViewModel;
+            Photo image = ivm.Photo;
             // For each tag in the image
             foreach (string tag in image.Tags)
             {
@@ -217,19 +250,25 @@ namespace PhotoGalleryApp.ViewModels
         /// <summary>
         /// Opens the given Photo in a new page.
         /// </summary>
-        /// <param name="parameter">The Models.Photo instance to open.</param>
+        /// <param name="parameter">The Photo instance to open.</param>
         public void OpenImage(object parameter)
         {
             Photo p = parameter as Photo;
-            List<Photo> list = GalleryView.OfType<Photo>().ToList();
+            
+            // Get a list of all the currently visible images
+            List<ImageViewModel> list = ImagesView.OfType<ImageViewModel>().ToList();
+            List<Photo> photos = ImageViewModel.GetPhotoList(list);
 
-            // Get photo's index in the above list
+            // Get the clicked on photo's index in the list of Photos
             int index = 0;
             for (int i = 0; i < list.Count; i++)
-                if (p == list[i])
+            {
+                if (p == list[i].Photo)
                     index = i;
+            }
 
-            ImageViewModel imagePage = new ImageViewModel(list, index);
+            // Create a new page to view the clicked image
+            SingleImageViewModel imagePage = new SingleImageViewModel(photos, index);
             _navigator.NewPage(imagePage);
         }
 
@@ -260,7 +299,7 @@ namespace PhotoGalleryApp.ViewModels
          * Notifies all commands that deal with selected images that 
          * the selection has changed.
          */
-        private void UpdateSelectedCommandsCanExecute()
+            private void UpdateSelectedCommandsCanExecute()
         {
             _removeImagesCommand.InvokeCanExecuteChanged();
         }

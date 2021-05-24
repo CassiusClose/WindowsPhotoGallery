@@ -1,10 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
-using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using PhotoGalleryApp.Models;
@@ -12,21 +11,48 @@ using PhotoGalleryApp.Models;
 namespace PhotoGalleryApp.ViewModels
 {
     /// <summary>
-    /// A ViewModel that displays one image in the full window, can switch between images in the gallery.
+    /// A ViewModel that loads and holds one image's pixel data. Should be used by all
+    /// ViewModels wanting to display an image, since the details of loading the image
+    /// are taken care of here. It's important to note that setting the Photo property
+    /// does not load the image into memory. To do that, the user must call UpdateImage(),
+    /// which can be called asynchronously. If UpdateImage() is called multiple times
+    /// asynchronously, previous calls to the method will be cancelled so that only the
+    /// latest image-loading task is completed.
     /// </summary>
     class ImageViewModel : ViewModelBase
     {
-        #region Constructors
-        public ImageViewModel(List<Photo> galleryItems, int index)
-        {
-            // Initialize commands
-            _leftCommand = new RelayCommand(Left);
-            _rightCommand = new RelayCommand(Right);
 
-            GalleryItems = galleryItems;
-            Console.WriteLine(galleryItems[index]);
-            CurrentIndex = index;
+        #region Constructors
+
+        /// <summary>
+        /// Creates an ImageViewModel that doesn't refer to any Photo initially.
+        /// The image's preview height is set to 128, and it's target height is set to the image's full size.
+        /// </summary>
+        public ImageViewModel() : this(null, 128, 0) { }
+
+        /// <summary>
+        /// Creates an ImageViewModel that doesn't refer to any Photo initially.
+        /// </summary>
+        /// <param name="previewHeight">The height at which the image's preview will be loaded. If 0, no preview will be loaded.</param>
+        /// <param name="fullHeight">The height at which the image will be loaded. If 0, the image will be loaded at its full size.</param>
+        public ImageViewModel(int previewHeight, int fullHeight) : this(null, previewHeight, fullHeight) { }
+
+        /// <summary>
+        /// Creates an ImageViewModel that holds the given photo. The photo will not be loaded into memory by default, this must be done
+        /// manually by calling UpdateImage()
+        /// </summary>
+        /// <param name="previewHeight">The height at which the image's preview will be loaded. If 0, no preview will be loaded.</param>
+        /// <param name="fullHeight">The height at which the image will be loaded. If 0, the image will be loaded at its full size.</param>
+        public ImageViewModel(Photo photo, int previewHeight, int fullHeight)
+        {
+            this._previewHeight = previewHeight;
+            this._targetHeight = fullHeight;
+
+            cancellationTokens = new List<CancellationTokenSource>();
+            
+            _photo = photo;
         }
+
 
         #endregion Constructors
 
@@ -34,79 +60,228 @@ namespace PhotoGalleryApp.ViewModels
 
         #region Fields and Properties
 
-        /// <summary>
-        /// The filepath of the current image to display
-        /// </summary>
-        public string Path => GalleryItems[CurrentIndex].Path;
 
-        /// <summary>
-        /// How much the current image should be rotated.
-        /// </summary>
-        public Rotation Rotation => GalleryItems[CurrentIndex].Rotation;
-
-
-        /*
-         * List of images from the gallery that spawned this page. Let's the user cycle between images in the gallery.
-         * This can be outdated - if somehow the gallery contents change while viewing these images, this list will
-         * not reflect those changes. That's something to fix in the future.
+        /**
+         * If specified, the image will be loaded twice:
+         *  - first at a low resolution, the height of which is specified by _previewHeight
+         *  - second at the target resolution, the height of which is specified by _targetHeight
+         * 
+         * Loading large images can take a long time, so the first, low-resolution load is done
+         * so that the user can quickly see a blurred version of the image instead of just a blank screen.
+         * 
+         * If _previewHeight is set to 0, then the image will only be loaded once at the target resolution.
+         * If _targetHeight is set to 0, then the target resolution will be the image's full size.
          */
-        private List<Photo> GalleryItems;
-        
-        /*
-         * The index of the currently selected image from the list of images.
+        private int _previewHeight;
+        private int _targetHeight;
+
+
+        /**
+         * If the image source of this VM is switched while in the middle of loading the previous images,
+         * we want to cancel those loads and only load the most recent image. This list will have one
+         * CancellationTokenSource for each ongoing image load process.
          */
-        private int CurrentIndex;
+        private List<CancellationTokenSource> cancellationTokens;
+
+
+
+        private Photo _photo;
+        /// <summary>
+        /// What Photo this ViewModel should use. Changing this property will not
+        /// trigger loading that photo into memory, that should be done by calling UpdateImage().
+        /// </summary>
+        public Photo Photo
+        {
+            get { return _photo; }
+            set
+            {
+                _photo = value;
+                OnPropertyChanged();
+            }
+        }
+
+
+        private ImageSource _image;
+        /// <summary>
+        /// The image information associated with the above Photo property. This is not created
+        /// by default when setting the Photo, the user must call UpdateImage() separately.
+        /// </summary>
+        public ImageSource Image
+        {
+            get { return _image; }
+            set
+            {
+                _image = value;
+                OnPropertyChanged();
+            }
+        }
+
 
         #endregion Fields and Properties
 
 
 
-        #region Commands
 
-        private RelayCommand _leftCommand;
-        /// <summary>
-        /// A command that switches the display to the image before (or to the left of) the current image.
-        /// </summary>
-        public ICommand LeftCommand => _leftCommand;
+
+        #region Methods
 
         /// <summary>
-        /// Switches the display to the image before (or to the left of) the current image.
+        /// Loads this ViewModel's image (as specified by the Photo field) into memory. If
+        /// specified in the properties, will first load the image at a preview resolution and
+        /// then at a target resolution (see constructor parameters).
+        /// 
+        /// This method is intended to be called asynchronously, so it will cancel any other
+        /// calls to UpdateImage() that are currently loading an image.
         /// </summary>
-        /// <param name="parameter">Unused command parameter.</param>
-        public void Left()
+        public void UpdateImage()
         {
-            CurrentIndex--;
-            // Wrap to end
-            if (CurrentIndex < 0)
-                CurrentIndex = GalleryItems.Count - 1;
+            // Cancel any existing image loading tasks, this should be the only one
+            CancelAllLoads();
 
-            OnPropertyChanged("Path");
-            OnPropertyChanged("Rotation");
+
+            // If no photo selected, nothing to load
+            if (_photo == null)
+                return;
+
+
+            // Create a cancellation token associated with loading this image
+            // Add to the token list so that if this VM's image is changed, the
+            // corresponding call to UpdateImage() will cancel this load task.
+            CancellationTokenSource cts = new CancellationTokenSource();
+            cancellationTokens.Add(cts);
+
+
+            // Store the images here temporarily, and then only update the Image
+            // property if the task hasn't been cancelled
+            BitmapImage tempImage;
+
+
+            // Check for cancellation of load
+            if (cts.IsCancellationRequested)
+            {
+                // Task is done, so get rid of its cancellation token
+                cts.Dispose();
+                cancellationTokens.Remove(cts);
+                return;
+            }
+
+            // Only load preview if a height is given
+            if (_previewHeight > 0)
+            {
+                // LOAD IMAGE
+                tempImage = _loadImage(_previewHeight);
+
+                // Check for cancellation of load
+                if (cts.IsCancellationRequested)
+                {
+                    // Task is done, so get rid of its cancellation token
+                    cts.Dispose();
+                    cancellationTokens.Remove(cts);
+                    return;
+                }
+
+                // UPDATE IMAGE PROPERTY
+                Image = tempImage;
+            }
+
+
+
+            // Check for cancellation of load
+            if (cts.IsCancellationRequested)
+            {
+                // Task is done, so get rid of its cancellation token
+                cts.Dispose();
+                cancellationTokens.Remove(cts);
+                return;
+            }
+
+
+
+            // LOAD IMAGE
+            tempImage = _loadImage(_targetHeight);
+
+            // Check for cancellation of load
+            if (cts.IsCancellationRequested)
+            {
+                // Task is done, so get rid of its cancellation token
+                cts.Dispose();
+                cancellationTokens.Remove(cts);
+                return;
+            }
+            
+            // UPDATE IMAGE PROPERTY
+            Image = tempImage;
+
+
+            // Task is done, so get rid of its cancellation token
+            cts.Dispose();
+            cancellationTokens.Remove(cts);
         }
 
 
-
-        private RelayCommand _rightCommand;
-        /// <summary>
-        /// A command that switches the display to the image after (or to the right of) the current image.
-        /// </summary>
-        public ICommand RightCommand => _rightCommand;
-
-        /// <summary>
-        /// Switches the display to the image after (or to the right of) the current image.
-        /// </summary>
-        /// <param name="parameter">Unused command parameter.</param>
-        public void Right()
+        /**
+         * Loads the VM's image into memory at the resolution specified by the given height.
+         * Uses data from the Photo property to guide how to load the image.
+         */
+        private BitmapImage _loadImage(int height)
         {
-            CurrentIndex++;
-            // Wrap to beginning
-            if (CurrentIndex >= GalleryItems.Count)
-                CurrentIndex = 0;
+            BitmapImage image = new BitmapImage();
+            image.BeginInit();
+            image.UriSource = new Uri(_photo.Path);
 
-            OnPropertyChanged("Path");
-            OnPropertyChanged("Rotation");
+            // This seems to be very important for keeping the UI responsive when asynchronously loading images
+            image.CacheOption = BitmapCacheOption.OnLoad;
+
+            // If a height is specified, only load the image at that height's corresponding resolution
+            if (height > 0)
+                image.DecodePixelHeight = height;
+
+            image.Rotation = _photo.Rotation;
+            image.EndInit();
+
+            // This allows _loadImage() to be called on a different thread. Normally, you can't load a BitmapImage
+            // on a thread other than the main one.
+            image.Freeze();
+
+            return image;
         }
 
-        #endregion Commands
+
+        /**
+         * This is used either to cancel any outdated loading tasks when a new one is started (for example,
+         * when the user goes right in the slideshow a bunch of times, only the image they land on should 
+         * be loaded), or when the slideshow page is closed.
+         */
+        /// <summary>
+        /// Cancels all current image-loading operations initiated by calling UpdateImage().
+        /// </summary>
+        public void CancelAllLoads()
+        {
+            for (int i = 0; i < cancellationTokens.Count; i++)
+                cancellationTokens[i].Cancel();
+        }
+
+        #endregion Methods
+
+
+
+        #region Static Methods
+
+        /// <summary>
+        /// Each ImageViewModel object holds one Photo object. This returns a list of the
+        /// Photo objects held by a list of ImageViewModel objects.
+        /// </summary>
+        /// <param name="list">The list to extract Photos from.</param>
+        /// <returns>A list of the Photo objects.</returns>
+        public static List<Photo> GetPhotoList(List<ImageViewModel> list)
+        {
+            List<Photo> photos = new List<Photo>();
+            foreach (ImageViewModel ivm in list)
+                photos.Add(ivm.Photo);
+
+            return photos;
+        } 
+
+        #endregion Static Methods
     }
 }
