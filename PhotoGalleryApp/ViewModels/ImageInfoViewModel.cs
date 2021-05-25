@@ -24,7 +24,7 @@ namespace PhotoGalleryApp.ViewModels
         public ImageInfoViewModel(Photo photo)
         {
             _photo = photo;
-            TagView = CollectionViewSource.GetDefaultView(photo.Tags);
+            TagsView = CollectionViewSource.GetDefaultView(photo.Tags);
         }
 
         #endregion Constructors
@@ -36,7 +36,7 @@ namespace PhotoGalleryApp.ViewModels
         private Photo _photo;
 
         // A view which stores all the photo's tags
-        public ICollectionView TagView;
+        public ICollectionView TagsView { get; }
 
         /// <summary>
         /// The filepath that the image is located at.

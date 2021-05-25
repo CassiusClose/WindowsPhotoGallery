@@ -42,12 +42,12 @@ namespace PhotoGalleryApp.ViewModels
             GalleryItems = galleryItems;
             CurrentIndex = index;
 
-            // Load the current image
-            UpdateImage();
-
-            // Initialize the sidebar to hold information about the photo, but be hidden initially
-            _sidebarContent = new ImageInfoViewModel(CurrentImage.Photo);
+            // Initialize the sidebar to be hidden initially
             _sidebarVisible = false;
+
+            // Load the current image
+            CurrentImageChanged();
+
         }
 
         #endregion Constructors
@@ -78,12 +78,17 @@ namespace PhotoGalleryApp.ViewModels
             get { return _currentImage; }
         }
 
+
+
         /*
-         * Updates the CurrentImage view model to represent the currently selected image from the collection.
+         * Updates the properties to represent the currently selected image from the collection.
          */
-        private async void UpdateImage()
+        private async void CurrentImageChanged()
         {
             _currentImage.Photo = GalleryItems[CurrentIndex];
+
+            SidebarContent = new ImageInfoViewModel(CurrentImage.Photo); 
+
             await Task.Run(() => { _currentImage.UpdateImage(); });
         }
 
@@ -96,6 +101,11 @@ namespace PhotoGalleryApp.ViewModels
         public ViewModelBase SidebarContent
         {
             get { return _sidebarContent; }
+            set
+            {
+                _sidebarContent = value;
+                OnPropertyChanged();
+            }
         }
 
 
@@ -146,7 +156,7 @@ namespace PhotoGalleryApp.ViewModels
             if (CurrentIndex < 0)
                 CurrentIndex = GalleryItems.Count - 1;
 
-            UpdateImage();
+            CurrentImageChanged();
         }
 
 
@@ -167,7 +177,7 @@ namespace PhotoGalleryApp.ViewModels
             if (CurrentIndex >= GalleryItems.Count)
                 CurrentIndex = 0;
 
-            UpdateImage();
+            CurrentImageChanged();
         }
         
 

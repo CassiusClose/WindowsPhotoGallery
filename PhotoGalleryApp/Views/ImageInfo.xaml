@@ -6,9 +6,18 @@
              xmlns:local="clr-namespace:PhotoGalleryApp.Views"
              mc:Ignorable="d" 
              d:DesignHeight="450" d:DesignWidth="800">
-    
+
+    <UserControl.Resources>
+        <Style TargetType="Label">
+            <Setter Property="HorizontalContentAlignment" Value="Center"/>
+        </Style>
+    </UserControl.Resources>
+
     <StackPanel>
-        <Label HorizontalContentAlignment="Center">Title</Label>
-        <Label HorizontalContentAlignment="Center">Content</Label>
+        <Label>Title</Label>
+        <Label>Path:</Label>
+        <Label Content="{Binding Path}"/>
+        <Label>Tags:</Label>
+        <ListBox ItemsSource="{Binding TagsView}"/>
     </StackPanel>
 </UserControl>
