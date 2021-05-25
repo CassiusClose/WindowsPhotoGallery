@@ -15,7 +15,7 @@
             <local:Gallery/>
         </DataTemplate>
         
-        <DataTemplate DataType="{x:Type vms:SingleImageViewModel}">
+        <DataTemplate DataType="{x:Type vms:ImageSlideshowViewModel}">
             <local:ImageSlideshow/>
         </DataTemplate>
     </UserControl.Resources>

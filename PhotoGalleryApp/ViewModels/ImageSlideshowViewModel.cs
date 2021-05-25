@@ -20,7 +20,7 @@ namespace PhotoGalleryApp.ViewModels
     /// view the other images in the gallery at a large resolution. This ViewModel
     /// would control that larger-resolution view.
     /// </example>
-    class SingleImageViewModel : ViewModelBase
+    class ImageSlideshowViewModel : ViewModelBase
     {
         #region Constructors
 
@@ -29,11 +29,12 @@ namespace PhotoGalleryApp.ViewModels
         /// </summary>
         /// <param name="galleryItems">The Photos available to view in this vm.</param>
         /// <param name="index">The index of the currently selected Photo in the given list.</param>
-        public SingleImageViewModel(List<Photo> galleryItems, int index)
+        public ImageSlideshowViewModel(List<Photo> galleryItems, int index)
         {
             // Initialize commands
             _leftCommand = new RelayCommand(Left);
             _rightCommand = new RelayCommand(Right);
+            _toggleInfoVisibilityCommand = new RelayCommand(ToggleInfoVisibility);
 
             _currentImage = new ImageViewModel(256, 0);
 
@@ -43,6 +44,10 @@ namespace PhotoGalleryApp.ViewModels
 
             // Load the current image
             UpdateImage();
+
+            // Initialize the sidebar to hold information about the photo, but be hidden initially
+            _sidebarContent = new ImageInfoViewModel(CurrentImage.Photo);
+            _sidebarVisible = false;
         }
 
         #endregion Constructors
@@ -83,6 +88,32 @@ namespace PhotoGalleryApp.ViewModels
         }
 
 
+
+        private ViewModelBase _sidebarContent;
+        /// <summary>
+        /// Holds the ViewModel whose data is displayed on the sidebar.
+        /// </summary>
+        public ViewModelBase SidebarContent
+        {
+            get { return _sidebarContent; }
+        }
+
+
+        private bool _sidebarVisible;
+        /// <summary>
+        /// Whether or not the sidebar is visible to the user.
+        /// </summary>
+        public bool SidebarVisible
+        {
+            get { return _sidebarVisible; }
+            set 
+            {
+                _sidebarVisible = value;
+                OnPropertyChanged();
+            }
+        }
+
+
         /// <summary>
         /// Cancels any image loading operations that might be going on when this page is no longer on the top.
         /// </summary>
@@ -90,6 +121,7 @@ namespace PhotoGalleryApp.ViewModels
         {
             CurrentImage.CancelAllLoads();
         }
+
 
 
         #endregion Fields and Properties
@@ -137,6 +169,26 @@ namespace PhotoGalleryApp.ViewModels
 
             UpdateImage();
         }
+        
+
+
+
+        private RelayCommand _toggleInfoVisibilityCommand;
+        /// <summary>
+        /// A command that toggles the visibility of the info sidebar. If the info pane is hidden, it will be
+        /// made visible, and vice versa.
+        /// </summary>
+        public ICommand ToggleInfoVisibilityCommand => _toggleInfoVisibilityCommand;
+
+        /// <summary>
+        /// Toggles the visibility of the info sidebar. If the info pane is hidden, it will be made visible,
+        /// and vice versa.
+        /// </summary>
+        public void ToggleInfoVisibility()
+        {
+            SidebarVisible = !SidebarVisible;
+        }
+
 
         #endregion Commands
     }

@@ -268,7 +268,7 @@ namespace PhotoGalleryApp.ViewModels
             }
 
             // Create a new page to view the clicked image
-            SingleImageViewModel imagePage = new SingleImageViewModel(photos, index);
+            ImageSlideshowViewModel imagePage = new ImageSlideshowViewModel(photos, index);
             _navigator.NewPage(imagePage);
         }
 

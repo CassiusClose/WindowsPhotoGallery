@@ -58,13 +58,17 @@
     <Compile Include="Models\Photo.cs" />
     <Compile Include="Models\PhotoGallery.cs" />
     <Compile Include="ViewModels\GalleryViewModel.cs" />
-    <Compile Include="ViewModels\SingleImageViewModel.cs" />
+    <Compile Include="ViewModels\ImageInfoViewModel.cs" />
+    <Compile Include="ViewModels\ImageSlideshowViewModel.cs" />
     <Compile Include="ViewModels\NavigatorViewModel.cs" />
     <Compile Include="ViewModels\RelayCommand.cs" />
     <Compile Include="ViewModels\ImageViewModel.cs" />
     <Compile Include="ViewModels\ViewModelBase.cs" />
     <Compile Include="Views\Gallery.xaml.cs">
       <DependentUpon>Gallery.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Views\ImageInfo.xaml.cs">
+      <DependentUpon>ImageInfo.xaml</DependentUpon>
     </Compile>
     <Compile Include="Views\ImageSlideshow.xaml.cs">
       <DependentUpon>ImageSlideshow.xaml</DependentUpon>
@@ -85,6 +89,10 @@
       <SubType>Code</SubType>
     </Compile>
     <Page Include="Views\Gallery.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Views\ImageInfo.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
