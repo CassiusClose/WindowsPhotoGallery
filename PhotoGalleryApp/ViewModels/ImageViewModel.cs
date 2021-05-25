@@ -51,6 +51,7 @@ namespace PhotoGalleryApp.ViewModels
             cancellationTokens = new List<CancellationTokenSource>();
             
             _photo = photo;
+            _needReload = true;
         }
 
 
@@ -77,6 +78,15 @@ namespace PhotoGalleryApp.ViewModels
 
 
         /**
+         * Marks whether or not the image stored in the Image property is up to date with the image parameters
+         * such as Photo, _previewHeight, and _targetHeight. After an image is loaded, _needReload will be false,
+         * but as soon as one of those parameters changes, it will be set to true.
+         * UpdateImage() will only load the image if _needReload is true.
+         */
+        private bool _needReload;
+
+
+        /**
          * If the image source of this VM is switched while in the middle of loading the previous images,
          * we want to cancel those loads and only load the most recent image. This list will have one
          * CancellationTokenSource for each ongoing image load process.
@@ -95,8 +105,13 @@ namespace PhotoGalleryApp.ViewModels
             get { return _photo; }
             set
             {
-                _photo = value;
-                OnPropertyChanged();
+                // If the photo is not different, don't need to update anything
+                if(_photo != value)
+                {
+                    _photo = value;
+                    _needReload = true;
+                    OnPropertyChanged();
+                }
             }
         }
 
@@ -128,13 +143,19 @@ namespace PhotoGalleryApp.ViewModels
         /// <summary>
         /// Loads this ViewModel's image (as specified by the Photo field) into memory. If
         /// specified in the properties, will first load the image at a preview resolution and
-        /// then at a target resolution (see constructor parameters).
+        /// then at a target resolution (see constructor parameters). If the image has previously
+        /// been loaded, then it will not reload it.
         /// 
         /// This method is intended to be called asynchronously, so it will cancel any other
         /// calls to UpdateImage() that are currently loading an image.
         /// </summary>
         public void UpdateImage()
         {
+            // If the image is already loaded, do nothing.
+            if (!_needReload)
+                return;
+
+
             // Cancel any existing image loading tasks, this should be the only one
             CancelAllLoads();
 
@@ -212,6 +233,9 @@ namespace PhotoGalleryApp.ViewModels
             // UPDATE IMAGE PROPERTY
             Image = tempImage;
 
+
+            // Now we don't need to reload the image until some parameter, either loading size or the image itself.
+            _needReload = false;
 
             // Task is done, so get rid of its cancellation token
             cts.Dispose();
