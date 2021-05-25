@@ -25,6 +25,7 @@ namespace PhotoGalleryApp.ViewModels
         public ImageInfoViewModel(Photo photo)
         {
             _addTagCommand = new RelayCommand(AddTag);
+            _removeTagCommand = new RelayCommand(RemoveTag);
 
             _photo = photo;
             TagsView = CollectionViewSource.GetDefaultView(photo.Tags);
@@ -99,6 +100,29 @@ namespace PhotoGalleryApp.ViewModels
             {
                 _photo.Tags.Add(tag);
             }
+        }
+
+
+
+
+        private RelayCommand _removeTagCommand;
+        /// <summary>
+        /// A command which attempts to remove the given tag from the photo. If the tag does not belong to the photo,
+        /// nothing happens.
+        /// </summary>
+        public ICommand RemoveTagCommand => _removeTagCommand;
+
+        /// <summary>
+        /// Attempts to remove the given tag from the photo. If the tag does not belong to the photo, nothing happens.
+        /// </summary>
+        /// <param name="parameter">The string tag to remove from the photo.</param>
+        public void RemoveTag(object parameter)
+        {
+            string tag = parameter as string;
+            if (tag == null)
+                return;
+
+            _photo.Tags.Remove(tag);
         }
 
         #endregion Commands

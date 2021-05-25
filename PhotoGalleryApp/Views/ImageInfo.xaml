@@ -11,15 +11,45 @@
         <Style TargetType="Label">
             <Setter Property="HorizontalContentAlignment" Value="Center"/>
         </Style>
+
+        <!-- TODO Move this out to a general style location -->
+        <!-- Horizontal, wrapping collection of items -->
+        <Style x:Key="HorizontalWrapItemsControl" TargetType="ItemsControl">
+            <!-- Items stored in a wrap panel -->
+            <Setter Property="ItemsPanel">
+                <Setter.Value>
+                    <ItemsPanelTemplate>
+                        <WrapPanel Orientation="Horizontal" IsItemsHost="True"/>
+                    </ItemsPanelTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <!-- Wrapping, horizontal collection of current tags, each of which is a clickable string. Clicking removes the tag from the image filter -->
+        <Style x:Key="TagsList" BasedOn="{StaticResource HorizontalWrapItemsControl}" TargetType="ItemsControl">
+            <Setter Property="ItemTemplate">
+                <Setter.Value>
+                    <DataTemplate>
+                        <Button Content="{Binding}"
+                                Command="{Binding Path=DataContext.RemoveTagCommand, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType={x:Type local:ImageInfo}}}"
+                                CommandParameter="{Binding}"/>
+                    </DataTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
     </UserControl.Resources>
 
     <StackPanel>
         <Label>Title</Label>
         <Label>Path:</Label>
         <Label Content="{Binding Path}"/>
-        <Label>Tags:</Label>
-        <ListBox ItemsSource="{Binding TagsView, Mode=OneWay}"/>
 
+        <!-- Display all image tags in horizontal wrapping view -->
+        <Label>Tags:</Label>
+        <ItemsControl ItemsSource="{Binding Path=TagsView, Mode=OneWay}" Style="{StaticResource TagsList}"/>
+
+        <!-- Adding new tags to the image -->
         <TextBox MaxLines="1" AcceptsReturn="False" AcceptsTab="False" Text="{Binding NewTagInput}"/>
         <Button Command="{Binding AddTagCommand}">Add Tag</Button>
     </StackPanel>
