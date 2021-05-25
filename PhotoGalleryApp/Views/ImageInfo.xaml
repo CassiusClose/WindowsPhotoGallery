@@ -18,6 +18,9 @@
         <Label>Path:</Label>
         <Label Content="{Binding Path}"/>
         <Label>Tags:</Label>
-        <ListBox ItemsSource="{Binding TagsView}"/>
+        <ListBox ItemsSource="{Binding TagsView, Mode=OneWay}"/>
+
+        <TextBox MaxLines="1" AcceptsReturn="False" AcceptsTab="False" Text="{Binding NewTagInput}"/>
+        <Button Command="{Binding AddTagCommand}">Add Tag</Button>
     </StackPanel>
 </UserControl>
