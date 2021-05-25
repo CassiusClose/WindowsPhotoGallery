@@ -99,16 +99,6 @@ namespace PhotoGalleryApp.ViewModels
             get { return _gallery.Tags; }
         }
 
-        /*
-         * When the list of tags change, update the property here.
-         */
-        private void GalleryTags_CollectionChanged(object sender, NotifyCollectionChangedEventArgs e)
-        {
-            OnPropertyChanged("AllTags");
-            //TODO Remove any obsolete tags from CurrentTags
-        }
-
-
 
 
 
