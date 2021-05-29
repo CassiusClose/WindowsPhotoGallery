@@ -53,12 +53,7 @@
         <!-- Image display -->
         <Image Grid.Column="1" Grid.Row="1" RenderOptions.BitmapScalingMode="HighQuality">
             <Image.Source>
-                <!-- Path and rotation information is converted into a BitmapImage -->
-                <!--<MultiBinding Converter="{StaticResource imc}" Mode="OneWay">
-                    <Binding Path="Path" Mode="OneWay"/>
-                    <Binding Path="Rotation" Mode="OneWay"/>
-                </MultiBinding>-->
-                <Binding Path="CurrentImage.Image" Mode="OneWay"/>
+                <Binding Path="CurrentImage" Mode="OneWay"/>
             </Image.Source>
         </Image>
 

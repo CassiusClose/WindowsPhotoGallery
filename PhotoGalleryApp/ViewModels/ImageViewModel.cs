@@ -110,10 +110,12 @@ namespace PhotoGalleryApp.ViewModels
                 {
                     _photo = value;
                     _needReload = true;
+                    CancelAllLoads();
                     OnPropertyChanged();
                 }
             }
         }
+
 
 
         private ImageSource _image;
@@ -132,9 +134,8 @@ namespace PhotoGalleryApp.ViewModels
         }
 
 
+
         #endregion Fields and Properties
-
-
 
 
 
@@ -151,25 +152,28 @@ namespace PhotoGalleryApp.ViewModels
         /// </summary>
         public void UpdateImage()
         {
+
             // If the image is already loaded, do nothing.
             if (!_needReload)
+            {
+                OnPropertyChanged("Image");
                 return;
-
-
-            // Cancel any existing image loading tasks, this should be the only one
-            CancelAllLoads();
-
+            }
 
             // If no photo selected, nothing to load
             if (_photo == null)
                 return;
 
 
+            // Cancel any existing image loading tasks, this should be the only one
+            CancelAllLoads();
+
             // Create a cancellation token associated with loading this image
             // Add to the token list so that if this VM's image is changed, the
             // corresponding call to UpdateImage() will cancel this load task.
             CancellationTokenSource cts = new CancellationTokenSource();
             cancellationTokens.Add(cts);
+
 
 
             // Store the images here temporarily, and then only update the Image
@@ -181,8 +185,8 @@ namespace PhotoGalleryApp.ViewModels
             if (cts.IsCancellationRequested)
             {
                 // Task is done, so get rid of its cancellation token
-                cts.Dispose();
                 cancellationTokens.Remove(cts);
+                cts.Dispose();
                 return;
             }
 
@@ -190,14 +194,14 @@ namespace PhotoGalleryApp.ViewModels
             if (_previewHeight > 0)
             {
                 // LOAD IMAGE
-                tempImage = _loadImage(_previewHeight);
+                tempImage = LoadImage(_previewHeight);
 
                 // Check for cancellation of load
                 if (cts.IsCancellationRequested)
                 {
                     // Task is done, so get rid of its cancellation token
-                    cts.Dispose();
                     cancellationTokens.Remove(cts);
+                    cts.Dispose();
                     return;
                 }
 
@@ -211,25 +215,26 @@ namespace PhotoGalleryApp.ViewModels
             if (cts.IsCancellationRequested)
             {
                 // Task is done, so get rid of its cancellation token
-                cts.Dispose();
                 cancellationTokens.Remove(cts);
+                cts.Dispose();
                 return;
             }
 
 
 
             // LOAD IMAGE
-            tempImage = _loadImage(_targetHeight);
+            tempImage = LoadImage(_targetHeight);
 
             // Check for cancellation of load
             if (cts.IsCancellationRequested)
             {
                 // Task is done, so get rid of its cancellation token
-                cts.Dispose();
                 cancellationTokens.Remove(cts);
+                cts.Dispose();
                 return;
             }
-            
+
+
             // UPDATE IMAGE PROPERTY
             Image = tempImage;
 
@@ -238,16 +243,17 @@ namespace PhotoGalleryApp.ViewModels
             _needReload = false;
 
             // Task is done, so get rid of its cancellation token
-            cts.Dispose();
             cancellationTokens.Remove(cts);
+            cts.Dispose();
         }
+
 
 
         /**
          * Loads the VM's image into memory at the resolution specified by the given height.
          * Uses data from the Photo property to guide how to load the image.
          */
-        private BitmapImage _loadImage(int height)
+        private BitmapImage LoadImage(int height)
         {
             BitmapImage image = new BitmapImage();
             image.BeginInit();
@@ -269,6 +275,7 @@ namespace PhotoGalleryApp.ViewModels
 
             return image;
         }
+
 
 
         /**
