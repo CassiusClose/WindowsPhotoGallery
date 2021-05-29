@@ -42,12 +42,11 @@ namespace PhotoGalleryApp.ViewModels
             CurrentIndex = index;
 
 
-            // Initialize the sidebar to be hidden initially
-            _sidebarVisible = false;
-
-
             // Setup image cache and start loading the images
             InitCache();
+
+            CurrentImageChanged();
+
             LoadWholeCache();
         }
 
@@ -109,7 +108,7 @@ namespace PhotoGalleryApp.ViewModels
         }
 
 
-        private bool _sidebarVisible;
+        private static bool _sidebarVisible = false;
         /// <summary>
         /// Whether or not the sidebar is visible to the user.
         /// </summary>
@@ -161,7 +160,10 @@ namespace PhotoGalleryApp.ViewModels
          */
         private void CurrentImageChanged()
         {
-            SidebarContent = new ImageInfoViewModel(CurrentImageViewModel.Photo);
+            if(SidebarVisible)
+            {
+                SidebarContent = new ImageInfoViewModel(CurrentImageViewModel.Photo);
+            }
         }
 
 
@@ -327,9 +329,11 @@ namespace PhotoGalleryApp.ViewModels
             // Update the cache position with the new image
             Photo p = _galleryItems[galleryUpdateIndex];
             _imageCache[cacheUpdateIndex].Photo = p;
-            await Task.Run(() => { _imageCache[cacheUpdateIndex].UpdateImage(); });
 
+            // Update sidebar first so that it's not waiting on the image load to update
             CurrentImageChanged();
+
+            await Task.Run(() => { _imageCache[cacheUpdateIndex].UpdateImage(); });
         }
 
 
@@ -363,9 +367,12 @@ namespace PhotoGalleryApp.ViewModels
             // Update the cache position with the new image
             Photo p = _galleryItems[galleryUpdateIndex];
             _imageCache[cacheUpdateIndex].Photo = p;
+            
+            // Update sidebar first so that it's not waiting on the image load to update
+            CurrentImageChanged();
+
             await Task.Run(() => { _imageCache[cacheUpdateIndex].UpdateImage(); });
 
-            CurrentImageChanged();
         }
 
 
@@ -391,6 +398,11 @@ namespace PhotoGalleryApp.ViewModels
             if (CurrentIndex < 0)
                 CurrentIndex = _galleryItems.Count - 1;
 
+            if (!CurrentImageViewModel.NeedReload())
+            {
+                OnPropertyChanged("CurrentImage");
+            }
+
             MoveCacheLeft();
         }
 
@@ -411,7 +423,10 @@ namespace PhotoGalleryApp.ViewModels
             if (CurrentIndex >= _galleryItems.Count)
                 CurrentIndex = 0;
 
-
+            if (!CurrentImageViewModel.NeedReload())
+            {
+                OnPropertyChanged("CurrentImage");
+            }
             MoveCacheRight();
         }
 
@@ -432,6 +447,9 @@ namespace PhotoGalleryApp.ViewModels
         public void ToggleInfoVisibility()
         {
             SidebarVisible = !SidebarVisible;
+            
+            // Update sidebar info, which will happen only if the info is visible
+            CurrentImageChanged();
         }
 
 

@@ -138,7 +138,10 @@ namespace PhotoGalleryApp.ViewModels
         #endregion Fields and Properties
 
 
-
+        public bool NeedReload()
+        {
+            return _needReload;
+        }
         #region Methods
 
         /// <summary>
