@@ -52,6 +52,7 @@ namespace PhotoGalleryApp.ViewModels
             
             _photo = photo;
             _needReload = true;
+            _previewLoaded = false;
         }
 
 
@@ -79,11 +80,22 @@ namespace PhotoGalleryApp.ViewModels
 
         /**
          * Marks whether or not the image stored in the Image property is up to date with the image parameters
-         * such as Photo, _previewHeight, and _targetHeight. After an image is loaded, _needReload will be false,
-         * but as soon as one of those parameters changes, it will be set to true.
+         * such as Photo, _previewHeight, and _targetHeight. _needReload marks whether the image has been fully
+         * loaded or not (false if it has), and _previewLoaded marks whether some form of the image, preview or
+         * full size, has been loaded (true if it has).
+         * 
+         * _needReload is used to determine if UpdateImage() needs to be called to be able to display the current
+         * image, and _previewLoaded is used to determine whether the current image has been loaded enough to trigger
+         * it to be displayed to the user.
+         * 
+         * As soon as the loaded image becomes outdated, i.e. one of the image parameters changes (what photo is
+         * stored, or the sizes at which to load them, _needReload will be set to true and _previewLoaded will be
+         * set to false.
+         * 
          * UpdateImage() will only load the image if _needReload is true.
          */
         private bool _needReload;
+        private bool _previewLoaded;
 
 
         /**
@@ -110,6 +122,7 @@ namespace PhotoGalleryApp.ViewModels
                 {
                     _photo = value;
                     _needReload = true;
+                    _previewLoaded = false;
                     CancelAllLoads();
                     OnPropertyChanged();
                 }
@@ -134,14 +147,21 @@ namespace PhotoGalleryApp.ViewModels
         }
 
 
+        /// <summary>
+        /// Returns whether or not the image stored in the Image property is up to date with the current ViewModel
+        /// parameters, such as what photo it is, and preview & full resolution size. This can be used to determine
+        /// whether the ViewModel is ready to be displayed to the user.
+        /// </summary>
+        /// <returns>Whether or not the Image property is up to date with this ViewModel's parameters.</returns>
+        public bool PreviewLoaded()
+        {
+            return _previewLoaded;
+        }
 
         #endregion Fields and Properties
 
 
-        public bool NeedReload()
-        {
-            return _needReload;
-        }
+
         #region Methods
 
         /// <summary>
@@ -210,8 +230,9 @@ namespace PhotoGalleryApp.ViewModels
 
                 // UPDATE IMAGE PROPERTY
                 Image = tempImage;
-            }
 
+                _previewLoaded = true;
+            }
 
 
             // Check for cancellation of load

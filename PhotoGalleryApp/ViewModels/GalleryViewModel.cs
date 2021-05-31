@@ -73,7 +73,6 @@ namespace PhotoGalleryApp.ViewModels
         public ICollectionView ImagesView { get; }
 
 
-
         /// <summary>
         /// The Gallery's name.
         /// </summary>
@@ -151,13 +150,20 @@ namespace PhotoGalleryApp.ViewModels
         {
             _images.Clear();
 
+            // Initialize all the image vms first without loading the images. This way,
+            // the whole gallery will be available and navigatable to in the slideshow
+            // view.
             for (int i = 0; i < _gallery.Count; i++)
             {
                 // 2nd argument is 0 so that it only loads the image once
                 ImageViewModel vm = new ImageViewModel(_gallery[i], 0, ThumbnailHeight);
                 _images.Add(vm);
-
-                await Task.Run(() => { vm.UpdateImage(); });
+            }
+            
+            // Now load the images one at a time
+            for (int i = 0; i < _images.Count; i++)
+            {
+                await Task.Run(() => { _images[i].UpdateImage(); });
             }
         }
 

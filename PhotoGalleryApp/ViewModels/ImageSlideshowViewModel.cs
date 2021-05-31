@@ -50,7 +50,6 @@ namespace PhotoGalleryApp.ViewModels
             LoadWholeCache();
         }
 
-     
 
         #endregion Constructors
 
@@ -147,9 +146,12 @@ namespace PhotoGalleryApp.ViewModels
         {
             if (e.PropertyName == "Image")
             {
-                // This doesn't seem to work when you try to narrow it down so that the 'sender' is the current image's ViewModel. I've only
-                // gotten it to work when notifying listeners any time any image is changed.
-                OnPropertyChanged("CurrentImage");
+                // Only update if the current image is the one that's changed
+                ImageViewModel vm = sender as ImageViewModel;
+                if (vm == CurrentImageViewModel)
+                {
+                    OnPropertyChanged("CurrentImage");
+                }
             }
         }
 
@@ -297,7 +299,6 @@ namespace PhotoGalleryApp.ViewModels
         }
 
 
-
         /**
          * Switches the current image one to the left. The means changing the index of the current image within
          * the cache and also updating one of the cache positions. Because the cache always holds the same number of
@@ -330,9 +331,19 @@ namespace PhotoGalleryApp.ViewModels
             Photo p = _galleryItems[galleryUpdateIndex];
             _imageCache[cacheUpdateIndex].Photo = p;
 
+
+            // If the current image has been loaded (i.e., there isn't an old image
+            // still loaded), either the preview or the full resolution, then update the
+            // view to the user. Otherwise, when the image loads, the view will update.
+            if (CurrentImageViewModel.PreviewLoaded())
+            {
+                OnPropertyChanged("CurrentImage");
+            }
+
             // Update sidebar first so that it's not waiting on the image load to update
             CurrentImageChanged();
 
+            // Then load the new cache position's image
             await Task.Run(() => { _imageCache[cacheUpdateIndex].UpdateImage(); });
         }
 
@@ -367,12 +378,21 @@ namespace PhotoGalleryApp.ViewModels
             // Update the cache position with the new image
             Photo p = _galleryItems[galleryUpdateIndex];
             _imageCache[cacheUpdateIndex].Photo = p;
-            
+
+
+            // If the current image has been loaded (i.e., there isn't an old image
+            // still loaded), either the preview or the full resolution, then update the
+            // view to the user. Otherwise, when the image loads, the view will update.
+            if (CurrentImageViewModel.PreviewLoaded())
+            {
+                OnPropertyChanged("CurrentImage");
+            }
+
             // Update sidebar first so that it's not waiting on the image load to update
             CurrentImageChanged();
 
+            // Then load the new cache position's image
             await Task.Run(() => { _imageCache[cacheUpdateIndex].UpdateImage(); });
-
         }
 
 
@@ -398,11 +418,6 @@ namespace PhotoGalleryApp.ViewModels
             if (CurrentIndex < 0)
                 CurrentIndex = _galleryItems.Count - 1;
 
-            if (!CurrentImageViewModel.NeedReload())
-            {
-                OnPropertyChanged("CurrentImage");
-            }
-
             MoveCacheLeft();
         }
 
@@ -423,10 +438,6 @@ namespace PhotoGalleryApp.ViewModels
             if (CurrentIndex >= _galleryItems.Count)
                 CurrentIndex = 0;
 
-            if (!CurrentImageViewModel.NeedReload())
-            {
-                OnPropertyChanged("CurrentImage");
-            }
             MoveCacheRight();
         }
 
