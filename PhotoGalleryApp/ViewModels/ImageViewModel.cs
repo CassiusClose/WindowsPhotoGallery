@@ -146,6 +146,14 @@ namespace PhotoGalleryApp.ViewModels
             }
         }
 
+        /// <summary>
+        /// The aspect ratio of the image stored in the Photo property.
+        /// </summary>
+        public double AspectRatio
+        {
+            get { return Photo.AspectRatio; }
+        }
+
 
         /// <summary>
         /// Returns whether or not the image stored in the Image property is up to date with the current ViewModel

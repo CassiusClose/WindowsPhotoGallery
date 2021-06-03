@@ -55,6 +55,7 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </ApplicationDefinition>
+    <Compile Include="Converters\HeightARToWidthConverter.cs" />
     <Compile Include="Models\Photo.cs" />
     <Compile Include="Models\PhotoGallery.cs" />
     <Compile Include="ViewModels\GalleryViewModel.cs" />
@@ -131,8 +132,6 @@
   <ItemGroup>
     <None Include="App.config" />
   </ItemGroup>
-  <ItemGroup>
-    <Folder Include="Converters\" />
-  </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

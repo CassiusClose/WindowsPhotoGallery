@@ -4,10 +4,13 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
              xmlns:local="clr-namespace:PhotoGalleryApp.Views"
+             xmlns:converters="clr-namespace:PhotoGalleryApp.Converters"
              mc:Ignorable="d" 
              d:DesignHeight="450" d:DesignWidth="800">
 
     <UserControl.Resources>
+
+        <converters:HeightARToWidthConverter x:Key="HeightARToWidth"/>
 
         <!-- Horizontal, wrapping collection of items -->
         <Style x:Key="HorizontalWrapItemsControl" TargetType="ItemsControl">
@@ -46,7 +49,8 @@
             <Setter Property="ItemTemplate">
                 <Setter.Value>
                     <DataTemplate>
-                        <Border MaxHeight="{Binding Path=DataContext.ThumbnailHeight, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType={x:Type local:Gallery}}}" Margin="3">
+                        <Border MaxHeight="{Binding Path=DataContext.ThumbnailHeight, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType={x:Type local:Gallery}}}"
+                                Margin="3" Background="LightGray">
                             <Border.InputBindings>
                                 <MouseBinding MouseAction="LeftClick"
                                               Command="{Binding Path=DataContext.OpenImageCommand, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType={x:Type local:Gallery}}}"
@@ -54,7 +58,16 @@
                             </Border.InputBindings>
                             <Grid>
                                 <!-- Display the image -->
-                                <Image>
+                                <Image MinHeight="{Binding Path=DataContext.ThumbnailHeight, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType={x:Type local:Gallery}}}">
+                                    <!-- The height is determined above by the gallery settings. Below, calculate the width based on that height and
+                                    the image's aspect ratio. -->
+                                    <Image.MinWidth>
+                                        <MultiBinding Converter="{StaticResource HeightARToWidth}" Mode="OneWay">
+                                            <Binding Path="DataContext.ThumbnailHeight" RelativeSource="{RelativeSource Mode=FindAncestor, AncestorType={x:Type local:Gallery}}"/>
+                                            <Binding Path="AspectRatio"/>
+                                        </MultiBinding>
+                                    </Image.MinWidth>
+                                    
                                     <Image.Source>
                                         <Binding Path="Image" Mode="OneWay"/>
                                     </Image.Source>

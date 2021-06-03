@@ -36,11 +36,6 @@ namespace PhotoGalleryApp.Models
 
         #region Fields and Properties
 
-        /// <summary>
-        /// How much the image should be rotated.
-        /// </summary>
-        public Rotation Rotation { get; set; }
-
 
         private string _path;
         /// <summary>
@@ -55,6 +50,39 @@ namespace PhotoGalleryApp.Models
                 // Load the image's rotation data
                 LoadImage();
             }
+        }
+
+
+
+        /// <summary>
+        /// How much the image should be rotated.
+        /// </summary>
+        public Rotation Rotation { get; set; }
+
+        private int _width;
+        /// <summary>
+        /// The width of the image
+        /// </summary>
+        public int Width 
+        {
+            get { return _width; }
+        }
+
+        private int _height;
+        /// <summary>
+        /// The height of the image
+        /// </summary>
+        public int Height 
+        {
+            get { return _height; }
+        }
+
+        /// <summary>
+        /// The aspect ratio (width/height) of the image
+        /// </summary>
+        public float AspectRatio
+        {
+            get { return Width / (float) Height;  }
         }
 
 
@@ -84,7 +112,14 @@ namespace PhotoGalleryApp.Models
             FileStream fs = new FileStream(Path, FileMode.Open, FileAccess.Read);
             BitmapFrame frame = BitmapFrame.Create(fs, BitmapCreateOptions.DelayCreation, BitmapCacheOption.None);
             BitmapMetadata meta = frame.Metadata as BitmapMetadata;
-            // If there is orientation metadata, process it
+
+
+            // Image size
+            _width = frame.PixelWidth;
+            _height = frame.PixelHeight;
+
+
+            // Process any rotation metadata
             if (meta != null && meta.ContainsQuery("System.Photo.Orientation"))
             {
                 ushort rotAmount = (ushort)meta.GetQuery("System.Photo.Orientation");
