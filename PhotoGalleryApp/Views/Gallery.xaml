@@ -5,6 +5,7 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
              xmlns:local="clr-namespace:PhotoGalleryApp.Views"
              xmlns:converters="clr-namespace:PhotoGalleryApp.Converters"
+             xmlns:i="clr-namespace:System.Windows.Interactivity;assembly=System.Windows.Interactivity"
              mc:Ignorable="d" 
              d:DesignHeight="450" d:DesignWidth="800">
 
@@ -28,7 +29,7 @@
         <!-- Horizontal, wrapping list of images -->
         <Style x:Key="GalleryBox" TargetType="ListBox">
             <Setter Property="ScrollViewer.HorizontalScrollBarVisibility" Value="Disabled"/>
-            <Setter Property="SelectionMode" Value="Multiple"/> 
+            <Setter Property="SelectionMode" Value="Multiple"/>
 
             <Setter Property="ItemContainerStyle">
                 <Setter.Value>
@@ -171,23 +172,32 @@
         <StackPanel Grid.Row="2" Orientation="Horizontal">
             <!-- Button that opens & closes the drop down list of tags -->
             <ToggleButton x:Name="showTagList" Style="{StaticResource DropDownButton}">Tags</ToggleButton>
-            
+
             <!-- Drop down list of all tags, selecting adds them to filter -->
             <Popup Style="{StaticResource DropDownList}" 
                    PlacementTarget="{Binding ElementName=showTagList}"
                    IsOpen="{Binding ElementName=showTagList,Path=IsChecked}">
                 <ItemsControl ItemsSource="{Binding AllTags}" ItemTemplate="{StaticResource DropDownItemTemplate}"/>
             </Popup>
-            
+
             <!-- A list of all currently selected tags, clicking removes them -->
             <ItemsControl ItemsSource="{Binding Path=CurrentTags, Mode=OneWay}" Style="{StaticResource CurrentTagsList}"/>
         </StackPanel>
 
         <!-- Display the images -->
         <ScrollViewer Grid.Row="3" HorizontalScrollBarVisibility="Disabled">
+            <!-- Make the ScrollChanged event call a command in the view model. -->
+            <i:Interaction.Triggers>
+                <i:EventTrigger EventName="ScrollChanged">
+                    <i:InvokeCommandAction
+                        Command="{Binding ScrollChangedCommand}"
+                        CommandParameter="{Binding RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=ScrollViewer}}"
+                        />
+                </i:EventTrigger>
+            </i:Interaction.Triggers>
             <ListBox
                  x:Name="GalleryImageListBox" 
-                 Style="{StaticResource GalleryBox}"
+                 Style="{StaticResource GalleryBox}" 
                  ItemsSource="{Binding Path=ImagesView, Mode=OneWay}"/>
         </ScrollViewer>
     </Grid>

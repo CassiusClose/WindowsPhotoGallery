@@ -15,6 +15,9 @@ using Microsoft.Win32;
 using PhotoGalleryApp.Models;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
+using System.Windows.Threading;
+using System.Windows;
+using PhotoGalleryApp.Utils;
 
 namespace PhotoGalleryApp.ViewModels
 {
@@ -36,6 +39,10 @@ namespace PhotoGalleryApp.ViewModels
             _addTagCommand = new RelayCommand(AddTag);
             _removeTagCommand = new RelayCommand(RemoveTag);
             _saveGalleryCommand = new RelayCommand(SaveGallery);
+            _scrollChangedCommand = new RelayCommand(ScrollChanged);
+
+            _scrollChangedTimer.Interval = new TimeSpan(0, 0, 0, 0, 150);
+            _scrollChangedTimer.Tick += ScrollChangedStopped;
 
 
             _gallery = gallery;
@@ -48,13 +55,12 @@ namespace PhotoGalleryApp.ViewModels
             ImagesView.Filter += ImageFilter;
             CurrentTags.CollectionChanged += CurrentTags_CollectionChanged;
 
-            UpdateImages();
+            InitAndLoadAllImages();
         }
 
         #endregion Constructors
 
 
-      
 
 
         #region Fields and Properties
@@ -142,11 +148,10 @@ namespace PhotoGalleryApp.ViewModels
         #region Methods
 
         /**
-         * Loads the thumbnails of all the images in the gallery asynchronously.
-         * TODO Depending on how things go, this maybe should be changed so that
-         * only the ones in view are being loaded at any given time.
+         * Creates the list of ImageViewModels of the photos in this gallery. Once the list is created, loads
+         * their thumbnails asynchronously.
          */
-        private async void UpdateImages()
+        private void InitAndLoadAllImages()
         {
             _images.Clear();
 
@@ -159,13 +164,65 @@ namespace PhotoGalleryApp.ViewModels
                 ImageViewModel vm = new ImageViewModel(_gallery[i], 0, ThumbnailHeight);
                 _images.Add(vm);
             }
-            
-            // Now load the images one at a time
-            for (int i = 0; i < _images.Count; i++)
+
+            LoadAllImages();
+        }
+
+
+
+        /**
+         * Each image load function call (LoadAllImages() or LoadPriorityImagesThenAll()) has its own ID.
+         * This marks the ID of the most recent image load call. These functions will check whether their ID
+         * is the most recent, and cancel their loads if not. This way, calling any of the image load functions
+         * will cancel any previous image load function calls.
+         */
+        private uint _imageLoadID = 0;
+
+        /**
+         * Loads the thumbnail of every image in the gallery. If this function or LoadPriorityImagesThenAll()
+         * is called after this function is, this function will stop loading its images.
+         */
+        private async void LoadAllImages() 
+        {
+            // Save this task's ID to a local variable
+            uint taskID = ++_imageLoadID;
+
+            // Load the images one at a time
+            foreach (ImageViewModel item in _images)
             {
-                await Task.Run(() => { _images[i].UpdateImage(); });
+                if (taskID == _imageLoadID)
+                    await Task.Run(() => { item.UpdateImage(); });
+                // If this task is outdated (there's a newer task ID out there), then cancel
+                else
+                    break;
             }
         }
+
+        /**
+         * Loads the thumbnail of every image in the given list. This is used to load specifically the images that 
+         * the user can see. Once those images in view have been loaded, this calls LoadAllImages() to resume loading the
+         * entire gallery in the background.
+         */
+        private async void LoadPriorityImagesThenAll(List<ImageViewModel> images)
+        {
+            // Save this task's ID to a local variable
+            uint taskID = ++_imageLoadID;
+
+            // Load the images one at a time
+            foreach (ImageViewModel item in images)
+            {
+                if (taskID == _imageLoadID)
+                    await Task.Run(() => { item.UpdateImage(); });
+                // If this task is outdated (there's a newer task ID out there), then cancel
+                else
+                    break;
+            }
+
+            // If the task isn't outdated, then resume loading the rest of the gallery
+            if (taskID == _imageLoadID)
+                LoadAllImages();
+        }
+
 
 
 
@@ -288,6 +345,65 @@ namespace PhotoGalleryApp.ViewModels
         }
 
 
+        #region ScrollChanged Events
+
+        // Stores a copy of the gallery display's ScrollViewer, used to determine what images are currently in view
+        private ScrollViewer _scrollViewer;
+
+        /*
+         * This timer is used to decrease the number of ScrollChanged events that are triggered. The issue is that as
+         * the user scrolls down, many ScrollChanged events are triggered, not just one when the user stops scrolling.
+         * For the purposes of choosing which images to load next, it's not ideal to start many image load tasks that
+         * will be cancelled when the next is called. So we use this timer, and only start loading the visible images
+         * when the scroll hasn't been changed in a certain amount of time.
+         */
+        private DispatcherTimer _scrollChangedTimer = new DispatcherTimer();
+
+
+        private RelayCommand _scrollChangedCommand;
+        /// <summary>
+        /// A command that should be called when the ScrollViewer that displays the images in this gallery has its
+        /// scroll changed (the user scrolls up or down, or the window size changes). This should be triggered on
+        /// the 'ScrollChanged' event.
+        /// </summary>
+        public ICommand ScrollChangedCommand => _scrollChangedCommand;
+        
+        /**
+         * Called every time the gallery's ScrollViewer's 'ScrollChanged' event is triggered. Here, we restart the
+         * timer, so that ScrollChangedStopped() is only called when the user has finished scrolling. 
+         */
+        private void ScrollChanged(object parameter)
+        {
+            // Save the ScrollViewer object locally so that ScrollChangedStopped can use it
+            _scrollViewer = parameter as ScrollViewer;
+
+            // Start/restart the timer
+            if (_scrollChangedTimer.IsEnabled)
+                _scrollChangedTimer.Stop();
+            _scrollChangedTimer.Start();
+        }
+
+
+        /**
+         * Called when the user has stopped scrolling on the gallery's ScrollViewer. This will figure out which
+         * images are in view of the user and load them.
+         */
+        private void ScrollChangedStopped(object sender, EventArgs e)
+        {
+            // Must stop the timer from repeating infinitely
+            _scrollChangedTimer.Stop();
+
+            // Get a list of the current images in view
+            ListBox lb = _scrollViewer.Content as ListBox;
+            List<ImageViewModel> list = DisplayUtils.GetVisibleItemsFromListBox(lb, Application.Current.MainWindow).Cast<ImageViewModel>().ToList();
+
+            // Load the images in view, and once this is done, continue loading the rest of the images in the gallery.
+            LoadPriorityImagesThenAll(list);
+        }
+
+        #endregion ScrollChanged Events
+
+
 
         #region Selected Image Commands
 
@@ -295,7 +411,7 @@ namespace PhotoGalleryApp.ViewModels
          * Notifies all commands that deal with selected images that 
          * the selection has changed.
          */
-            private void UpdateSelectedCommandsCanExecute()
+        private void UpdateSelectedCommandsCanExecute()
         {
             _removeImagesCommand.InvokeCanExecuteChanged();
         }
