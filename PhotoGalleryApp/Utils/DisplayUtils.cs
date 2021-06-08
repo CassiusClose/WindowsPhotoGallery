@@ -21,6 +21,8 @@ namespace PhotoGalleryApp.Utils
         /// <returns>A list of the ListBox's items that are visible within the container.</returns>
         public static List<object> GetVisibleItemsFromListBox(ListBox listbox, FrameworkElement container)
         {
+            // Got from https://stackoverflow.com/questions/830272/calculating-number-of-visible-items-in-listbox/43837145
+
             List<object> items = new List<object>();
 
             foreach (var item in listbox.Items)

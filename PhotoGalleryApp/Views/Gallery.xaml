@@ -190,7 +190,10 @@
 
         <!-- Display the images -->
         <ScrollViewer Grid.Row="3" HorizontalScrollBarVisibility="Disabled">
-            <!-- Make the ScrollChanged event call a command in the view model. -->
+            <!--
+            Make the ScrollChanged event call a command in the view model.
+            Gotten from https://stackoverflow.com/questions/25809655/wpf-mvvm-binding-command-to-event 
+            -->
             <i:Interaction.Triggers>
                 <i:EventTrigger EventName="ScrollChanged">
                     <i:InvokeCommandAction
