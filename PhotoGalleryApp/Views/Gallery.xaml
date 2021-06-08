@@ -173,10 +173,14 @@
             <!-- Button that opens & closes the drop down list of tags -->
             <ToggleButton x:Name="showTagList" Style="{StaticResource DropDownButton}">Tags</ToggleButton>
 
-            <!-- Drop down list of all tags, selecting adds them to filter -->
+            <!--
+            Drop down list of all tags, selecting adds them to filter
+                IsOpen binding should be OneWay, otherwise clicking the above button will always open the
+                popup, even if the popup is already open.
+            -->
             <Popup Style="{StaticResource DropDownList}" 
                    PlacementTarget="{Binding ElementName=showTagList}"
-                   IsOpen="{Binding ElementName=showTagList,Path=IsChecked}">
+                   IsOpen="{Binding ElementName=showTagList,Path=IsChecked, Mode=OneWay}">
                 <ItemsControl ItemsSource="{Binding AllTags}" ItemTemplate="{StaticResource DropDownItemTemplate}"/>
             </Popup>
 
