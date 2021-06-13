@@ -1,4 +1,5 @@
-﻿using System;
+﻿using PhotoGalleryApp.Utils;
+using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Collections.Specialized;
@@ -25,7 +26,7 @@ namespace PhotoGalleryApp.Models
         public PhotoGallery(string name)
         {
             Name = name;
-            Tags = new ObservableCollection<string>();
+            Tags = new RangeObservableCollection<string>();
         }
 
         #endregion Constructors
@@ -41,7 +42,7 @@ namespace PhotoGalleryApp.Models
         /// <summary>
         /// A collection of all the tags present in the gallery (compiled from the tags of each image).
         /// </summary>
-        public ObservableCollection<string> Tags { get; private set; }
+        public RangeObservableCollection<string> Tags { get; private set; }
 
         #endregion Members
 
@@ -65,7 +66,8 @@ namespace PhotoGalleryApp.Models
                 }
             }
 
-            Tags = tags;
+            // Update the tags list once with one notification to change listeners
+            Tags.ReplaceWith(tags);
         }
 
 

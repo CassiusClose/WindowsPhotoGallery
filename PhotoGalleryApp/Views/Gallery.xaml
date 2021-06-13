@@ -5,11 +5,16 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
              xmlns:local="clr-namespace:PhotoGalleryApp.Views"
              xmlns:converters="clr-namespace:PhotoGalleryApp.Converters"
+             xmlns:vms="clr-namespace:PhotoGalleryApp.ViewModels"
              xmlns:i="clr-namespace:System.Windows.Interactivity;assembly=System.Windows.Interactivity"
              mc:Ignorable="d" 
              d:DesignHeight="450" d:DesignWidth="800">
 
     <UserControl.Resources>
+
+        <DataTemplate DataType="{x:Type vms:ChooserDropDownViewModel}">
+            <local:ChooserDropDown/>
+        </DataTemplate>
 
         <converters:HeightARToWidthConverter x:Key="HeightARToWidth"/>
 
@@ -99,54 +104,6 @@
             </Setter>
         </Style>
 
-        <!-- Drop down list of all tags to choose from-->
-        <Style x:Key="AllTagsSelector" TargetType="ComboBox">
-            <Setter Property="ItemTemplate">
-                <Setter.Value>
-                    <DataTemplate>
-                        <ContentPresenter x:Name="Presenter" Content="{Binding}" ContentTemplate="{StaticResource DropDownItem}"/>
-                        <DataTemplate.Triggers>
-                            <DataTrigger Binding="{Binding RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=ComboBoxItem, AncestorLevel=1}}"
-                                         Value="{x:Null}">
-                                <Setter TargetName="Presenter" Property="ContentTemplate" Value="{StaticResource DropDownSelected}"/>
-                            </DataTrigger>
-                        </DataTemplate.Triggers>
-                    </DataTemplate>
-                </Setter.Value>
-            </Setter>
-        </Style>
-
-
-        <!-- The button that opens & closes the tag drop down list -->
-        <Style x:Key="DropDownButton" TargetType="ToggleButton">
-            <Setter Property="Padding" Value="7,3,7,3"/>
-        </Style>
-
-        <!-- Tag drop down list-->
-        <Style x:Key="DropDownList" TargetType="Popup">
-            <Setter Property="StaysOpen" Value="False"/>
-        </Style>
-
-        <!-- Tags Drop Down item -->
-        <DataTemplate x:Key="DropDownItemTemplate">
-            <Button Content="{Binding}"
-                    Command="{Binding Path=DataContext.AddTagCommand, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType={x:Type local:Gallery}}}"
-                    CommandParameter="{Binding}">
-                <!-- On Click, close the popup -->
-                <Button.Triggers>
-                    <EventTrigger RoutedEvent="Button.Click">
-                        <BeginStoryboard>
-                            <Storyboard>
-                                <BooleanAnimationUsingKeyFrames Storyboard.TargetProperty="IsChecked" Storyboard.Target="{Binding ElementName=showTagList}">
-                                    <DiscreteBooleanKeyFrame KeyTime="0" Value="False"/>
-                                </BooleanAnimationUsingKeyFrames>
-                            </Storyboard>
-                        </BeginStoryboard>
-                    </EventTrigger>
-                </Button.Triggers>
-            </Button>
-        </DataTemplate>
-        
     </UserControl.Resources>
     
     
@@ -170,19 +127,9 @@
 
         <!-- Tag Filtering panel -->
         <StackPanel Grid.Row="2" Orientation="Horizontal">
-            <!-- Button that opens & closes the drop down list of tags -->
-            <ToggleButton x:Name="showTagList" Style="{StaticResource DropDownButton}">Tags</ToggleButton>
+            <!-- Drop down list that lets you add tags to the filter -->
+            <ContentControl Content="{Binding TagChooserDropDown}"/>
 
-            <!--
-            Drop down list of all tags, selecting adds them to filter
-                IsOpen binding should be OneWay, otherwise clicking the above button will always open the
-                popup, even if the popup is already open.
-            -->
-            <Popup Style="{StaticResource DropDownList}" 
-                   PlacementTarget="{Binding ElementName=showTagList}"
-                   IsOpen="{Binding ElementName=showTagList,Path=IsChecked, Mode=OneWay}">
-                <ItemsControl ItemsSource="{Binding AllTags}" ItemTemplate="{StaticResource DropDownItemTemplate}"/>
-            </Popup>
 
             <!-- A list of all currently selected tags, clicking removes them -->
             <ItemsControl ItemsSource="{Binding Path=CurrentTags, Mode=OneWay}" Style="{StaticResource CurrentTagsList}"/>
@@ -199,7 +146,7 @@
                     <i:InvokeCommandAction
                         Command="{Binding ScrollChangedCommand}"
                         CommandParameter="{Binding RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=ScrollViewer}}"
-                        />
+                    />
                 </i:EventTrigger>
             </i:Interaction.Triggers>
             <ListBox

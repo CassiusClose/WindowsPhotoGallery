@@ -23,9 +23,13 @@ namespace PhotoGalleryApp
     /// </summary>
     public partial class MainWindow : Window
     {
+        // The main content of the app is this Navigator VM that controls how pages are
+        // loaded on top of each other. Just display nav, and nav will display the rest.
+        private NavigatorViewModel nav;
+
         public MainWindow()
         {
-            NavigatorViewModel nav = new NavigatorViewModel();
+            nav = new NavigatorViewModel();
 
             PhotoGallery gallery = PhotoGallery.LoadGallery("gallery.xml");
 
@@ -33,6 +37,18 @@ namespace PhotoGalleryApp
             DataContext = nav;
 
             InitializeComponent();
+        }
+
+        /**
+         * When the user clicks on the "window", i.e. something that isn't focusable, like a
+         * panel, grid, or label, then this will be called. Here, we set focus & keyboard focus
+         * to the window's grid so that focus is lost elsewhere. This lets the user click off
+         * of a textbox, for example, and have it lose focus.
+         */
+        private void Window_MouseDown(object sender, MouseButtonEventArgs e)
+        {
+            WindowGrid.Focus();
+            Keyboard.ClearFocus();
         }
     }
 }

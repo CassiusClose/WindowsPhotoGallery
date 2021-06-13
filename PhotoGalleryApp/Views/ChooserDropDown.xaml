@@ -1,0 +1,48 @@
+﻿<UserControl x:Class="PhotoGalleryApp.Views.ChooserDropDown"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             xmlns:local="clr-namespace:PhotoGalleryApp.Views"
+             xmlns:i="clr-namespace:System.Windows.Interactivity;assembly=System.Windows.Interactivity"
+             mc:Ignorable="d" 
+             d:DesignHeight="450" d:DesignWidth="800">
+
+    <UserControl.Resources>
+        <!-- The template for each item in the drop-down. Each item is a button that, when clicked on, selects that item in the VM. -->
+        <DataTemplate x:Key="DropDownItemTemplate">
+            <Button Content="{Binding}"
+                    Command="{Binding Path=DataContext.ItemSelectedCommand, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType={x:Type local:ChooserDropDown}}}"
+                    CommandParameter="{Binding}"/>
+        </DataTemplate>
+    </UserControl.Resources>
+
+    <StackPanel>
+        <!-- The textbox where the user enters the filtering text. -->
+        <TextBox AcceptsReturn="False" AcceptsTab="False" Text="{Binding TextInput, UpdateSourceTrigger=PropertyChanged}" Name="ChooserDropDownTextBox">
+            <!-- Convert event handlers into VM commands -->
+            <i:Interaction.Triggers>
+                <i:EventTrigger EventName="GotFocus">
+                    <i:InvokeCommandAction Command="{Binding TextboxFocusedCommand}"/>
+                </i:EventTrigger>
+                <i:EventTrigger EventName="LostFocus">
+                    <i:InvokeCommandAction Command="{Binding TextboxUnfocusedCommand}"/>
+                </i:EventTrigger>
+            </i:Interaction.Triggers>
+        </TextBox>
+
+        <!-- The drop down list, which only opens if the user is typing in the above textbox. -->
+        <Popup IsOpen="{Binding ShowDropDown}" AllowsTransparency="True" >
+            <Border Background="LightGray" Name="PopupBorder">
+                <StackPanel>
+                    <!-- The list of items in the drop-down. -->
+                    <ItemsControl ItemsSource="{Binding Items, Mode=OneWay}" ItemTemplate="{StaticResource DropDownItemTemplate}"/>
+                    
+                    <!-- At the bottom of the drop-down, this button creates the text in the textbox as a new item. -->
+                    <Button Command="{Binding NewItemCommand}">Create new</Button>
+                </StackPanel>
+            </Border>
+        </Popup>
+    </StackPanel>
+
+</UserControl>

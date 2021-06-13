@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.IO;
 using System.Linq;
@@ -30,7 +31,8 @@ namespace PhotoGalleryApp.ViewModels
         /// </summary>
         /// <param name="galleryItems">The Photos available to view in this vm.</param>
         /// <param name="index">The index of the currently selected Photo in the given list.</param>
-        public ImageSlideshowViewModel(List<Photo> galleryItems, int index)
+        /// <param name="gallery">The PhotoGallery that these photos belong to.</param>
+        public ImageSlideshowViewModel(List<Photo> galleryItems, int index, PhotoGallery gallery)
         {
             // Initialize commands
             _leftCommand = new RelayCommand(Left);
@@ -40,6 +42,10 @@ namespace PhotoGalleryApp.ViewModels
 
             _galleryItems = galleryItems;
             CurrentIndex = index;
+
+            // Save a reference to the photo gallery because ImageInfoViewModel needs
+            // it, and those could be created every time the user goes to a new image.
+            _gallery = gallery;
 
 
             // Setup image cache and start loading the images
@@ -52,8 +58,6 @@ namespace PhotoGalleryApp.ViewModels
 
 
         #endregion Constructors
-
-
 
 
         #region Fields and Properties
@@ -70,6 +74,12 @@ namespace PhotoGalleryApp.ViewModels
          */
         private int CurrentIndex;
 
+
+        /**
+        * The PhotoGallery that the viewable collection of images here belong to. This is
+        * needed to instantiate ImageInfoViewModels, so it is saved here.
+        */
+        private PhotoGallery _gallery;
 
 
 
@@ -127,7 +137,6 @@ namespace PhotoGalleryApp.ViewModels
 
 
 
-
         #region Methods
 
 
@@ -164,7 +173,7 @@ namespace PhotoGalleryApp.ViewModels
         {
             if(SidebarVisible)
             {
-                SidebarContent = new ImageInfoViewModel(CurrentImageViewModel.Photo);
+                SidebarContent = new ImageInfoViewModel(CurrentImageViewModel.Photo, _gallery);
             }
         }
 

@@ -4,10 +4,17 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
              xmlns:local="clr-namespace:PhotoGalleryApp.Views"
+             xmlns:vms="clr-namespace:PhotoGalleryApp.ViewModels"
              mc:Ignorable="d" 
              d:DesignHeight="450" d:DesignWidth="800">
 
     <UserControl.Resources>
+        <!-- The below ContentControl is bound to a ViewModel, so to use a certain View in the Navigator, you must
+             declare a DataTemplate here that links the binding of that ViewModel to display the desired view. -->
+        <DataTemplate DataType="{x:Type vms:ChooserDropDownViewModel}">
+            <local:ChooserDropDown/>
+        </DataTemplate>
+
         <Style TargetType="Label">
             <Setter Property="HorizontalContentAlignment" Value="Center"/>
         </Style>
@@ -49,8 +56,7 @@
         <Label>Tags:</Label>
         <ItemsControl ItemsSource="{Binding Path=TagsView, Mode=OneWay}" Style="{StaticResource TagsList}"/>
 
-        <!-- Adding new tags to the image -->
-        <TextBox MaxLines="1" AcceptsReturn="False" AcceptsTab="False" Text="{Binding NewTagInput}"/>
-        <Button Command="{Binding AddTagCommand}">Add Tag</Button>
+        <!-- Drop-down chooser which lets the user add tags to the image-->
+        <ContentControl Content="{Binding TagChooser}"/>
     </StackPanel>
 </UserControl>

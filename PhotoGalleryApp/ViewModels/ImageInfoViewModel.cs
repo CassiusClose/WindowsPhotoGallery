@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Linq;
 using System.Text;
@@ -22,13 +23,17 @@ namespace PhotoGalleryApp.ViewModels
         /// Initializes the VM to represent the given photo.
         /// </summary>
         /// <param name="photo">The Photo from which to show information.</param>
-        public ImageInfoViewModel(Photo photo)
+        public ImageInfoViewModel(Photo photo, PhotoGallery gallery)
         {
-            _addTagCommand = new RelayCommand(AddTag);
+            //Init commands
             _removeTagCommand = new RelayCommand(RemoveTag);
 
             _photo = photo;
             TagsView = CollectionViewSource.GetDefaultView(photo.Tags);
+
+            // Init the tag chooser VM. AddTag will be called whenever an item is selected or
+            // created from the drop-down.
+            _tagChooser = new ChooserDropDownViewModel(new CollectionViewSource { Source = gallery.Tags }.View, AddTag);
         }
 
         #endregion Constructors
@@ -56,54 +61,38 @@ namespace PhotoGalleryApp.ViewModels
 
 
 
-        private string _newTagInput;
+        private ChooserDropDownViewModel _tagChooser;
         /// <summary>
-        /// Contains the contents of the textbox in which the user will enter new tags for the photo.
+        /// The ViewModel that hold info for the drop-down list where the user can add tags to the photo.
         /// </summary>
-        public string NewTagInput
+        public ChooserDropDownViewModel TagChooser
         {
-            get { return _newTagInput; }
-            set
-            {
-                _newTagInput = value;
-                OnPropertyChanged();
-            }
+            get { return _tagChooser; }
         }
 
         #endregion Fields and Properties
 
 
-
-        #region Commands
-
-        private RelayCommand _addTagCommand;
-        /// <summary>
-        /// A command which attempts to add the contents of the NewTagInput as a new tag of the image. If the string is
-        /// empty or already a tag, nothing will change.
-        /// </summary>
-        public ICommand AddTagCommand => _addTagCommand;
+        #region Methods
 
         /// <summary>
-        /// Attempts to add the contents of the NewTagInput as a new tag of the photo. If the tag string is empty or already
-        /// a tag of the photo, nothing will change.
+        /// Adds the given tag to this VM's photo's list of tags. Will update the containing PhotoGallery's
+        /// list of all tags.
         /// </summary>
-        public void AddTag() {
-            string tag = NewTagInput;
-            if (tag == null)
-                return;
-            
-            if (tag == "")
-                return;
-
-            // If the tag doesn't already exist
-            if(!_photo.Tags.Contains(tag))
-            {
+        /// <param name="tag">The tag to be added.</param>
+        /// <param name="isNew">False if the tag already exists in the gallery and true if it doesn't.</param>
+        public void AddTag(string tag, bool isNew)
+        {
+            // If the tag doesn't already exist in the photo's tag list, add it
+            if (isNew || !_photo.Tags.Contains(tag))
                 _photo.Tags.Add(tag);
-            }
         }
 
+        #endregion Methods
 
 
+
+        #region Commands
 
         private RelayCommand _removeTagCommand;
         /// <summary>

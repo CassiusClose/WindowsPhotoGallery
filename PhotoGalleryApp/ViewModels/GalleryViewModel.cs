@@ -36,7 +36,6 @@ namespace PhotoGalleryApp.ViewModels
             _selectImageCommand = new RelayCommand(SelectImage);
             _removeImagesCommand = new RelayCommand(RemoveImages, AreImagesSelected);
             _openImageCommand = new RelayCommand(OpenImage);
-            _addTagCommand = new RelayCommand(AddTag);
             _removeTagCommand = new RelayCommand(RemoveTag);
             _saveGalleryCommand = new RelayCommand(SaveGallery);
             _scrollChangedCommand = new RelayCommand(ScrollChanged);
@@ -45,21 +44,26 @@ namespace PhotoGalleryApp.ViewModels
             _scrollChangedTimer.Tick += ScrollChangedStopped;
 
 
+            // Setup gallery & images
             _gallery = gallery;
             _images = new ObservableCollection<ImageViewModel>();
-
             ImagesView = CollectionViewSource.GetDefaultView(_images);
+           
             CurrentTags = new ObservableCollection<string>();
 
-
+            // Setup the filter, after CurrnetTags has been created
             ImagesView.Filter += ImageFilter;
             CurrentTags.CollectionChanged += CurrentTags_CollectionChanged;
 
+            // Initialize the tag chooser drop-down
+            ICollectionView view = new CollectionViewSource() { Source = gallery.Tags }.View;
+            _tagChooserDropDown = new ChooserDropDownViewModel(view, AddTag);
+
+            // Load all the images in the gallery
             InitAndLoadAllImages();
         }
 
         #endregion Constructors
-
 
 
 
@@ -93,6 +97,20 @@ namespace PhotoGalleryApp.ViewModels
         }
 
 
+        private ChooserDropDownViewModel _tagChooserDropDown;
+        /// <summary>
+        /// The ViewModel for a filterable drop-down list that lets the user choose which tags
+        /// to filter the images by.
+        /// </summary>
+        public ChooserDropDownViewModel TagChooserDropDown
+        {
+            get { return _tagChooserDropDown; }
+            set
+            {
+                _tagChooserDropDown = value;
+                OnPropertyChanged();
+            }
+        }
 
 
 
@@ -130,6 +148,7 @@ namespace PhotoGalleryApp.ViewModels
             OnPropertyChanged("CurrentTags");
             ImagesView.Refresh();
         }
+
 
 
         /// <summary>
@@ -321,7 +340,7 @@ namespace PhotoGalleryApp.ViewModels
             }
 
             // Create a new page to view the clicked image
-            ImageSlideshowViewModel imagePage = new ImageSlideshowViewModel(photos, index);
+            ImageSlideshowViewModel imagePage = new ImageSlideshowViewModel(photos, index, _gallery);
             _navigator.NewPage(imagePage);
         }
 
@@ -472,19 +491,13 @@ namespace PhotoGalleryApp.ViewModels
 
         #region Tag Commands
 
-        private RelayCommand _addTagCommand;
-        /// <summary>
-        /// A command which adds a tag to the list of selected tags.
-        /// </summary>
-        public ICommand AddTagCommand => _addTagCommand;
-
         /// <summary>
         /// Adds the given tag to the list of selected tags, if it is not already added.
         /// </summary>
         /// <param name="parameter">The tag to add, as a string.</param>
-        public void AddTag(object parameter)
+        /// <param name="isNew">Whether or not the tag is being creatd or added.</param>
+        public void AddTag(string tag, bool isNew)
         {
-            string tag = parameter as string;
             if (!CurrentTags.Contains(tag))
                 CurrentTags.Add(tag);
         }
