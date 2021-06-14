@@ -27,6 +27,7 @@ namespace PhotoGalleryApp.ViewModels
         /// <param name="items"></param>
         public ChooserDropDownViewModel(ICollectionView items) : this(items, null) { }
 
+
         /// <summary>
         /// Initializes a ChooserDropDown with a collection of items. Also stores a callback
         /// function to be called when an item is chosen or created.
@@ -34,7 +35,19 @@ namespace PhotoGalleryApp.ViewModels
         /// <param name="items">The items that will be choosable in the dropdown menu.</param>
         /// <param name="addTagCallback">A callback function that will be called when an item is
         /// either chosen or created.</param>
-        public ChooserDropDownViewModel(ICollectionView items, ItemCallback addTagCallback)
+        public ChooserDropDownViewModel(ICollectionView items, ItemCallback addTagCallback) : this(items, addTagCallback, true, true) { }
+
+
+        /// <summary>
+        /// Initializes a ChooserDropDown with a collection of items. Also stores a callback
+        /// function to be called when an item is chosen or created.
+        /// </summary>
+        /// <param name="items">The items that will be choosable in the dropdown menu.</param>
+        /// <param name="addTagCallback">A callback function that will be called when an item is
+        /// either chosen or created.</param>
+        /// <param name="showCreateButton">Whether the "create new item" button should be shown.</param>
+        /// <param name="emptyTextShowsAll">Whether no input in the textbox should display nothing or all the drop-down's items.</param>
+        public ChooserDropDownViewModel(ICollectionView items, ItemCallback addTagCallback, bool showCreateButton, bool emptyTextShowsAll)
         {
             // Init commands
             _itemSelectedCommand = new RelayCommand(ItemSelected);
@@ -42,6 +55,8 @@ namespace PhotoGalleryApp.ViewModels
             _textboxFocusedCommand = new RelayCommand(TextboxFocused);
             _textboxUnfocusedCommand = new RelayCommand(TextboxUnfocused);
 
+            _showCreateButton = showCreateButton;
+            _emptyTextShowsAll = emptyTextShowsAll;
 
             ItemSelectedCallback = addTagCallback;
             _textInput = "";
@@ -80,6 +95,7 @@ namespace PhotoGalleryApp.ViewModels
                 Items.Refresh();
 
                 OnPropertyChanged();
+                OnPropertyChanged("CreateButtonVisible");
             }
         }
 
@@ -113,15 +129,30 @@ namespace PhotoGalleryApp.ViewModels
         public ItemCallback ItemSelectedCallback;
 
 
-        /*
+        
         private bool _showCreateButton;
-        public bool ShowCreateButton { get { return _showCreateButton; } }
+        /// <summary>
+        /// Whether the "Create New" button should be visible. This determines whether the drop-down is
+        /// just used to choose existing items or if it can be used to create new items as well.
+        /// </summary>
+        public bool CreateButtonVisible
+        {
+            get
+            {
+                // If there's no textbox input, don't show the button regardless.
+                if (TextInput == "")
+                    return false;
+
+                return _showCreateButton;
+            }
+        }
 
 
+        /**
+         * Whether or not an empty textbox should display all the drop-down's items or none of them.
+         */
         private bool _emptyTextShowsAll;
-        public bool EmptyTextShowsAll { get { return _emptyTextShowsAll; } }
 
-        */
 
 
         #endregion Fields and Properties
@@ -140,9 +171,13 @@ namespace PhotoGalleryApp.ViewModels
             if (TextInput == null)
                 return false;
 
-            // If no input, then show all the items
+            // If there's no input in the textbox, determine whether to show all or none of the items
             if (TextInput == "")
-                return true;
+            { 
+                if (_emptyTextShowsAll)
+                    return true;
+                return false;
+            }
 
             string tag = item as string;
             if (tag == null)
@@ -214,6 +249,9 @@ namespace PhotoGalleryApp.ViewModels
          */
         private void CreateNewItem()
         {
+            if (TextInput == "")
+                return;
+
             if (ItemSelectedCallback != null)
                 ItemSelectedCallback(TextInput, true);
 

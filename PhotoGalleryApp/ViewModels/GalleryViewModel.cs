@@ -57,7 +57,7 @@ namespace PhotoGalleryApp.ViewModels
 
             // Initialize the tag chooser drop-down
             ICollectionView view = new CollectionViewSource() { Source = gallery.Tags }.View;
-            _tagChooserDropDown = new ChooserDropDownViewModel(view, AddTag);
+            _tagChooserDropDown = new ChooserDropDownViewModel(view, AddTag, false, true);
 
             // Load all the images in the gallery
             InitAndLoadAllImages();
