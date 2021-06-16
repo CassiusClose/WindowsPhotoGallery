@@ -48,7 +48,15 @@ namespace PhotoGalleryApp
         private void Window_MouseDown(object sender, MouseButtonEventArgs e)
         {
             WindowGrid.Focus();
-            Keyboard.ClearFocus();
+            Keyboard.Focus(WindowGrid);
+        }
+         
+        /**
+         * KeyDown events will be send to the navigator to be passed on to the current page.
+         */
+        private void Window_KeyDown(object sender, KeyEventArgs e)
+        {
+            nav.BroadcastKeyEvent(e.Key);
         }
     }
 }

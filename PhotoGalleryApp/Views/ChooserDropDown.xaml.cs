@@ -20,7 +20,7 @@ namespace PhotoGalleryApp.Views
     /// </summary>
     public partial class ChooserDropDown : UserControl
     {
-        public ChooserDropDown()
+          public ChooserDropDown()
         {
             InitializeComponent();
         }

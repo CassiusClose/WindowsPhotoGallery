@@ -66,6 +66,7 @@
     <Compile Include="Models\Photo.cs" />
     <Compile Include="Models\PhotoGallery.cs" />
     <Compile Include="Utils\DisplayUtils.cs" />
+    <Compile Include="Utils\MultiKeyDictionary.cs" />
     <Compile Include="Utils\RangeObservableCollection.cs" />
     <Compile Include="ViewModels\ChooserDropDownViewModel.cs" />
     <Compile Include="ViewModels\GalleryViewModel.cs" />

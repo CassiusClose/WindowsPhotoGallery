@@ -40,6 +40,11 @@ namespace PhotoGalleryApp.ViewModels
             _toggleInfoVisibilityCommand = new RelayCommand(ToggleInfoVisibility);
 
 
+            // Register key listeners
+            NavigatorViewModel.RegisterKeyEventHandler(this, Key.Left, Left);
+            NavigatorViewModel.RegisterKeyEventHandler(this, Key.Right, Right);
+
+
             _galleryItems = galleryItems;
             CurrentIndex = index;
 
@@ -58,6 +63,7 @@ namespace PhotoGalleryApp.ViewModels
 
 
         #endregion Constructors
+
 
 
         #region Fields and Properties
@@ -475,4 +481,4 @@ namespace PhotoGalleryApp.ViewModels
 
         #endregion Commands
     }
-}
+}   

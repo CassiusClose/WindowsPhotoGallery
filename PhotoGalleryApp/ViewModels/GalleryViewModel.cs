@@ -40,9 +40,9 @@ namespace PhotoGalleryApp.ViewModels
             _saveGalleryCommand = new RelayCommand(SaveGallery);
             _scrollChangedCommand = new RelayCommand(ScrollChanged);
 
+            // Init scroll timer
             _scrollChangedTimer.Interval = new TimeSpan(0, 0, 0, 0, 150);
             _scrollChangedTimer.Tick += ScrollChangedStopped;
-
 
             // Setup gallery & images
             _gallery = gallery;
@@ -51,7 +51,7 @@ namespace PhotoGalleryApp.ViewModels
            
             CurrentTags = new ObservableCollection<string>();
 
-            // Setup the filter, after CurrnetTags has been created
+            // Setup the filter, after CurrentTags has been created
             ImagesView.Filter += ImageFilter;
             CurrentTags.CollectionChanged += CurrentTags_CollectionChanged;
 

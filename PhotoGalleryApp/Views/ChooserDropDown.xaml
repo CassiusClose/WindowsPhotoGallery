@@ -35,7 +35,7 @@
         </TextBox>
 
         <!-- The drop down list, which only opens if the user is typing in the above textbox. -->
-        <Popup IsOpen="{Binding ShowDropDown}" AllowsTransparency="True" >
+        <Popup IsOpen="{Binding ShowDropDown}" AllowsTransparency="True">
             <Border Background="LightGray" Name="PopupBorder">
                 <StackPanel>
                     <!-- The list of items in the drop-down. -->
