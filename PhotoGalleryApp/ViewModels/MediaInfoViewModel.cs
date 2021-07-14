@@ -14,7 +14,7 @@ namespace PhotoGalleryApp.ViewModels
     /// <summary>
     /// A ViewModel which displays information about a certain Photo to the user.
     /// </summary>
-    class ImageInfoViewModel : ViewModelBase
+    class MediaInfoViewModel : ViewModelBase
     {
 
         #region Constructors
@@ -23,7 +23,7 @@ namespace PhotoGalleryApp.ViewModels
         /// Initializes the VM to represent the given photo.
         /// </summary>
         /// <param name="photo">The Photo from which to show information.</param>
-        public ImageInfoViewModel(Photo photo, PhotoGallery gallery)
+        public MediaInfoViewModel(Media photo, MediaGallery gallery)
         {
             //Init commands
             _removeTagCommand = new RelayCommand(RemoveTag);
@@ -42,7 +42,7 @@ namespace PhotoGalleryApp.ViewModels
         #region Fields and Properties
 
         // The photo that contains all the information
-        private Photo _photo;
+        private Media _photo;
 
 
         /// <summary>

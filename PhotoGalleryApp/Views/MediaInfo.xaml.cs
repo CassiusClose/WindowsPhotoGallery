@@ -16,11 +16,11 @@ using System.Windows.Shapes;
 namespace PhotoGalleryApp.Views
 {
     /// <summary>
-    /// Interaction logic for ImageInfo.xaml
+    /// Interaction logic for MediaInfo.xaml
     /// </summary>
-    public partial class ImageInfo : UserControl
+    public partial class MediaInfo : UserControl
     {
-        public ImageInfo()
+        public MediaInfo()
         {
             InitializeComponent();
         }

@@ -27,15 +27,15 @@ namespace PhotoGalleryApp.ViewModels
     class GalleryViewModel : ViewModelBase
     {
         #region Constructors
-        public GalleryViewModel(NavigatorViewModel navigator, PhotoGallery gallery)
+        public GalleryViewModel(NavigatorViewModel navigator, MediaGallery gallery)
         {
             _navigator = navigator;
 
             // Init commands
             _addFilesCommand = new RelayCommand(AddFiles);
-            _selectImageCommand = new RelayCommand(SelectImage);
-            _removeImagesCommand = new RelayCommand(RemoveImages, AreImagesSelected);
-            _openImageCommand = new RelayCommand(OpenImage);
+            _selectMediaCommand = new RelayCommand(SelectMedia);
+            _removeMediaCommand = new RelayCommand(RemoveMedia, AreImagesSelected);
+            _openMediaCommand = new RelayCommand(OpenMedia);
             _removeTagCommand = new RelayCommand(RemoveTag);
             _saveGalleryCommand = new RelayCommand(SaveGallery);
             _scrollChangedCommand = new RelayCommand(ScrollChanged);
@@ -46,13 +46,13 @@ namespace PhotoGalleryApp.ViewModels
 
             // Setup gallery & images
             _gallery = gallery;
-            _images = new ObservableCollection<ImageViewModel>();
-            ImagesView = CollectionViewSource.GetDefaultView(_images);
+            _items = new RangeObservableCollection<MediaViewModel>();
+            ImagesView = CollectionViewSource.GetDefaultView(_items);
            
             CurrentTags = new ObservableCollection<string>();
 
             // Setup the filter, after CurrentTags has been created
-            ImagesView.Filter += ImageFilter;
+            ImagesView.Filter += MediaFilter;
             CurrentTags.CollectionChanged += CurrentTags_CollectionChanged;
 
             // Initialize the tag chooser drop-down
@@ -60,7 +60,7 @@ namespace PhotoGalleryApp.ViewModels
             _tagChooserDropDown = new ChooserDropDownViewModel(view, AddTag, false, true);
 
             // Load all the images in the gallery
-            InitAndLoadAllImages();
+            InitAndLoadAllMedia();
         }
 
         #endregion Constructors
@@ -73,9 +73,9 @@ namespace PhotoGalleryApp.ViewModels
         private NavigatorViewModel _navigator;
 
         // The collection of photos in the gallery
-        private PhotoGallery _gallery;
+        private MediaGallery _gallery;
         // The collection of images (image data) to display
-        private ObservableCollection<ImageViewModel> _images;
+        private RangeObservableCollection<MediaViewModel> _items;
 
         /// <summary>
         /// The gallery's current items (with any filtering & sorting applied)
@@ -170,21 +170,23 @@ namespace PhotoGalleryApp.ViewModels
          * Creates the list of ImageViewModels of the photos in this gallery. Once the list is created, loads
          * their thumbnails asynchronously.
          */
-        private void InitAndLoadAllImages()
+        private void InitAndLoadAllMedia()
         {
-            _images.Clear();
+            _items.Clear();
 
             // Initialize all the image vms first without loading the images. This way,
             // the whole gallery will be available and navigatable to in the slideshow
             // view.
             for (int i = 0; i < _gallery.Count; i++)
             {
-                // 2nd argument is 0 so that it only loads the image once
-                ImageViewModel vm = new ImageViewModel(_gallery[i], 0, ThumbnailHeight);
-                _images.Add(vm);
+                if (_gallery[i].IsVideo)
+                    _items.Add(new VideoViewModel(_gallery[i]));
+                else
+                    // 2nd argument is 0 so that it only loads the image once
+                    _items.Add(new ImageViewModel(_gallery[i], 0, ThumbnailHeight));
             }
 
-            LoadAllImages();
+            LoadAllMedia();
         }
 
 
@@ -201,18 +203,21 @@ namespace PhotoGalleryApp.ViewModels
          * Loads the thumbnail of every image in the gallery. If this function or LoadPriorityImagesThenAll()
          * is called after this function is, this function will stop loading its images.
          */
-        private async void LoadAllImages() 
+        private async void LoadAllMedia() 
         {
             // Save this task's ID to a local variable
             uint taskID = ++_imageLoadID;
 
             // Load the images one at a time
-            foreach (ImageViewModel item in _images)
+            foreach (MediaViewModel item in _items)
             {
-                if (taskID == _imageLoadID)
-                    await Task.Run(() => { item.UpdateImage(); });
                 // If this task is outdated (there's a newer task ID out there), then cancel
-                else
+                if (taskID != _imageLoadID)
+                    break;
+
+                await Task.Run(() => { item.LoadMedia(); });
+
+                if (taskID != _imageLoadID)
                     break;
             }
         }
@@ -222,16 +227,16 @@ namespace PhotoGalleryApp.ViewModels
          * the user can see. Once those images in view have been loaded, this calls LoadAllImages() to resume loading the
          * entire gallery in the background.
          */
-        private async void LoadPriorityImagesThenAll(List<ImageViewModel> images)
+        private async void LoadPriorityMediaThenAll(List<MediaViewModel> images)
         {
             // Save this task's ID to a local variable
             uint taskID = ++_imageLoadID;
 
             // Load the images one at a time
-            foreach (ImageViewModel item in images)
+            foreach (MediaViewModel item in images)
             {
                 if (taskID == _imageLoadID)
-                    await Task.Run(() => { item.UpdateImage(); });
+                    await Task.Run(() => { item.LoadMedia(); });
                 // If this task is outdated (there's a newer task ID out there), then cancel
                 else
                     break;
@@ -239,7 +244,7 @@ namespace PhotoGalleryApp.ViewModels
 
             // If the task isn't outdated, then resume loading the rest of the gallery
             if (taskID == _imageLoadID)
-                LoadAllImages();
+                LoadAllMedia();
         }
 
 
@@ -251,14 +256,15 @@ namespace PhotoGalleryApp.ViewModels
         /// </summary>
         /// <param name="item">The Photo object to accept or reject.</param>
         /// <returns>bool, whether the photo was accepted or not.</returns>
-        public bool ImageFilter(object item)
+        public bool MediaFilter(object item)
         {
             // If no tags picked, show all of the images 
             if (CurrentTags.Count == 0)
                 return true;
 
-            ImageViewModel ivm = item as ImageViewModel;
-            Photo image = ivm.Photo;
+
+            MediaViewModel ivm = item as MediaViewModel;
+            Media image = ivm.Media;
             // For each tag in the image
             foreach (string tag in image.Tags)
             {
@@ -300,47 +306,71 @@ namespace PhotoGalleryApp.ViewModels
         {
             OpenFileDialog fileDialog = new OpenFileDialog();
             fileDialog.Multiselect = true;
-            fileDialog.Filter = "Image files (*.png;*.jpeg;*.jpg)|*.png;*.jpeg;*.jpg";
+            fileDialog.Filter = "Media files (*.png;*.jpeg;*.jpg,*.mp4)|*.png;*.jpeg;*.jpg;*.mp4";
             if(fileDialog.ShowDialog() == true)
             {
                 foreach (string filename in fileDialog.FileNames)
                 {
-                    Photo p = new Photo(filename);
+                    Media p = new Media(filename);
                     _gallery.Add(p);
+
+
+                    MediaViewModel vm = CreateMediaViewModel(p);
+                    _imageLoadID++;
+                    _items.Add(vm);
+                    ScrollChangedStopped(null, null);
                 }
             }
         }
 
 
+        /// <summary>
+        /// Creates and returns a MediaViewModel object, that holds the given Media object. Will be
+        /// either an ImageViewModel or VideoViewModel instance, depending on the type of media the
+        /// Media object contains.
+        /// </summary>
+        /// <param name="media">The Media object that the MediaViewModel will contain.</param>
+        /// <returns>A MediaViewModel which contains the Media object, either an ImageViewModel
+        /// or VideoViewModel.</returns>
+        public MediaViewModel CreateMediaViewModel(Media media)
+        {
+            if (media.IsVideo)
+                return new VideoViewModel(media);
+            else
+            {
+                return new ImageViewModel(media, 0, ThumbnailHeight);
+            }
+        }
 
-        private RelayCommand _openImageCommand;
+
+        private RelayCommand _openMediaCommand;
         /// <summary>
         /// A command which opens the specified Photo in a new page. Must pass the specified Photo as an argument.
         /// </summary>
-        public ICommand OpenImageCommand => _openImageCommand;
+        public ICommand OpenMediaCommand => _openMediaCommand;
 
         /// <summary>
         /// Opens the given Photo in a new page.
         /// </summary>
         /// <param name="parameter">The Photo instance to open.</param>
-        public void OpenImage(object parameter)
+        public void OpenMedia(object parameter)
         {
-            Photo p = parameter as Photo;
+            Media p = parameter as Media;
             
             // Get a list of all the currently visible images
-            List<ImageViewModel> list = ImagesView.OfType<ImageViewModel>().ToList();
-            List<Photo> photos = ImageViewModel.GetPhotoList(list);
+            List<MediaViewModel> list = ImagesView.OfType<MediaViewModel>().ToList();
+            List<Media> photos = MediaViewModel.GetMediaList(list);
 
             // Get the clicked on photo's index in the list of Photos
             int index = 0;
             for (int i = 0; i < list.Count; i++)
             {
-                if (p == list[i].Photo)
+                if (p == list[i].Media)
                     index = i;
             }
 
             // Create a new page to view the clicked image
-            ImageSlideshowViewModel imagePage = new ImageSlideshowViewModel(photos, index, _gallery);
+            SlideshowViewModel imagePage = new SlideshowViewModel(photos, index, _gallery);
             _navigator.NewPage(imagePage);
         }
 
@@ -357,7 +387,7 @@ namespace PhotoGalleryApp.ViewModels
         /// </summary>
         public void SaveGallery()
         {
-            XmlSerializer serializer = new XmlSerializer(typeof(PhotoGallery));
+            XmlSerializer serializer = new XmlSerializer(typeof(MediaGallery));
             TextWriter writer = new StreamWriter("gallery.xml");
             serializer.Serialize(writer, _gallery);
             writer.Close();
@@ -414,17 +444,17 @@ namespace PhotoGalleryApp.ViewModels
 
             // Get a list of the current images in view
             ListBox lb = _scrollViewer.Content as ListBox;
-            List<ImageViewModel> list = DisplayUtils.GetVisibleItemsFromListBox(lb, Application.Current.MainWindow).Cast<ImageViewModel>().ToList();
+            List<MediaViewModel> list = DisplayUtils.GetVisibleItemsFromListBox(lb, Application.Current.MainWindow).Cast<MediaViewModel>().ToList();
 
             // Load the images in view, and once this is done, continue loading the rest of the images in the gallery.
-            LoadPriorityImagesThenAll(list);
+            LoadPriorityMediaThenAll(list);
         }
 
         #endregion ScrollChanged Events
 
 
 
-        #region Selected Image Commands
+        #region Selected Media Commands
 
         /*
          * Notifies all commands that deal with selected images that 
@@ -432,7 +462,7 @@ namespace PhotoGalleryApp.ViewModels
          */
         private void UpdateSelectedCommandsCanExecute()
         {
-            _removeImagesCommand.InvokeCanExecuteChanged();
+            _removeMediaCommand.InvokeCanExecuteChanged();
         }
 
         /*
@@ -450,42 +480,42 @@ namespace PhotoGalleryApp.ViewModels
 
 
 
-        private RelayCommand _selectImageCommand;
+        private RelayCommand _selectMediaCommand;
         /// <summary>
         /// A command which should be called when an image is selected.
         /// </summary>
-        public ICommand SelectImageCommand => _selectImageCommand;
+        public ICommand SelectMediaCommand => _selectMediaCommand;
 
         /// <summary>
         /// Notifies the gallery that the selection of images has changed.
         /// </summary>
-        public void SelectImage()
+        public void SelectMedia()
         {
             UpdateSelectedCommandsCanExecute();
         }
 
 
 
-        private RelayCommand _removeImagesCommand;
+        private RelayCommand _removeMediaCommand;
         /// <summary>
         /// A command which removes the given Photos from the gallery.
         /// </summary>
-        public ICommand RemoveImagesCommand => _removeImagesCommand;
+        public ICommand RemoveMediaCommand => _removeMediaCommand;
 
         /// <summary>
         /// Removes the given images from the gallery.
         /// </summary>
         /// <param name="parameter">The list of images to remove, of type System.Windows.Controls.SelectedItemCollection (from ListBox SelectedItems).</param>
-        public void RemoveImages(object parameter)
+        public void RemoveMedia(object parameter)
         {
             System.Collections.IList list = parameter as System.Collections.IList;
-            List<Photo> photos = list.Cast<Photo>().ToList();
-            foreach (Photo p in photos)
+            List<Media> photos = list.Cast<Media>().ToList();
+            foreach (Media p in photos)
                 _gallery.Remove(p);
         }
 
 
-        #endregion Selected Image Commands
+        #endregion Selected Media Commands
 
 
 

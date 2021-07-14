@@ -16,11 +16,11 @@ using System.Windows.Shapes;
 namespace PhotoGalleryApp.Views
 {
     /// <summary>
-    /// Interaction logic for ImageSlideshow.xaml
+    /// Interaction logic for Slideshow.xaml
     /// </summary>
-    public partial class ImageSlideshow : UserControl
+    public partial class Slideshow : UserControl
     {
-        public ImageSlideshow()
+        public Slideshow()
         {
             InitializeComponent();
         }

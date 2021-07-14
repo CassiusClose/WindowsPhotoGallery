@@ -14,12 +14,12 @@ namespace PhotoGalleryApp.ViewModels
     /// A ViewModel that loads and holds one image's pixel data. Should be used by all
     /// ViewModels wanting to display an image, since the details of loading the image
     /// are taken care of here. It's important to note that setting the Photo property
-    /// does not load the image into memory. To do that, the user must call UpdateImage(),
-    /// which can be called asynchronously. If UpdateImage() is called multiple times
+    /// does not load the image into memory. To do that, the user must call LoadMedia(),
+    /// which can be called asynchronously. If LoadMedia() is called multiple times
     /// asynchronously, previous calls to the method will be cancelled so that only the
     /// latest image-loading task is completed.
     /// </summary>
-    class ImageViewModel : ViewModelBase
+    class ImageViewModel : MediaViewModel
     {
 
         #region Constructors
@@ -39,20 +39,24 @@ namespace PhotoGalleryApp.ViewModels
 
         /// <summary>
         /// Creates an ImageViewModel that holds the given photo. The photo will not be loaded into memory by default, this must be done
-        /// manually by calling UpdateImage()
+        /// manually by calling LoadMedia()
         /// </summary>
         /// <param name="previewHeight">The height at which the image's preview will be loaded. If 0, no preview will be loaded.</param>
         /// <param name="fullHeight">The height at which the image will be loaded. If 0, the image will be loaded at its full size.</param>
-        public ImageViewModel(Photo photo, int previewHeight, int fullHeight)
+        public ImageViewModel(Media photo, int previewHeight, int fullHeight)
         {
+            _needReload = true;
+            _previewLoaded = false;
+
+            if (photo.IsVideo)
+                throw new Exception("Tried to set a video Media model to a ImageViewModel");
+            _media = photo;
+
+
             this._previewHeight = previewHeight;
             this._targetHeight = fullHeight;
 
             cancellationTokens = new List<CancellationTokenSource>();
-            
-            _photo = photo;
-            _needReload = true;
-            _previewLoaded = false;
         }
 
 
@@ -84,7 +88,7 @@ namespace PhotoGalleryApp.ViewModels
          * loaded or not (false if it has), and _previewLoaded marks whether some form of the image, preview or
          * full size, has been loaded (true if it has).
          * 
-         * _needReload is used to determine if UpdateImage() needs to be called to be able to display the current
+         * _needReload is used to determine if LoadMedia() needs to be called to be able to display the current
          * image, and _previewLoaded is used to determine whether the current image has been loaded enough to trigger
          * it to be displayed to the user.
          * 
@@ -92,7 +96,7 @@ namespace PhotoGalleryApp.ViewModels
          * stored, or the sizes at which to load them, _needReload will be set to true and _previewLoaded will be
          * set to false.
          * 
-         * UpdateImage() will only load the image if _needReload is true.
+         * LoadMedia() will only load the image if _needReload is true.
          */
         private bool _needReload;
         private bool _previewLoaded;
@@ -107,23 +111,25 @@ namespace PhotoGalleryApp.ViewModels
 
 
 
-        private Photo _photo;
         /// <summary>
         /// What Photo this ViewModel should use. Changing this property will not
-        /// trigger loading that photo into memory, that should be done by calling UpdateImage().
+        /// trigger loading that photo into memory, that should be done by calling LoadMedia().
         /// </summary>
-        public Photo Photo
+        public Media Photo
         {
-            get { return _photo; }
+            get { return _media; }
             set
             {
+                if (value.IsVideo)
+                    throw new Exception("Tried to set a video Media model to a ImageViewModel");
+
                 // If the photo is not different, don't need to update anything
-                if(_photo != value)
+                if(_media != value)
                 {
-                    _photo = value;
+                    _media = value;
                     _needReload = true;
                     _previewLoaded = false;
-                    CancelAllLoads();
+                    CancelLoading();
                     OnPropertyChanged();
                 }
             }
@@ -134,7 +140,7 @@ namespace PhotoGalleryApp.ViewModels
         private ImageSource _image;
         /// <summary>
         /// The image information associated with the above Photo property. This is not created
-        /// by default when setting the Photo, the user must call UpdateImage() separately.
+        /// by default when setting the Photo, the user must call LoadMedia() separately.
         /// </summary>
         public ImageSource Image
         {
@@ -144,6 +150,16 @@ namespace PhotoGalleryApp.ViewModels
                 _image = value;
                 OnPropertyChanged();
             }
+        }
+
+
+        /**
+         * Any instance of this class will represent an image, not an object. This is here
+         * to distinguish between other subclasses of MediaViewModel.
+         */
+        protected override bool MediaIsVideo()
+        {
+            return false;
         }
 
         /// <summary>
@@ -179,11 +195,10 @@ namespace PhotoGalleryApp.ViewModels
         /// been loaded, then it will not reload it.
         /// 
         /// This method is intended to be called asynchronously, so it will cancel any other
-        /// calls to UpdateImage() that are currently loading an image.
+        /// calls to LoadMedia() that are currently loading an image.
         /// </summary>
-        public void UpdateImage()
+        public override void LoadMedia()
         {
-
             // If the image is already loaded, do nothing.
             if (!_needReload)
             {
@@ -192,16 +207,16 @@ namespace PhotoGalleryApp.ViewModels
             }
 
             // If no photo selected, nothing to load
-            if (_photo == null)
+            if (_media == null)
                 return;
 
 
             // Cancel any existing image loading tasks, this should be the only one
-            CancelAllLoads();
+            CancelLoading();
 
             // Create a cancellation token associated with loading this image
             // Add to the token list so that if this VM's image is changed, the
-            // corresponding call to UpdateImage() will cancel this load task.
+            // corresponding call to LoadMedia() will cancel this load task.
             CancellationTokenSource cts = new CancellationTokenSource();
             cancellationTokens.Add(cts);
 
@@ -254,6 +269,7 @@ namespace PhotoGalleryApp.ViewModels
 
 
 
+
             // LOAD IMAGE
             tempImage = LoadImage(_targetHeight);
 
@@ -289,7 +305,7 @@ namespace PhotoGalleryApp.ViewModels
         {
             BitmapImage image = new BitmapImage();
             image.BeginInit();
-            image.UriSource = new Uri(_photo.Path);
+            image.UriSource = new Uri(_media.Path);
 
             // This seems to be very important for keeping the UI responsive when asynchronously loading images
             image.CacheOption = BitmapCacheOption.OnLoad;
@@ -298,7 +314,7 @@ namespace PhotoGalleryApp.ViewModels
             if (height > 0)
                 image.DecodePixelHeight = height;
 
-            image.Rotation = _photo.Rotation;
+            image.Rotation = _media.Rotation;
             image.EndInit();
 
             // This allows _loadImage() to be called on a different thread. Normally, you can't load a BitmapImage
@@ -316,9 +332,9 @@ namespace PhotoGalleryApp.ViewModels
          * be loaded), or when the slideshow page is closed.
          */
         /// <summary>
-        /// Cancels all current image-loading operations initiated by calling UpdateImage().
+        /// Cancels all current image-loading operations initiated by calling LoadMedia().
         /// </summary>
-        public void CancelAllLoads()
+        public override void CancelLoading()
         {
             for (int i = 0; i < cancellationTokens.Count; i++)
                 cancellationTokens[i].Cancel();
@@ -336,14 +352,14 @@ namespace PhotoGalleryApp.ViewModels
         /// </summary>
         /// <param name="list">The list to extract Photos from.</param>
         /// <returns>A list of the Photo objects.</returns>
-        public static List<Photo> GetPhotoList(List<ImageViewModel> list)
+        public static List<Media> GetPhotoList(List<ImageViewModel> list)
         {
-            List<Photo> photos = new List<Photo>();
+            List<Media> photos = new List<Media>();
             foreach (ImageViewModel ivm in list)
                 photos.Add(ivm.Photo);
 
             return photos;
-        } 
+        }
 
         #endregion Static Methods
     }

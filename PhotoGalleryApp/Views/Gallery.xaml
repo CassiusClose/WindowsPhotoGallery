@@ -11,12 +11,34 @@
              d:DesignHeight="450" d:DesignWidth="800">
 
     <UserControl.Resources>
+        <converters:HeightARToWidthConverter x:Key="HeightARToWidth"/>
 
         <DataTemplate DataType="{x:Type vms:ChooserDropDownViewModel}">
             <local:ChooserDropDown/>
         </DataTemplate>
 
-        <converters:HeightARToWidthConverter x:Key="HeightARToWidth"/>
+        <!-- How to display an image -->
+        <DataTemplate DataType="{x:Type vms:ImageViewModel}">
+            <Image MinHeight="{Binding Path=DataContext.ThumbnailHeight, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType={x:Type local:Gallery}}}">
+                <!-- The height is determined above by the gallery settings. Below, calculate the width based on that height and
+                                    the image's aspect ratio. -->
+                <Image.MinWidth>
+                    <MultiBinding Converter="{StaticResource HeightARToWidth}" Mode="OneWay">
+                        <Binding Path="DataContext.ThumbnailHeight" RelativeSource="{RelativeSource Mode=FindAncestor, AncestorType={x:Type local:Gallery}}"/>
+                        <Binding Path="AspectRatio"/>
+                    </MultiBinding>
+                </Image.MinWidth>
+
+                <Image.Source>
+                    <Binding Path="Image" Mode="OneWay"/>
+                </Image.Source>
+            </Image>
+        </DataTemplate>
+
+        <!-- How to display an video -->
+        <DataTemplate DataType="{x:Type vms:VideoViewModel}">
+            <MediaElement LoadedBehavior="Pause" ScrubbingEnabled="True" Source="{Binding Media.Path}"/>
+        </DataTemplate>
 
         <!-- Horizontal, wrapping collection of items -->
         <Style x:Key="HorizontalWrapItemsControl" TargetType="ItemsControl">
@@ -59,28 +81,15 @@
                                 Margin="3" Background="LightGray">
                             <Border.InputBindings>
                                 <MouseBinding MouseAction="LeftClick"
-                                              Command="{Binding Path=DataContext.OpenImageCommand, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType={x:Type local:Gallery}}}"
-                                              CommandParameter="{Binding Photo}"/>
+                                              Command="{Binding Path=DataContext.OpenMediaCommand, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType={x:Type local:Gallery}}}"
+                                              CommandParameter="{Binding Media}"/>
                             </Border.InputBindings>
                             <Grid>
                                 <!-- Display the image -->
-                                <Image MinHeight="{Binding Path=DataContext.ThumbnailHeight, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType={x:Type local:Gallery}}}">
-                                    <!-- The height is determined above by the gallery settings. Below, calculate the width based on that height and
-                                    the image's aspect ratio. -->
-                                    <Image.MinWidth>
-                                        <MultiBinding Converter="{StaticResource HeightARToWidth}" Mode="OneWay">
-                                            <Binding Path="DataContext.ThumbnailHeight" RelativeSource="{RelativeSource Mode=FindAncestor, AncestorType={x:Type local:Gallery}}"/>
-                                            <Binding Path="AspectRatio"/>
-                                        </MultiBinding>
-                                    </Image.MinWidth>
-                                    
-                                    <Image.Source>
-                                        <Binding Path="Image" Mode="OneWay"/>
-                                    </Image.Source>
-                                </Image>
+                                <ContentControl Content="{Binding}"/>
                                 <!-- Display a selection button on top of the image -->
                                 <ToggleButton Grid.ZIndex="1" Width="50" Height="50" HorizontalAlignment="Left" VerticalAlignment="Top" 
-                                              Command="{Binding Path=DataContext.SelectImageCommand, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType={x:Type local:Gallery}}}" 
+                                              Command="{Binding Path=DataContext.SelectMediaCommand, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType={x:Type local:Gallery}}}" 
                                               CommandParameter="{Binding}"
                                               IsChecked="{Binding Path=IsSelected, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType={x:Type ListBoxItem}}}">Sel</ToggleButton>
                                 
@@ -122,7 +131,7 @@
         <StackPanel Grid.Row="1" Orientation="Horizontal">
             <Button Command="{Binding AddFilesCommand}">Add Images</Button>
             <Button Command="{Binding SaveGalleryCommand}">Save Gallery</Button>
-            <Button CommandParameter="{Binding SelectedItems, ElementName=GalleryImageListBox}" Command="{Binding RemoveImagesCommand}">Remove Selected</Button>
+            <Button CommandParameter="{Binding SelectedItems, ElementName=GalleryImageListBox}" Command="{Binding RemoveMediaCommand}">Remove Selected</Button>
         </StackPanel>
 
         <!-- Tag Filtering panel -->

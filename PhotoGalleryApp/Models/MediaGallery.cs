@@ -12,18 +12,22 @@ using System.Xml.Serialization;
 namespace PhotoGalleryApp.Models
 {
     /// <summary>
-    /// A collection of Photos.
+    /// A collection of Media objects, can be both photo and video.
     /// </summary>
-    public class PhotoGallery : ObservableCollection<Photo>
+    public class MediaGallery : ObservableCollection<Media>
     {
         #region Constructors
 
-        /*
-         * Used for XMl de-serialization
+        /**
+         * XML de-serialization requires a default constructor
          */
-        private PhotoGallery() : this("Gallery") { }
+        private MediaGallery() : this("Gallery") { }
 
-        public PhotoGallery(string name)
+        /// <summary>
+        /// Creates a MediaGallery object with the given name.
+        /// </summary>
+        /// <param name="name">The name of the gallery.</param>
+        public MediaGallery(string name)
         {
             Name = name;
             Tags = new RangeObservableCollection<string>();
@@ -32,7 +36,7 @@ namespace PhotoGalleryApp.Models
         #endregion Constructors
 
 
-        #region Members
+        #region Fields and Properties
 
         /// <summary>
         /// The gallery's name.
@@ -40,23 +44,24 @@ namespace PhotoGalleryApp.Models
         public string Name;
 
         /// <summary>
-        /// A collection of all the tags present in the gallery (compiled from the tags of each image).
+        /// A collection of all the tags present in the gallery (compiled from the tags of each image). Tags are not
+        /// added here, they are added to the media within the gallery, and those changes are reflected here.
         /// </summary>
         public RangeObservableCollection<string> Tags { get; private set; }
 
-        #endregion Members
+        #endregion Fields and Properties
 
 
         #region Methods
 
-        /*
+        /**
          * Compiles the list of all tags from the images in the gallery.
          */
         private void UpdateTags()
         {
             ObservableCollection<string> tags = new ObservableCollection<string>();
 
-            foreach (Photo p in Items)
+            foreach (Media p in Items)
             {
                 // For each tag in the photo
                 foreach (string tag in p.Tags)
@@ -71,19 +76,23 @@ namespace PhotoGalleryApp.Models
         }
 
 
-        protected override void InsertItem(int index, Photo item)
+        /**
+         * Adds a media item to the gallery
+         */
+        protected override void InsertItem(int index, Media item)
         {
             // InsertItem is used internally by functions such as Add, so overriding here is enough
             base.InsertItem(index, item);
 
-            // Add handler for when the photo's tags change
+            // Add handler for when the photo's tags change, so we can update this gallery's master list of tags
             item.Tags.CollectionChanged += PhotoTags_CollectionChanged;
 
             // When a photo is added, need to refresh the list of tags
             UpdateTags();
         }
 
-        /*
+
+        /**
          * ObservableCollection event handler: When a photo's tags update, need to refresh the list of tags in the gallery
          */
         private void PhotoTags_CollectionChanged(object sender, NotifyCollectionChangedEventArgs e)
@@ -92,6 +101,9 @@ namespace PhotoGalleryApp.Models
         }
 
 
+        /**
+         * Removes a media item from the gallery
+         */
         protected override void RemoveItem(int index)
         {
             //RemoveItem is used internally by functions such as Remove, so overriding here is enough
@@ -114,12 +126,12 @@ namespace PhotoGalleryApp.Models
         /// </summary>
         /// <param name="filename">The XMl file's name</param>
         /// <returns>The constructed PhotoGallery object.</returns>
-        public static PhotoGallery LoadGallery(string filename)
+        public static MediaGallery LoadGallery(string filename)
         {
-            XmlSerializer serializer = new XmlSerializer(typeof(PhotoGallery));
+            XmlSerializer serializer = new XmlSerializer(typeof(MediaGallery));
             FileStream fs = new FileStream(filename, FileMode.Open);
 
-            return (PhotoGallery)serializer.Deserialize(fs);
+            return (MediaGallery)serializer.Deserialize(fs);
         }
 
 

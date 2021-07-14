@@ -10,13 +10,18 @@ using System.Windows.Media.Imaging;
 namespace PhotoGalleryApp.Models
 {
     /// <summary>
-    /// Represents one image, stored somewhere on disk, associated with a list of tags.
+    /// Represents one piece of media, photo or image, associated with a list of tags.
     /// </summary>
-    public class Photo
+    public class Media
     {
         #region Constructors
 
-        public Photo(string path, ObservableCollection<string> tags)
+        /// <summary>
+        /// Creates a media object with the given path, with the given list of tags.
+        /// </summary>
+        /// <param name="path">The filepath of the media object.</param>
+        /// <param name="tags">A list of tags that the media object should have.</param>
+        public Media(string path, ObservableCollection<string> tags)
         {
             Path = path;
 
@@ -26,9 +31,18 @@ namespace PhotoGalleryApp.Models
                 Tags = tags;
         }
 
-        private Photo() : this(null, null) { }
 
-        public Photo(string path) : this(path, null) { }
+        /// <summary>
+        /// Creates a blank media object.
+        /// </summary>
+        private Media() : this(null, null) { }
+
+
+        /// <summary>
+        /// Creates a media object with the given filepath.
+        /// </summary>
+        /// <param name="path"></param>
+        public Media(string path) : this(path, null) { }
 
         #endregion Constructors
 
@@ -39,7 +53,7 @@ namespace PhotoGalleryApp.Models
 
         private string _path;
         /// <summary>
-        /// The filepath to the image.
+        /// The filepath of the piece of media.
         /// </summary>
         public string Path 
         {
@@ -47,17 +61,49 @@ namespace PhotoGalleryApp.Models
             set
             {
                 _path = value;
-                // Load the image's rotation data
-                LoadImage();
+
+                if (value != null)
+                {
+                    // Extract the extension from the path
+                    string[] strs = _path.Split('.');
+                    _extension = strs[strs.Length - 1].ToLower();
+
+                    // Load the media's metadata
+                    if (IsVideo)
+                        LoadVideo();
+                    else
+                        LoadImage();
+                }
             }
         }
 
+
+        private string _extension;
+        /// <summary>
+        /// The media file's extension
+        /// </summary>
+        public string Extension { get { return _extension; } }
+
+
+        /// <summary>
+        /// Whether the media object is a video (true) or an image (false)
+        /// </summary>
+        public bool IsVideo
+        {
+            get
+            {
+                if(Extension == "mp4")
+                    return true;
+                return false;
+            }
+        }
 
 
         /// <summary>
         /// How much the image should be rotated.
         /// </summary>
         public Rotation Rotation { get; set; }
+
 
         private int _width;
         /// <summary>
@@ -86,6 +132,7 @@ namespace PhotoGalleryApp.Models
         }
 
 
+
         /// <summary>
         /// A collection of tags associated with the image, used for easier sorting & filtering of images.
         /// </summary>
@@ -97,10 +144,17 @@ namespace PhotoGalleryApp.Models
 
         #region Methods
 
-        /// <summary>
-        /// Loads any informaton about this class' photo needed to display it.
-        /// If the image has orientation metadata, reads and saves that.
-        /// </summary>
+        /**
+         * Treats the media object as a video and loads any metadata required.
+         */
+        private void LoadVideo()
+        {
+
+        }
+
+        /**
+         * Treats the media object as an image and loads any metadata required.
+         */
         private void LoadImage()
         {
             if (Path == null)
@@ -109,6 +163,7 @@ namespace PhotoGalleryApp.Models
             // By default, don't rotate the image
             Rotation = Rotation.Rotate0;
     
+            // Load image metadata
             FileStream fs = new FileStream(Path, FileMode.Open, FileAccess.Read);
             BitmapFrame frame = BitmapFrame.Create(fs, BitmapCreateOptions.DelayCreation, BitmapCacheOption.None);
             BitmapMetadata meta = frame.Metadata as BitmapMetadata;

@@ -31,7 +31,7 @@ namespace PhotoGalleryApp
         {
             nav = new NavigatorViewModel();
 
-            PhotoGallery gallery = PhotoGallery.LoadGallery("gallery.xml");
+            MediaGallery gallery = MediaGallery.LoadGallery("gallery.xml");
 
             nav.NewPage(new GalleryViewModel(nav, gallery));
             DataContext = nav;

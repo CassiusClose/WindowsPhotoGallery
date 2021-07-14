@@ -36,7 +36,8 @@ namespace PhotoGalleryApp.Utils
             notificationsEnabled = true;
 
             // Send one change notification
-            OnCollectionChanged(new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Add, items.ToList()));
+            // The 2nd argument of NotifyCollectionChangedEventArgs must contain only one item
+            OnCollectionChanged(new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Add, items.First()));
         }
 
         /// <summary>

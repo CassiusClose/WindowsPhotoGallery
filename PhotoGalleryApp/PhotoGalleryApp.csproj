@@ -63,18 +63,20 @@
     </ApplicationDefinition>
     <Compile Include="Converters\BoolToVisibilityConverter.cs" />
     <Compile Include="Converters\HeightARToWidthConverter.cs" />
-    <Compile Include="Models\Photo.cs" />
-    <Compile Include="Models\PhotoGallery.cs" />
+    <Compile Include="Models\Media.cs" />
+    <Compile Include="Models\MediaGallery.cs" />
     <Compile Include="Utils\DisplayUtils.cs" />
     <Compile Include="Utils\MultiKeyDictionary.cs" />
     <Compile Include="Utils\RangeObservableCollection.cs" />
     <Compile Include="ViewModels\ChooserDropDownViewModel.cs" />
     <Compile Include="ViewModels\GalleryViewModel.cs" />
-    <Compile Include="ViewModels\ImageInfoViewModel.cs" />
-    <Compile Include="ViewModels\ImageSlideshowViewModel.cs" />
+    <Compile Include="ViewModels\MediaInfoViewModel.cs" />
+    <Compile Include="ViewModels\SlideshowViewModel.cs" />
+    <Compile Include="ViewModels\MediaViewModel.cs" />
     <Compile Include="ViewModels\NavigatorViewModel.cs" />
     <Compile Include="ViewModels\RelayCommand.cs" />
     <Compile Include="ViewModels\ImageViewModel.cs" />
+    <Compile Include="ViewModels\VideoViewModel.cs" />
     <Compile Include="ViewModels\ViewModelBase.cs" />
     <Compile Include="Views\ChooserDropDown.xaml.cs">
       <DependentUpon>ChooserDropDown.xaml</DependentUpon>
@@ -82,11 +84,11 @@
     <Compile Include="Views\Gallery.xaml.cs">
       <DependentUpon>Gallery.xaml</DependentUpon>
     </Compile>
-    <Compile Include="Views\ImageInfo.xaml.cs">
-      <DependentUpon>ImageInfo.xaml</DependentUpon>
+    <Compile Include="Views\MediaInfo.xaml.cs">
+      <DependentUpon>MediaInfo.xaml</DependentUpon>
     </Compile>
-    <Compile Include="Views\ImageSlideshow.xaml.cs">
-      <DependentUpon>ImageSlideshow.xaml</DependentUpon>
+    <Compile Include="Views\Slideshow.xaml.cs">
+      <DependentUpon>Slideshow.xaml</DependentUpon>
     </Compile>
     <Compile Include="Views\Navigator.xaml.cs">
       <DependentUpon>Navigator.xaml</DependentUpon>
@@ -111,11 +113,11 @@
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
-    <Page Include="Views\ImageInfo.xaml">
+    <Page Include="Views\MediaInfo.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
-    <Page Include="Views\ImageSlideshow.xaml">
+    <Page Include="Views\Slideshow.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>

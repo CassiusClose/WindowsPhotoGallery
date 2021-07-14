@@ -22,7 +22,7 @@ namespace PhotoGalleryApp.ViewModels
     /// view the other images in the gallery at a large resolution. This ViewModel
     /// would control that larger-resolution view.
     /// </example>
-    class ImageSlideshowViewModel : ViewModelBase
+    class SlideshowViewModel : ViewModelBase
     {
         #region Constructors
 
@@ -32,7 +32,7 @@ namespace PhotoGalleryApp.ViewModels
         /// <param name="galleryItems">The Photos available to view in this vm.</param>
         /// <param name="index">The index of the currently selected Photo in the given list.</param>
         /// <param name="gallery">The PhotoGallery that these photos belong to.</param>
-        public ImageSlideshowViewModel(List<Photo> galleryItems, int index, PhotoGallery gallery)
+        public SlideshowViewModel(List<Media> galleryItems, int index, MediaGallery gallery)
         {
             // Initialize commands
             _leftCommand = new RelayCommand(Left);
@@ -48,7 +48,7 @@ namespace PhotoGalleryApp.ViewModels
             _galleryItems = galleryItems;
             CurrentIndex = index;
 
-            // Save a reference to the photo gallery because ImageInfoViewModel needs
+            // Save a reference to the photo gallery because MediaInfoViewModel needs
             // it, and those could be created every time the user goes to a new image.
             _gallery = gallery;
 
@@ -56,7 +56,7 @@ namespace PhotoGalleryApp.ViewModels
             // Setup image cache and start loading the images
             InitCache();
 
-            CurrentImageChanged();
+            CurrentMediaChanged();
 
             LoadWholeCache();
         }
@@ -73,7 +73,7 @@ namespace PhotoGalleryApp.ViewModels
          * TODO This can be outdated - if somehow the gallery contents change while viewing these images, this list will
          * not reflect those changes. That's something to fix in the future.
          */
-        private List<Photo> _galleryItems;
+        private List<Media> _galleryItems;
         
         /*
          * The index of the currently selected image from the viewable list of images.
@@ -83,27 +83,18 @@ namespace PhotoGalleryApp.ViewModels
 
         /**
         * The PhotoGallery that the viewable collection of images here belong to. This is
-        * needed to instantiate ImageInfoViewModels, so it is saved here.
+        * needed to instantiate MediaInfoViewModels, so it is saved here.
         */
-        private PhotoGallery _gallery;
+        private MediaGallery _gallery;
 
 
 
         /// <summary>
         /// The ViewModel that holds the currently-selected image to display.
         /// </summary>
-        public ImageViewModel CurrentImageViewModel
+        public MediaViewModel CurrentMediaViewModel
         {
             get { return _imageCache[_imageCacheCurrIndex]; }
-        }
-
-
-        /// <summary>
-        /// The ImageSource used to render the currently-selected image.
-        /// </summary>
-        public ImageSource CurrentImage
-        {
-            get { return CurrentImageViewModel.Image; }
         }
 
 
@@ -163,9 +154,9 @@ namespace PhotoGalleryApp.ViewModels
             {
                 // Only update if the current image is the one that's changed
                 ImageViewModel vm = sender as ImageViewModel;
-                if (vm == CurrentImageViewModel)
+                if (vm == CurrentMediaViewModel)
                 {
-                    OnPropertyChanged("CurrentImage");
+                    OnPropertyChanged("CurrentMediaViewModel");
                 }
             }
         }
@@ -175,11 +166,11 @@ namespace PhotoGalleryApp.ViewModels
          * Updates data related to the current image when the image changes. This isn't called when the image loads, just when the photo selected
          * is changed. Updates sidebar data, for example.
          */
-        private void CurrentImageChanged()
+        private void CurrentMediaChanged()
         {
             if(SidebarVisible)
             {
-                SidebarContent = new ImageInfoViewModel(CurrentImageViewModel.Photo, _gallery);
+                SidebarContent = new MediaInfoViewModel(CurrentMediaViewModel.Media, _gallery);
             }
         }
 
@@ -195,7 +186,8 @@ namespace PhotoGalleryApp.ViewModels
         /// </summary>
         public override void NavigatorLostFocus()
         {
-            CurrentImageViewModel.CancelAllLoads();
+            foreach (MediaViewModel vm in _imageCache)
+                vm.CancelLoading();
         }
 
         #endregion Misc
@@ -233,7 +225,7 @@ namespace PhotoGalleryApp.ViewModels
         private const int CACHE_LEN = BACK_CACHE_NUM + FORWARD_CACHE_NUM + 1;
 
         // The cache itself and the position of the current image within it
-        private ImageViewModel[] _imageCache = new ImageViewModel[CACHE_LEN];
+        private MediaViewModel[] _imageCache = new MediaViewModel[CACHE_LEN];
         private int _imageCacheCurrIndex = 0;
 
 
@@ -257,18 +249,14 @@ namespace PhotoGalleryApp.ViewModels
                     galleryIndex += _galleryItems.Count();
 
                 // Create the VM which holds the image & subscribe to property change events
-                _imageCache[cacheIndex] = new ImageViewModel(_galleryItems[galleryIndex], 256, 0);
-                _imageCache[cacheIndex].PropertyChanged += new PropertyChangedEventHandler(Child_OnPropertyChanged);
-                cacheIndex++;
+                _imageCache[cacheIndex++] = CreateMediaViewModel(_galleryItems[galleryIndex]);
             }
 
 
             // Create a cache position for the current image
             _imageCacheCurrIndex = cacheIndex;
             // Create the VM which holds the image & subscribe to property change events
-            _imageCache[cacheIndex] = new ImageViewModel(_galleryItems[CurrentIndex], 256, 0);
-            _imageCache[cacheIndex].PropertyChanged += new PropertyChangedEventHandler(Child_OnPropertyChanged);
-            cacheIndex++;
+            _imageCache[cacheIndex++] = CreateMediaViewModel(_galleryItems[CurrentIndex]);
 
 
             // Create each cache position for images after the current one
@@ -280,12 +268,31 @@ namespace PhotoGalleryApp.ViewModels
                     galleryIndex -= _galleryItems.Count();
 
                 // Create the VM which holds the image & subscribe to property change events
-                _imageCache[cacheIndex] = new ImageViewModel(_galleryItems[galleryIndex], 256, 0);
-                _imageCache[cacheIndex].PropertyChanged += new PropertyChangedEventHandler(Child_OnPropertyChanged);
-                cacheIndex++;
+                _imageCache[cacheIndex++] = CreateMediaViewModel(_galleryItems[galleryIndex]);
             }
         }
 
+
+        /// <summary>
+        /// Creates and returns a MediaViewModel that holds the given Media object. Initializes the
+        /// view model with settings specific to this slideshow's view. Depending on the type of media
+        /// file within the Media object, the returned object will either be an ImageViewModel or a
+        /// VideoViewModel.
+        /// </summary>
+        /// <param name="media">The Media object to create the MediaViewModel object around.</param>
+        /// <returns>The MediaViewModel that was created to hold the Media object.</returns>
+        private MediaViewModel CreateMediaViewModel(Media media)
+        {
+            if (media.IsVideo)
+                return new VideoViewModel(media);
+            else
+            {
+                //Load images at 256 pixel thumbnail resolution, then at full size
+                ImageViewModel imageVM = new ImageViewModel(media, 256, 0);
+                imageVM.PropertyChanged += new PropertyChangedEventHandler(Child_OnPropertyChanged);
+                return imageVM;
+            }
+        }
 
 
 
@@ -309,7 +316,7 @@ namespace PhotoGalleryApp.ViewModels
                     index -= CACHE_LEN;
 
                 // Load the image
-                await Task.Run(() => { _imageCache[index].UpdateImage(); });
+                await Task.Run(() => { _imageCache[index].LoadMedia(); });
             }
         }
 
@@ -343,23 +350,32 @@ namespace PhotoGalleryApp.ViewModels
                 galleryUpdateIndex += _galleryItems.Count();
 
             // Update the cache position with the new image
-            Photo p = _galleryItems[galleryUpdateIndex];
-            _imageCache[cacheUpdateIndex].Photo = p;
+            Media p = _galleryItems[galleryUpdateIndex];
+            _imageCache[cacheUpdateIndex] = CreateMediaViewModel(p);
 
 
-            // If the current image has been loaded (i.e., there isn't an old image
-            // still loaded), either the preview or the full resolution, then update the
-            // view to the user. Otherwise, when the image loads, the view will update.
-            if (CurrentImageViewModel.PreviewLoaded())
+            // We don't have an event that gets called when the video is loaded, so just
+            // treat it as if it's loaded, and if it's not then the screen will be blank
+            // for a second.
+            if (CurrentMediaViewModel.IsVideo)
             {
-                OnPropertyChanged("CurrentImage");
+                OnPropertyChanged("CurrentMediaViewModel");
+            }
+            else
+            {
+                // If the current image has been loaded (i.e., there isn't an old image
+                // still loaded), either the preview or the full resolution, then update the
+                // view to the user. Otherwise, when the image loads, the view will update.
+                if ((CurrentMediaViewModel as ImageViewModel).PreviewLoaded())
+                    OnPropertyChanged("CurrentMediaViewModel");
             }
 
+
             // Update sidebar first so that it's not waiting on the image load to update
-            CurrentImageChanged();
+            CurrentMediaChanged();
 
             // Then load the new cache position's image
-            await Task.Run(() => { _imageCache[cacheUpdateIndex].UpdateImage(); });
+            await Task.Run(() => { _imageCache[cacheUpdateIndex].LoadMedia(); });
         }
 
 
@@ -391,23 +407,31 @@ namespace PhotoGalleryApp.ViewModels
                 galleryUpdateIndex -= _galleryItems.Count();
 
             // Update the cache position with the new image
-            Photo p = _galleryItems[galleryUpdateIndex];
-            _imageCache[cacheUpdateIndex].Photo = p;
+            Media p = _galleryItems[galleryUpdateIndex];
+            _imageCache[cacheUpdateIndex] = CreateMediaViewModel(p);
 
 
-            // If the current image has been loaded (i.e., there isn't an old image
-            // still loaded), either the preview or the full resolution, then update the
-            // view to the user. Otherwise, when the image loads, the view will update.
-            if (CurrentImageViewModel.PreviewLoaded())
+            // We don't have an event that gets called when the video is loaded, so just
+            // treat it as if it's loaded, and if it's not then the screen will be blank
+            // for a second.
+            if (CurrentMediaViewModel.IsVideo)
             {
-                OnPropertyChanged("CurrentImage");
+                OnPropertyChanged("CurrentMediaViewModel");
+            }
+            else
+            {
+                // If the current image has been loaded (i.e., there isn't an old image
+                // still loaded), either the preview or the full resolution, then update the
+                // view to the user. Otherwise, when the image loads, the view will update.
+                if ((CurrentMediaViewModel as ImageViewModel).PreviewLoaded())
+                    OnPropertyChanged("CurrentMediaViewModel");
             }
 
             // Update sidebar first so that it's not waiting on the image load to update
-            CurrentImageChanged();
+            CurrentMediaChanged();
 
             // Then load the new cache position's image
-            await Task.Run(() => { _imageCache[cacheUpdateIndex].UpdateImage(); });
+            await Task.Run(() => { _imageCache[cacheUpdateIndex].LoadMedia(); });
         }
 
 
@@ -475,7 +499,7 @@ namespace PhotoGalleryApp.ViewModels
             SidebarVisible = !SidebarVisible;
             
             // Update sidebar info, which will happen only if the info is visible
-            CurrentImageChanged();
+            CurrentMediaChanged();
         }
 
 

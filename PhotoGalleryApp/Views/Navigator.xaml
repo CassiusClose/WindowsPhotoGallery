@@ -14,9 +14,9 @@
         <DataTemplate DataType="{x:Type vms:GalleryViewModel}">
             <local:Gallery/>
         </DataTemplate>
-        
-        <DataTemplate DataType="{x:Type vms:ImageSlideshowViewModel}">
-            <local:ImageSlideshow/>
+
+        <DataTemplate DataType="{x:Type vms:SlideshowViewModel}">
+            <local:Slideshow/>
         </DataTemplate>
     </UserControl.Resources>
 
