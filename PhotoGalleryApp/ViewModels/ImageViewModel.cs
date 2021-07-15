@@ -43,15 +43,11 @@ namespace PhotoGalleryApp.ViewModels
         /// </summary>
         /// <param name="previewHeight">The height at which the image's preview will be loaded. If 0, no preview will be loaded.</param>
         /// <param name="fullHeight">The height at which the image will be loaded. If 0, the image will be loaded at its full size.</param>
-        public ImageViewModel(Media photo, int previewHeight, int fullHeight)
+        public ImageViewModel(Image photo, int previewHeight, int fullHeight)
         {
             _needReload = true;
             _previewLoaded = false;
-
-            if (photo.IsVideo)
-                throw new Exception("Tried to set a video Media model to a ImageViewModel");
             _media = photo;
-
 
             this._previewHeight = previewHeight;
             this._targetHeight = fullHeight;
@@ -115,16 +111,13 @@ namespace PhotoGalleryApp.ViewModels
         /// What Photo this ViewModel should use. Changing this property will not
         /// trigger loading that photo into memory, that should be done by calling LoadMedia().
         /// </summary>
-        public Media Photo
+        public Image Photo
         {
-            get { return _media; }
+            get { return _media as Image; }
             set
             {
-                if (value.IsVideo)
-                    throw new Exception("Tried to set a video Media model to a ImageViewModel");
-
                 // If the photo is not different, don't need to update anything
-                if(_media != value)
+                if(_media as Image != value)
                 {
                     _media = value;
                     _needReload = true;
@@ -137,27 +130,27 @@ namespace PhotoGalleryApp.ViewModels
 
 
 
-        private ImageSource _image;
+        private ImageSource _imageData;
         /// <summary>
         /// The image information associated with the above Photo property. This is not created
         /// by default when setting the Photo, the user must call LoadMedia() separately.
         /// </summary>
-        public ImageSource Image
+        public ImageSource ImageData
         {
-            get { return _image; }
+            get { return _imageData; }
             set
             {
-                _image = value;
+                _imageData = value;
                 OnPropertyChanged();
             }
         }
 
 
-        /**
-         * Any instance of this class will represent an image, not an object. This is here
-         * to distinguish between other subclasses of MediaViewModel.
-         */
-        protected override bool MediaIsVideo()
+        /// <summary>
+        /// Returns whether or not the media is a video (true) or an image (false). This will always
+        /// return false. This is how users can distinguish between the types of instances of MediaViewModel.
+        /// </summary>
+        public override bool IsVideo()
         {
             return false;
         }
@@ -202,7 +195,7 @@ namespace PhotoGalleryApp.ViewModels
             // If the image is already loaded, do nothing.
             if (!_needReload)
             {
-                OnPropertyChanged("Image");
+                OnPropertyChanged("ImageData");
                 return;
             }
 
@@ -252,7 +245,7 @@ namespace PhotoGalleryApp.ViewModels
                 }
 
                 // UPDATE IMAGE PROPERTY
-                Image = tempImage;
+                ImageData = tempImage;
 
                 _previewLoaded = true;
             }
@@ -284,7 +277,7 @@ namespace PhotoGalleryApp.ViewModels
 
 
             // UPDATE IMAGE PROPERTY
-            Image = tempImage;
+            ImageData = tempImage;
 
 
             // Now we don't need to reload the image until some parameter, either loading size or the image itself.
@@ -305,7 +298,7 @@ namespace PhotoGalleryApp.ViewModels
         {
             BitmapImage image = new BitmapImage();
             image.BeginInit();
-            image.UriSource = new Uri(_media.Path);
+            image.UriSource = new Uri(_media.Filepath);
 
             // This seems to be very important for keeping the UI responsive when asynchronously loading images
             image.CacheOption = BitmapCacheOption.OnLoad;
@@ -352,9 +345,9 @@ namespace PhotoGalleryApp.ViewModels
         /// </summary>
         /// <param name="list">The list to extract Photos from.</param>
         /// <returns>A list of the Photo objects.</returns>
-        public static List<Media> GetPhotoList(List<ImageViewModel> list)
+        public static List<Image> GetPhotoList(List<ImageViewModel> list)
         {
-            List<Media> photos = new List<Media>();
+            List<Image> photos = new List<Image>();
             foreach (ImageViewModel ivm in list)
                 photos.Add(ivm.Photo);
 

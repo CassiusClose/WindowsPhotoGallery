@@ -85,7 +85,7 @@ namespace PhotoGalleryApp.Models
             base.InsertItem(index, item);
 
             // Add handler for when the photo's tags change, so we can update this gallery's master list of tags
-            item.Tags.CollectionChanged += PhotoTags_CollectionChanged;
+            item.Tags.CollectionChanged += MediaTags_CollectionChanged;
 
             // When a photo is added, need to refresh the list of tags
             UpdateTags();
@@ -95,7 +95,7 @@ namespace PhotoGalleryApp.Models
         /**
          * ObservableCollection event handler: When a photo's tags update, need to refresh the list of tags in the gallery
          */
-        private void PhotoTags_CollectionChanged(object sender, NotifyCollectionChangedEventArgs e)
+        private void MediaTags_CollectionChanged(object sender, NotifyCollectionChangedEventArgs e)
         {
             UpdateTags();
         }

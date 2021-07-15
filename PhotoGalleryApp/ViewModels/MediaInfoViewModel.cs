@@ -50,7 +50,7 @@ namespace PhotoGalleryApp.ViewModels
         /// </summary>
         public string Path
         {
-            get { return _photo.Path; }
+            get { return _photo.Filepath; }
         }
 
 

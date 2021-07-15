@@ -21,21 +21,18 @@ namespace PhotoGalleryApp.ViewModels
             get { return _media; }
         }
 
-        /// <summary>
-        /// Whether or not the media is a video (true) or an image (false)
-        /// </summary>
-        public bool IsVideo
+        public string Filepath
         {
-            get { return MediaIsVideo(); }
+            get { return _media.Filepath; }
         }
 
 
-        /**
-         * Returns whether or not the media is a video. Subclasses must override this
-         * to provide a return value. This is how users can distinguish between instances
-         * of this abstract class/know what subclass to cast to.
-         */
-        protected abstract bool MediaIsVideo();
+        /// <summary>
+        /// Returns whether or not the media is a video (true) or an image (false). Subclasses
+        /// must override this to provide a return value. This is how users can distinguish between
+        /// instances of this abstract class/know what subclass to cast to.
+        /// </summary>
+        public abstract bool IsVideo();
 
         /// <summary>
         /// Loads the media from disk, if the loading is not done automatically.

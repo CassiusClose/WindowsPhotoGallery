@@ -63,8 +63,10 @@
     </ApplicationDefinition>
     <Compile Include="Converters\BoolToVisibilityConverter.cs" />
     <Compile Include="Converters\HeightARToWidthConverter.cs" />
+    <Compile Include="Models\Image.cs" />
     <Compile Include="Models\Media.cs" />
     <Compile Include="Models\MediaGallery.cs" />
+    <Compile Include="Models\Video.cs" />
     <Compile Include="Utils\DisplayUtils.cs" />
     <Compile Include="Utils\MultiKeyDictionary.cs" />
     <Compile Include="Utils\RangeObservableCollection.cs" />

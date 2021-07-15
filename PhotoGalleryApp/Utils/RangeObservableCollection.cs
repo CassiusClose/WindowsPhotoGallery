@@ -29,6 +29,9 @@ namespace PhotoGalleryApp.Utils
         /// <param name="items">The list of items to add to the collection.</param>
         public void AddRange(IEnumerable<T> items)
         {
+            if (items.Count<T>() == 0)
+                return;
+
             notificationsEnabled = false;
             foreach(T item in items)
                 Add(item);
@@ -47,6 +50,9 @@ namespace PhotoGalleryApp.Utils
         /// <param name="items">The items that will replace the current collection of items.</param>
         public void ReplaceWith(IEnumerable<T> items)
         {
+            if (items.Count<T>() == 0)
+                return;
+
             notificationsEnabled = false;
 
             Clear();

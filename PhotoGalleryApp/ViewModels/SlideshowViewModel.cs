@@ -283,12 +283,12 @@ namespace PhotoGalleryApp.ViewModels
         /// <returns>The MediaViewModel that was created to hold the Media object.</returns>
         private MediaViewModel CreateMediaViewModel(Media media)
         {
-            if (media.IsVideo)
-                return new VideoViewModel(media);
+            if (media.IsVideo())
+                return new VideoViewModel(media as Video);
             else
             {
                 //Load images at 256 pixel thumbnail resolution, then at full size
-                ImageViewModel imageVM = new ImageViewModel(media, 256, 0);
+                ImageViewModel imageVM = new ImageViewModel(media as Image, 256, 0);
                 imageVM.PropertyChanged += new PropertyChangedEventHandler(Child_OnPropertyChanged);
                 return imageVM;
             }
@@ -357,7 +357,7 @@ namespace PhotoGalleryApp.ViewModels
             // We don't have an event that gets called when the video is loaded, so just
             // treat it as if it's loaded, and if it's not then the screen will be blank
             // for a second.
-            if (CurrentMediaViewModel.IsVideo)
+            if (CurrentMediaViewModel.IsVideo())
             {
                 OnPropertyChanged("CurrentMediaViewModel");
             }
@@ -414,7 +414,7 @@ namespace PhotoGalleryApp.ViewModels
             // We don't have an event that gets called when the video is loaded, so just
             // treat it as if it's loaded, and if it's not then the screen will be blank
             // for a second.
-            if (CurrentMediaViewModel.IsVideo)
+            if (CurrentMediaViewModel.IsVideo())
             {
                 OnPropertyChanged("CurrentMediaViewModel");
             }

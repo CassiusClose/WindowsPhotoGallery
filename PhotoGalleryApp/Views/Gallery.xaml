@@ -30,14 +30,14 @@
                 </Image.MinWidth>
 
                 <Image.Source>
-                    <Binding Path="Image" Mode="OneWay"/>
+                    <Binding Path="ImageData" Mode="OneWay"/>
                 </Image.Source>
             </Image>
         </DataTemplate>
 
         <!-- How to display an video -->
         <DataTemplate DataType="{x:Type vms:VideoViewModel}">
-            <MediaElement LoadedBehavior="Pause" ScrubbingEnabled="True" Source="{Binding Media.Path}"/>
+            <MediaElement LoadedBehavior="Pause" ScrubbingEnabled="True" Source="{Binding Media.Filepath, Mode=OneWay}"/>
         </DataTemplate>
 
         <!-- Horizontal, wrapping collection of items -->

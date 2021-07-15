@@ -18,13 +18,13 @@
         <!-- How to display an image -->
         <DataTemplate DataType="{x:Type vms:ImageViewModel}">
             <Image RenderOptions.BitmapScalingMode="HighQuality"
-                   Source="{Binding Path=Image, Mode=OneWay}">
+                   Source="{Binding Path=ImageData, Mode=OneWay}">
             </Image>        
         </DataTemplate>
 
         <!-- How to display a video -->
         <DataTemplate DataType="{x:Type vms:VideoViewModel}">
-            <MediaElement LoadedBehavior="Play" Source="{Binding Path, Mode=OneWay}"/>
+            <MediaElement LoadedBehavior="Play" Source="{Binding Filepath, Mode=OneWay}"/>
         </DataTemplate>
     </UserControl.Resources>
 

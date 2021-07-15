@@ -6,13 +6,19 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Media.Imaging;
+using System.Xml.Serialization;
 
 namespace PhotoGalleryApp.Models
 {
     /// <summary>
     /// Represents one piece of media, photo or image, associated with a list of tags.
     /// </summary>
-    public class Media
+    /**
+     * List possible subclasses of the abstract class for the serializer
+     */
+    [XmlInclude(typeof(Image))]
+    [XmlInclude(typeof(Video))]
+    public abstract class Media
     {
         #region Constructors
 
@@ -23,7 +29,7 @@ namespace PhotoGalleryApp.Models
         /// <param name="tags">A list of tags that the media object should have.</param>
         public Media(string path, ObservableCollection<string> tags)
         {
-            Path = path;
+            Filepath = path;
 
             if (tags == null)
                 Tags = new ObservableCollection<string>();
@@ -33,16 +39,16 @@ namespace PhotoGalleryApp.Models
 
 
         /// <summary>
-        /// Creates a blank media object.
-        /// </summary>
-        private Media() : this(null, null) { }
-
-
-        /// <summary>
         /// Creates a media object with the given filepath.
         /// </summary>
-        /// <param name="path"></param>
+        /// <param name="path">The filepath of the media file.</param>
         public Media(string path) : this(path, null) { }
+        
+        
+        /**
+         * Need by XmlSerializer
+         */
+        protected Media() : this(null, null) { }
 
         #endregion Constructors
 
@@ -51,52 +57,50 @@ namespace PhotoGalleryApp.Models
         #region Fields and Properties
 
 
-        private string _path;
+        protected string _filepath;
         /// <summary>
         /// The filepath of the piece of media.
         /// </summary>
-        public string Path 
+        public string Filepath 
         {
-            get { return _path; }
+            get { return _filepath; }
             set
             {
-                _path = value;
+                if (value == null)
+                    return;
+
+                if (!Path.HasExtension(value))
+                    return;
+
+                _filepath = value;
 
                 if (value != null)
                 {
-                    // Extract the extension from the path
-                    string[] strs = _path.Split('.');
-                    _extension = strs[strs.Length - 1].ToLower();
+                    _extension = Path.GetExtension(_filepath).ToLower();
+
+                    if(IsVideo() && (Extension != ".mp4"))
+                        throw new Exception("Tried to set an image file as the path of a Video model."); 
+                    else if(!IsVideo() && (Extension != ".jpg" && Extension != ".jpeg" && Extension != ".png"))
+                        throw new Exception("Tried to set an video file as the path of a Image model.");
 
                     // Load the media's metadata
-                    if (IsVideo)
-                        LoadVideo();
-                    else
-                        LoadImage();
+                    LoadMetadata();
                 }
             }
         }
 
+        /// <summary>
+        /// Whether the media object is a video (true) or an image (false)
+        /// </summary>
+        public abstract bool IsVideo();
 
-        private string _extension;
+
+
+        protected string _extension;
         /// <summary>
         /// The media file's extension
         /// </summary>
         public string Extension { get { return _extension; } }
-
-
-        /// <summary>
-        /// Whether the media object is a video (true) or an image (false)
-        /// </summary>
-        public bool IsVideo
-        {
-            get
-            {
-                if(Extension == "mp4")
-                    return true;
-                return false;
-            }
-        }
 
 
         /// <summary>
@@ -105,7 +109,7 @@ namespace PhotoGalleryApp.Models
         public Rotation Rotation { get; set; }
 
 
-        private int _width;
+        protected int _width;
         /// <summary>
         /// The width of the image
         /// </summary>
@@ -114,7 +118,7 @@ namespace PhotoGalleryApp.Models
             get { return _width; }
         }
 
-        private int _height;
+        protected int _height;
         /// <summary>
         /// The height of the image
         /// </summary>
@@ -145,56 +149,9 @@ namespace PhotoGalleryApp.Models
         #region Methods
 
         /**
-         * Treats the media object as a video and loads any metadata required.
+         * Loads the media file's metadata. Subclasses should implement this depending on the media file type.
          */
-        private void LoadVideo()
-        {
-
-        }
-
-        /**
-         * Treats the media object as an image and loads any metadata required.
-         */
-        private void LoadImage()
-        {
-            if (Path == null)
-                return;
-
-            // By default, don't rotate the image
-            Rotation = Rotation.Rotate0;
-    
-            // Load image metadata
-            FileStream fs = new FileStream(Path, FileMode.Open, FileAccess.Read);
-            BitmapFrame frame = BitmapFrame.Create(fs, BitmapCreateOptions.DelayCreation, BitmapCacheOption.None);
-            BitmapMetadata meta = frame.Metadata as BitmapMetadata;
-
-
-            // Image size
-            _width = frame.PixelWidth;
-            _height = frame.PixelHeight;
-
-
-            // Process any rotation metadata
-            if (meta != null && meta.ContainsQuery("System.Photo.Orientation"))
-            {
-                ushort rotAmount = (ushort)meta.GetQuery("System.Photo.Orientation");
-                switch (rotAmount)
-                {
-                    case 6:
-                        Rotation = Rotation.Rotate90;
-                        break;
-                    case 3:
-                        Rotation = Rotation.Rotate180;
-                        break;
-                    case 8:
-                        Rotation = Rotation.Rotate270;
-                        break;
-                }
-            }
-
-            fs.Close();
-        }
-
+        protected abstract void LoadMetadata();
 
 
         /// <summary>
@@ -203,7 +160,7 @@ namespace PhotoGalleryApp.Models
         /// <returns>A string representation of this photo.</returns>
         public override string ToString()
         {
-            return Path;
+            return Filepath;
         }
 
         #endregion Methods

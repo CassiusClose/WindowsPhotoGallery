@@ -9,7 +9,6 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Data;
 using System.Windows.Input;
-using System.Windows.Controls;
 using System.Xml.Serialization;
 using Microsoft.Win32;
 using PhotoGalleryApp.Models;
@@ -179,11 +178,11 @@ namespace PhotoGalleryApp.ViewModels
             // view.
             for (int i = 0; i < _gallery.Count; i++)
             {
-                if (_gallery[i].IsVideo)
-                    _items.Add(new VideoViewModel(_gallery[i]));
+                if (_gallery[i].IsVideo())
+                    _items.Add(new VideoViewModel(_gallery[i] as Video));
                 else
                     // 2nd argument is 0 so that it only loads the image once
-                    _items.Add(new ImageViewModel(_gallery[i], 0, ThumbnailHeight));
+                    _items.Add(new ImageViewModel(_gallery[i] as Image, 0, ThumbnailHeight));
             }
 
             LoadAllMedia();
@@ -311,11 +310,20 @@ namespace PhotoGalleryApp.ViewModels
             {
                 foreach (string filename in fileDialog.FileNames)
                 {
-                    Media p = new Media(filename);
-                    _gallery.Add(p);
+                    if (!Path.HasExtension(filename))
+                        continue;
 
+                    Media m;
 
-                    MediaViewModel vm = CreateMediaViewModel(p);
+                    string ext = Path.GetExtension(filename).ToLower();
+                    if (ext == ".png" || ext == ".jpeg" || ext == ".jpg")
+                        m = new Image(filename);
+                    else
+                        m = new Video(filename);
+
+                    _gallery.Add(m);
+
+                    MediaViewModel vm = CreateMediaViewModel(m);
                     _imageLoadID++;
                     _items.Add(vm);
                     ScrollChangedStopped(null, null);
@@ -334,11 +342,13 @@ namespace PhotoGalleryApp.ViewModels
         /// or VideoViewModel.</returns>
         public MediaViewModel CreateMediaViewModel(Media media)
         {
-            if (media.IsVideo)
-                return new VideoViewModel(media);
+            if (media.IsVideo())
+            {
+                return new VideoViewModel(media as Video);
+            }
             else
             {
-                return new ImageViewModel(media, 0, ThumbnailHeight);
+                return new ImageViewModel(media as Image, 0, ThumbnailHeight);
             }
         }
 
@@ -397,7 +407,7 @@ namespace PhotoGalleryApp.ViewModels
         #region ScrollChanged Events
 
         // Stores a copy of the gallery display's ScrollViewer, used to determine what images are currently in view
-        private ScrollViewer _scrollViewer;
+        private System.Windows.Controls.ScrollViewer _scrollViewer;
 
         /*
          * This timer is used to decrease the number of ScrollChanged events that are triggered. The issue is that as
@@ -424,7 +434,7 @@ namespace PhotoGalleryApp.ViewModels
         private void ScrollChanged(object parameter)
         {
             // Save the ScrollViewer object locally so that ScrollChangedStopped can use it
-            _scrollViewer = parameter as ScrollViewer;
+            _scrollViewer = parameter as System.Windows.Controls.ScrollViewer;
 
             // Start/restart the timer
             if (_scrollChangedTimer.IsEnabled)
@@ -443,7 +453,7 @@ namespace PhotoGalleryApp.ViewModels
             _scrollChangedTimer.Stop();
 
             // Get a list of the current images in view
-            ListBox lb = _scrollViewer.Content as ListBox;
+            System.Windows.Controls.ListBox lb = _scrollViewer.Content as System.Windows.Controls.ListBox;
             List<MediaViewModel> list = DisplayUtils.GetVisibleItemsFromListBox(lb, Application.Current.MainWindow).Cast<MediaViewModel>().ToList();
 
             // Load the images in view, and once this is done, continue loading the rest of the images in the gallery.

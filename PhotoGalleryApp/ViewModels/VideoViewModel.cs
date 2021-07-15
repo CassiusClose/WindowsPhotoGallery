@@ -14,11 +14,8 @@ namespace PhotoGalleryApp.ViewModels
     {
         #region Constructors
 
-        public VideoViewModel(Media video)
+        public VideoViewModel(Video video)
         {
-            if (!video.IsVideo)
-                throw new Exception("Tried to set a image Media model to a VideoViewModel");
-
             _media = video;
         }
 
@@ -30,15 +27,12 @@ namespace PhotoGalleryApp.ViewModels
         /// <summary>
         /// Returns the Media object that this ViewModel refers too.
         /// </summary>
-        public Media Video
+        public Video Video
         {
-            get { return _media; }
+            get { return _media as Video; }
             set
             {
-                if(!value.IsVideo)
-                    throw new Exception("Tried to set a image Media model to a VideoViewModel");
-
-                if(_media != value)
+                if(_media as Video != value)
                 {
                     _media = value;
                     OnPropertyChanged();
@@ -46,24 +40,16 @@ namespace PhotoGalleryApp.ViewModels
             }
         }
 
-        /// <summary>
-        /// The filepath that the video is stored at
-        /// </summary>
-        public string Path
-        {
-            get { return Video.Path; }
-        }
-
         #endregion Fields and Properties
 
 
         #region Methods
 
-        /**
-         * Any instance of this class will represent an image, not an object. This is here
-         * to distinguish between other subclasses of MediaViewModel.
-         */
-        protected override bool MediaIsVideo()
+        /// <summary>
+        /// Returns whether or not the media is a video (true) or an image (false). This will always
+        /// return true. This is how users can distinguish between the types of instances of MediaViewModel.
+        /// </summary>
+        public override bool IsVideo()
         {
             return true;
         }
