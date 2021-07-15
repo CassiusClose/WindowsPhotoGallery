@@ -42,23 +42,33 @@ namespace PhotoGalleryApp.Models
 
         #region Fields and Properties
 
-        private Image _thumbnail;
         /// <summary>
         /// The Image that is the video's thumbnail
         /// </summary>
-        public Image Thumbnail
-        {
-            get { return _thumbnail; }
-        }
+        public Image Thumbnail;
 
         #endregion Fields and Properties
 
 
         /**
-         * Loads the video file's associated data. This will create the video's thumbnail in the thumbnail directory.
+         * Loads the video file's associated data.
          */
         protected override void LoadMetadata()
         {
+
+        }
+
+
+        /// <summary>
+        /// If the video's thumbnail has not been created/loaded as an Image object,
+        /// then extract the video's thumbnail, save it to disk, and create an
+        /// Image object for it.
+        /// </summary>
+        public void LoadThumbnail()
+        {
+            if (Thumbnail != null)
+                return;
+
             string[] files = Directory.GetFiles(THUMBNAIL_DIRECTORY);
 
             // The first try for the thumbnail is the video file's name as a jpg
@@ -89,14 +99,14 @@ namespace PhotoGalleryApp.Models
             process.WaitForExit();
 
             // If the process failed somehow, abort
-            if(process.ExitCode != 0)
+            if (process.ExitCode != 0)
             {
                 Console.WriteLine("Something went wrong creating the thumbnail: " + process.ExitCode);
                 return;
             }
 
             // If everything succeeded, then create the Image object for the thumbnail.
-            _thumbnail = new Image(_thumbnailFile);
+            Thumbnail = new Image(_thumbnailFile);
         }
 
 

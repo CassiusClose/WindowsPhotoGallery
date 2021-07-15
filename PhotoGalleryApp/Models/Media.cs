@@ -46,7 +46,7 @@ namespace PhotoGalleryApp.Models
         
         
         /**
-         * Need by XmlSerializer
+         * Needed by XmlSerializer
          */
         protected Media() : this(null, null) { }
 

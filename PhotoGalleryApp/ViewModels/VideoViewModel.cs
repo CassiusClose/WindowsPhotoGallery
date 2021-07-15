@@ -36,7 +36,10 @@ namespace PhotoGalleryApp.ViewModels
 
             // If thumbnail mode is activated, create a view model for the thumbnail
             if(ThumbnailMode)
+            {
+                video.LoadThumbnail();
                 _thumbnailViewModel = new ImageViewModel(video.Thumbnail, thumbnailPreviewHeight, thumbnailFinalHeight);
+            }
         }
 
         #endregion Constructors
