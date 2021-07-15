@@ -44,7 +44,6 @@ namespace PhotoGalleryApp.ViewModels
             NavigatorViewModel.RegisterKeyEventHandler(this, Key.Left, Left);
             NavigatorViewModel.RegisterKeyEventHandler(this, Key.Right, Right);
 
-
             _galleryItems = galleryItems;
             CurrentIndex = index;
 
@@ -220,12 +219,12 @@ namespace PhotoGalleryApp.ViewModels
          */
 
         // Cache sizes. How many images before and the current image to cache, and the total cache length.
-        private const int BACK_CACHE_NUM = 1;
-        private const int FORWARD_CACHE_NUM = 2;
-        private const int CACHE_LEN = BACK_CACHE_NUM + FORWARD_CACHE_NUM + 1;
+        private int BACK_CACHE_NUM;
+        private int FORWARD_CACHE_NUM;
+        private int CACHE_LEN;
 
         // The cache itself and the position of the current image within it
-        private MediaViewModel[] _imageCache = new MediaViewModel[CACHE_LEN];
+        private MediaViewModel[] _imageCache;
         private int _imageCacheCurrIndex = 0;
 
 
@@ -238,6 +237,45 @@ namespace PhotoGalleryApp.ViewModels
         */
         private void InitCache()
         {
+            /* Determine Cache Length
+             * The cache has a default length, which it will be, unless the number of items to display in the slideshow
+             * is smaller than that length. In that case, the cache will be sized to fit the number of items.
+             */
+            BACK_CACHE_NUM = 1;
+            FORWARD_CACHE_NUM = 2;
+            CACHE_LEN = BACK_CACHE_NUM + FORWARD_CACHE_NUM + 1;
+
+            // If fewer items than the cache size
+            if (_galleryItems.Count < CACHE_LEN)
+            {
+                // The size of the cache that holds non-current items (items before and after the current item)
+                int nonCurrCacheNum = _galleryItems.Count - 1;
+
+                // If even number of cache positions left, divide evenly between back & forward cache
+                if (nonCurrCacheNum % 2 == 0)
+                {
+                    BACK_CACHE_NUM = nonCurrCacheNum / 2;
+                    FORWARD_CACHE_NUM = nonCurrCacheNum / 2;
+                }
+                // Otherwise, give 1 extra cache position to the forward cache
+                else
+                {
+                    BACK_CACHE_NUM = (nonCurrCacheNum - 1) / 2;
+                    FORWARD_CACHE_NUM = nonCurrCacheNum - BACK_CACHE_NUM;
+                }
+
+                CACHE_LEN = BACK_CACHE_NUM + FORWARD_CACHE_NUM + 1;
+            }
+
+            // Init the cache array itself
+            _imageCache = new MediaViewModel[CACHE_LEN];
+
+
+
+            /* 
+             * Initialize each position in the cache
+             */
+
             int cacheIndex = 0;
 
             // Create each cache position for images before the current one
@@ -339,20 +377,40 @@ namespace PhotoGalleryApp.ViewModels
                 _imageCacheCurrIndex += CACHE_LEN;
 
 
-            // Which position in the cache is now stale and should be replaced
-            int cacheUpdateIndex = _imageCacheCurrIndex - BACK_CACHE_NUM;
-            if (cacheUpdateIndex < 0)
-                cacheUpdateIndex += CACHE_LEN;
+            // Update sidebar first so that it's not waiting on the image load to update
+            CurrentMediaChanged();
 
-            // What image in the gallery will replace the stale cache position
-            int galleryUpdateIndex = CurrentIndex - BACK_CACHE_NUM;
-            if (galleryUpdateIndex < 0)
-                galleryUpdateIndex += _galleryItems.Count();
 
-            // Update the cache position with the new image
-            Media p = _galleryItems[galleryUpdateIndex];
-            _imageCache[cacheUpdateIndex] = CreateMediaViewModel(p);
+            /* If the cache size is exactly the number of items possible to display, then all of the items should be
+             * loaded, and all we need to do is move the cache position over and be done with it.
+             * 
+             * If it's not, then we must update on cache position so that the cache centers around the new current item.
+             */
+            int cacheUpdateIndex = 0;
+            if (_galleryItems.Count != _imageCache.Length)
+            {
+                cacheUpdateIndex = _imageCacheCurrIndex - BACK_CACHE_NUM;
 
+                // Which position in the cache is now stale and should be replaced
+                if (cacheUpdateIndex < 0)
+                    cacheUpdateIndex += CACHE_LEN;
+
+                // What image in the gallery will replace the stale cache position
+                int galleryUpdateIndex = CurrentIndex - BACK_CACHE_NUM;
+                if (galleryUpdateIndex < 0)
+                    galleryUpdateIndex += _galleryItems.Count();
+
+                // Update the cache position with the new image
+                Media p = _galleryItems[galleryUpdateIndex];
+                _imageCache[cacheUpdateIndex] = CreateMediaViewModel(p);
+            }
+
+
+
+            /* If the new current item is fully loaded, then trigger a display update. If not,
+             * then when it's loaded, that will trigger a display update in the callback elsewhere
+             * in this class.
+             */
 
             // We don't have an event that gets called when the video is loaded, so just
             // treat it as if it's loaded, and if it's not then the screen will be blank
@@ -371,11 +429,13 @@ namespace PhotoGalleryApp.ViewModels
             }
 
 
-            // Update sidebar first so that it's not waiting on the image load to update
-            CurrentMediaChanged();
 
-            // Then load the new cache position's image
-            await Task.Run(() => { _imageCache[cacheUpdateIndex].LoadMedia(); });
+            // If a cache position was updated with a new item, then load the item's data
+            if (_galleryItems.Count != _imageCache.Length)
+            {
+                // Then load the new cache position's image
+                await Task.Run(() => { _imageCache[cacheUpdateIndex].LoadMedia(); });
+            }
         }
 
 
@@ -397,19 +457,45 @@ namespace PhotoGalleryApp.ViewModels
             if (_imageCacheCurrIndex >= CACHE_LEN)
                 _imageCacheCurrIndex -= CACHE_LEN;
 
-            // Which position in the cache is now stale and should be replaced
-            int cacheUpdateIndex = _imageCacheCurrIndex + FORWARD_CACHE_NUM;
-            if (cacheUpdateIndex >= CACHE_LEN)
-                cacheUpdateIndex -= CACHE_LEN;
 
-            int galleryUpdateIndex = CurrentIndex + FORWARD_CACHE_NUM;
-            if (galleryUpdateIndex >= _galleryItems.Count())
-                galleryUpdateIndex -= _galleryItems.Count();
+            // Update sidebar first so that it's not waiting on the image load to update
+            CurrentMediaChanged();
 
-            // Update the cache position with the new image
-            Media p = _galleryItems[galleryUpdateIndex];
-            _imageCache[cacheUpdateIndex] = CreateMediaViewModel(p);
+            if (_galleryItems.Count == _imageCache.Length)
+            {
+                OnPropertyChanged("CurrentMediaViewModel");
+                return;
+            }
 
+
+            /* If the cache size is exactly the number of items possible to display, then all of the items should be
+             * loaded, and all we need to do is move the cache position over and be done with it.
+             * 
+             * If it's not, then we must update on cache position so that the cache centers around the new current item.
+             */
+            int cacheUpdateIndex = 0;
+            if (_galleryItems.Count != _imageCache.Length)
+            {
+                // Which position in the cache is now stale and should be replaced
+                cacheUpdateIndex = _imageCacheCurrIndex + FORWARD_CACHE_NUM;
+                if (cacheUpdateIndex >= CACHE_LEN)
+                    cacheUpdateIndex -= CACHE_LEN;
+
+                int galleryUpdateIndex = CurrentIndex + FORWARD_CACHE_NUM;
+                if (galleryUpdateIndex >= _galleryItems.Count())
+                    galleryUpdateIndex -= _galleryItems.Count();
+
+                // Update the cache position with the new image
+                Media p = _galleryItems[galleryUpdateIndex];
+                _imageCache[cacheUpdateIndex] = CreateMediaViewModel(p);
+            }
+
+
+
+            /* If the new current item is fully loaded, then trigger a display update. If not,
+             * then when it's loaded, that will trigger a display update in the callback elsewhere
+             * in this class.
+             */
 
             // We don't have an event that gets called when the video is loaded, so just
             // treat it as if it's loaded, and if it's not then the screen will be blank
@@ -427,11 +513,14 @@ namespace PhotoGalleryApp.ViewModels
                     OnPropertyChanged("CurrentMediaViewModel");
             }
 
-            // Update sidebar first so that it's not waiting on the image load to update
-            CurrentMediaChanged();
 
-            // Then load the new cache position's image
-            await Task.Run(() => { _imageCache[cacheUpdateIndex].LoadMedia(); });
+
+            // If a cache position was updated with a new item, then load the item's data
+            if (_galleryItems.Count != _imageCache.Length)
+            {
+                // Then load the new cache position's image
+                await Task.Run(() => { _imageCache[cacheUpdateIndex].LoadMedia(); });
+            }
         }
 
 
