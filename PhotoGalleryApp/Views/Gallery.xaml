@@ -17,9 +17,13 @@
             <local:ChooserDropDown/>
         </DataTemplate>
 
+        <Style x:Key="GalleryThumbnailImage" TargetType="Image">
+            <Setter Property="MinHeight" Value="{Binding Path=DataContext.ThumbnailHeight, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType={x:Type local:Gallery}}}"/>
+        </Style>
+
         <!-- How to display an image -->
         <DataTemplate DataType="{x:Type vms:ImageViewModel}">
-            <Image MinHeight="{Binding Path=DataContext.ThumbnailHeight, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType={x:Type local:Gallery}}}">
+            <Image Style="{StaticResource GalleryThumbnailImage}">
                 <!-- The height is determined above by the gallery settings. Below, calculate the width based on that height and
                                     the image's aspect ratio. -->
                 <Image.MinWidth>
@@ -37,7 +41,18 @@
 
         <!-- How to display an video -->
         <DataTemplate DataType="{x:Type vms:VideoViewModel}">
-            <MediaElement LoadedBehavior="Pause" ScrubbingEnabled="True" Source="{Binding Media.Filepath, Mode=OneWay}"/>
+            <Image Style="{StaticResource GalleryThumbnailImage}">
+                <Image.MinWidth>
+                    <MultiBinding Converter="{StaticResource HeightARToWidth}" Mode="OneWay">
+                        <Binding Path="DataContext.ThumbnailHeight" RelativeSource="{RelativeSource Mode=FindAncestor, AncestorType={x:Type local:Gallery}}"/>
+                        <Binding Path="ThumbnailViewModel.AspectRatio"/>
+                    </MultiBinding>
+                </Image.MinWidth>
+
+                <Image.Source>
+                    <Binding Path="ThumbnailViewModel.ImageData" Mode="OneWay"/>
+                </Image.Source>
+            </Image>
         </DataTemplate>
 
         <!-- Horizontal, wrapping collection of items -->

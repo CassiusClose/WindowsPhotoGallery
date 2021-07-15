@@ -178,11 +178,7 @@ namespace PhotoGalleryApp.ViewModels
             // view.
             for (int i = 0; i < _gallery.Count; i++)
             {
-                if (_gallery[i].IsVideo())
-                    _items.Add(new VideoViewModel(_gallery[i] as Video));
-                else
-                    // 2nd argument is 0 so that it only loads the image once
-                    _items.Add(new ImageViewModel(_gallery[i] as Image, 0, ThumbnailHeight));
+                _items.Add(CreateMediaViewModel(_gallery[i]));
             }
 
             LoadAllMedia();
@@ -344,7 +340,9 @@ namespace PhotoGalleryApp.ViewModels
         {
             if (media.IsVideo())
             {
-                return new VideoViewModel(media as Video);
+                // Create the VideoVM in ThumbnailMode, which creates an ImageViewModel
+                // for the thumbnail within the VM.
+                return new VideoViewModel(media as Video, true, 0, ThumbnailHeight);
             }
             else
             {

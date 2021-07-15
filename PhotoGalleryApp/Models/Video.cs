@@ -9,7 +9,7 @@ using System.Threading.Tasks;
 namespace PhotoGalleryApp.Models
 {
     /// <summary>
-    /// A Media object that refers to a video file.
+    /// A Media object that refers to a video file and holds a Media object for its thumbnail
     /// </summary>
     public class Video : Media
     {
@@ -40,13 +40,18 @@ namespace PhotoGalleryApp.Models
         #endregion Constructors
 
 
-        private string _thumbnailPath;
-        public string ThumbnailPath
+        #region Fields and Properties
+
+        private Image _thumbnail;
+        /// <summary>
+        /// The Image that is the video's thumbnail
+        /// </summary>
+        public Image Thumbnail
         {
-            get { return _thumbnailPath; }
+            get { return _thumbnail; }
         }
 
-
+        #endregion Fields and Properties
 
 
         /**
@@ -90,8 +95,8 @@ namespace PhotoGalleryApp.Models
                 return;
             }
 
-            // If everything succeeded, then set the property that outside classes can see.
-            _thumbnailPath = _thumbnailFile;
+            // If everything succeeded, then create the Image object for the thumbnail.
+            _thumbnail = new Image(_thumbnailFile);
         }
 
 

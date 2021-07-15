@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading;
@@ -298,7 +299,8 @@ namespace PhotoGalleryApp.ViewModels
         {
             BitmapImage image = new BitmapImage();
             image.BeginInit();
-            image.UriSource = new Uri(_media.Filepath);
+            // The path could be absolute (a user submitted image) or relative (a program-generated video thumbnail file)
+            image.UriSource = new Uri(_media.Filepath, UriKind.RelativeOrAbsolute);
 
             // This seems to be very important for keeping the UI responsive when asynchronously loading images
             image.CacheOption = BitmapCacheOption.OnLoad;
