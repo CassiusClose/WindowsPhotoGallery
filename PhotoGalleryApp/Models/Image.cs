@@ -1,4 +1,5 @@
-﻿using System;
+﻿using PhotoGalleryApp.Utils;
+using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.IO;
@@ -81,14 +82,13 @@ namespace PhotoGalleryApp.Models
         }
 
 
-        /// <summary>
-        /// Returns whether the media object is a video (true) or an image (false). This
-        /// will always return false. This is used to determine which Media subclass
-        /// a Media instance belongs to.
-        /// </summary>
-        public override bool IsVideo()
+        /*
+         * Returns the media file type (image, video, etc.). This is used to determine
+         * which Media subclass a Media instance belongs to.
+         */
+        protected override MediaFileType GetMediaType()
         {
-            return false;
+            return MediaFileType.Image;
         }
     }
 }

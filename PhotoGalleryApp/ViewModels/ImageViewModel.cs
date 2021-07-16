@@ -31,12 +31,14 @@ namespace PhotoGalleryApp.ViewModels
         /// </summary>
         public ImageViewModel() : this(null, 128, 0) { }
 
+
         /// <summary>
         /// Creates an ImageViewModel that doesn't refer to any Photo initially.
         /// </summary>
         /// <param name="previewHeight">The height at which the image's preview will be loaded. If 0, no preview will be loaded.</param>
         /// <param name="fullHeight">The height at which the image will be loaded. If 0, the image will be loaded at its full size.</param>
         public ImageViewModel(int previewHeight, int fullHeight) : this(null, previewHeight, fullHeight) { }
+
 
         /// <summary>
         /// Creates an ImageViewModel that holds the given photo. The photo will not be loaded into memory by default, this must be done
@@ -53,7 +55,7 @@ namespace PhotoGalleryApp.ViewModels
             this._previewHeight = previewHeight;
             this._targetHeight = fullHeight;
 
-            cancellationTokens = new List<CancellationTokenSource>();
+            _cancellationTokens = new List<CancellationTokenSource>();
         }
 
 
@@ -104,7 +106,7 @@ namespace PhotoGalleryApp.ViewModels
          * we want to cancel those loads and only load the most recent image. This list will have one
          * CancellationTokenSource for each ongoing image load process.
          */
-        private List<CancellationTokenSource> cancellationTokens;
+        private List<CancellationTokenSource> _cancellationTokens;
 
 
 
@@ -148,15 +150,6 @@ namespace PhotoGalleryApp.ViewModels
 
 
         /// <summary>
-        /// Returns whether or not the media is a video (true) or an image (false). This will always
-        /// return false. This is how users can distinguish between the types of instances of MediaViewModel.
-        /// </summary>
-        public override bool IsVideo()
-        {
-            return false;
-        }
-
-        /// <summary>
         /// The aspect ratio of the image stored in the Photo property.
         /// </summary>
         public double AspectRatio
@@ -166,14 +159,13 @@ namespace PhotoGalleryApp.ViewModels
 
 
         /// <summary>
-        /// Returns whether or not the image stored in the Image property is up to date with the current ViewModel
+        /// Whether the image stored in the Image property is up to date with the current ViewModel
         /// parameters, such as what photo it is, and preview & full resolution size. This can be used to determine
         /// whether the ViewModel is ready to be displayed to the user.
         /// </summary>
-        /// <returns>Whether or not the Image property is up to date with this ViewModel's parameters.</returns>
-        public bool PreviewLoaded()
+        public bool PreviewLoaded
         {
-            return _previewLoaded;
+            get { return _previewLoaded; }
         }
 
         #endregion Fields and Properties
@@ -212,7 +204,7 @@ namespace PhotoGalleryApp.ViewModels
             // Add to the token list so that if this VM's image is changed, the
             // corresponding call to LoadMedia() will cancel this load task.
             CancellationTokenSource cts = new CancellationTokenSource();
-            cancellationTokens.Add(cts);
+            _cancellationTokens.Add(cts);
 
 
 
@@ -225,7 +217,7 @@ namespace PhotoGalleryApp.ViewModels
             if (cts.IsCancellationRequested)
             {
                 // Task is done, so get rid of its cancellation token
-                cancellationTokens.Remove(cts);
+                _cancellationTokens.Remove(cts);
                 cts.Dispose();
                 return;
             }
@@ -240,7 +232,7 @@ namespace PhotoGalleryApp.ViewModels
                 if (cts.IsCancellationRequested)
                 {
                     // Task is done, so get rid of its cancellation token
-                    cancellationTokens.Remove(cts);
+                    _cancellationTokens.Remove(cts);
                     cts.Dispose();
                     return;
                 }
@@ -256,7 +248,7 @@ namespace PhotoGalleryApp.ViewModels
             if (cts.IsCancellationRequested)
             {
                 // Task is done, so get rid of its cancellation token
-                cancellationTokens.Remove(cts);
+                _cancellationTokens.Remove(cts);
                 cts.Dispose();
                 return;
             }
@@ -271,7 +263,7 @@ namespace PhotoGalleryApp.ViewModels
             if (cts.IsCancellationRequested)
             {
                 // Task is done, so get rid of its cancellation token
-                cancellationTokens.Remove(cts);
+                _cancellationTokens.Remove(cts);
                 cts.Dispose();
                 return;
             }
@@ -285,7 +277,7 @@ namespace PhotoGalleryApp.ViewModels
             _needReload = false;
 
             // Task is done, so get rid of its cancellation token
-            cancellationTokens.Remove(cts);
+            _cancellationTokens.Remove(cts);
             cts.Dispose();
         }
 
@@ -331,8 +323,8 @@ namespace PhotoGalleryApp.ViewModels
         /// </summary>
         public override void CancelLoading()
         {
-            for (int i = 0; i < cancellationTokens.Count; i++)
-                cancellationTokens[i].Cancel();
+            for (int i = 0; i < _cancellationTokens.Count; i++)
+                _cancellationTokens[i].Cancel();
         }
 
         #endregion Methods

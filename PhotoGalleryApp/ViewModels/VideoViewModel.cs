@@ -68,10 +68,8 @@ namespace PhotoGalleryApp.ViewModels
             get 
             {
                 if (!ThumbnailMode)
-                {
-                    Console.WriteLine(Video.Filepath);
                     throw new Exception("Requested ThumbnailViewModel within a VideoViewModel that is not in Thumbnail Mode");
-                }
+
                 return _thumbnailViewModel;
             }
         }
@@ -97,15 +95,6 @@ namespace PhotoGalleryApp.ViewModels
 
 
         #region Methods
-
-        /// <summary>
-        /// Returns whether or not the media is a video (true) or an image (false). This will always
-        /// return true. This is how users can distinguish between the types of instances of MediaViewModel.
-        /// </summary>
-        public override bool IsVideo()
-        {
-            return true;
-        }
 
         /**
          * Triggers manual loading of the video. The video is loaded automatically by WPF, so

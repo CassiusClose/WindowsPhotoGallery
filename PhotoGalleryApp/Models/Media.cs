@@ -1,4 +1,5 @@
-﻿using System;
+﻿using PhotoGalleryApp.Utils;
+using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.IO;
@@ -66,21 +67,21 @@ namespace PhotoGalleryApp.Models
             get { return _filepath; }
             set
             {
-                if (value == null)
-                    return;
-
-                if (!Path.HasExtension(value))
-                    return;
-
-                _filepath = value;
+                _filepath = value;                
 
                 if (value != null)
                 {
+                    // If it has no extension, there's no way to tell if it's an image/video/etc.
+                    if (!Path.HasExtension(value))
+                        throw new Exception("Media object filepaths must have extensions.");
+
                     _extension = Path.GetExtension(_filepath).ToLower();
 
-                    if(IsVideo() && (Extension != ".mp4"))
+                    // Ensure that the file's extension matches the Media subclass (Image or Video), which is designated
+                    // by the return value of IsVideo()
+                    if(MediaType == MediaFileType.Video && (Extension != ".mp4"))
                         throw new Exception("Tried to set an image file as the path of a Video model."); 
-                    else if(!IsVideo() && (Extension != ".jpg" && Extension != ".jpeg" && Extension != ".png"))
+                    else if(MediaType == MediaFileType.Image  && (Extension != ".jpg" && Extension != ".jpeg" && Extension != ".png"))
                         throw new Exception("Tried to set an video file as the path of a Image model.");
 
                     // Load the media's metadata
@@ -90,9 +91,16 @@ namespace PhotoGalleryApp.Models
         }
 
         /// <summary>
-        /// Whether the media object is a video (true) or an image (false)
+        /// The type of media that is stored here (image, video, etc.)
         /// </summary>
-        public abstract bool IsVideo();
+        public MediaFileType MediaType
+        {
+            get { return GetMediaType(); }
+        }
+        /**
+         * Subclasses will implement this to define what media type they represent.
+         */
+        protected abstract MediaFileType GetMediaType();
 
 
 

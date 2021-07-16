@@ -338,15 +338,18 @@ namespace PhotoGalleryApp.ViewModels
         /// or VideoViewModel.</returns>
         public MediaViewModel CreateMediaViewModel(Media media)
         {
-            if (media.IsVideo())
+            switch(media.MediaType)
             {
-                // Create the VideoVM in ThumbnailMode, which creates an ImageViewModel
-                // for the thumbnail within the VM.
-                return new VideoViewModel(media as Video, true, 0, ThumbnailHeight);
-            }
-            else
-            {
-                return new ImageViewModel(media as Image, 0, ThumbnailHeight);
+                case MediaFileType.Video:               
+                    // Create the VideoVM in ThumbnailMode, which creates an ImageViewModel
+                    // for the thumbnail within the VM.
+                    return new VideoViewModel(media as Video, true, 0, ThumbnailHeight);
+
+                case MediaFileType.Image:
+                    return new ImageViewModel(media as Image, 0, ThumbnailHeight);
+
+                default:
+                    return null;
             }
         }
 

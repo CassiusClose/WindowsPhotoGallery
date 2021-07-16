@@ -1,4 +1,5 @@
 ﻿using PhotoGalleryApp.Models;
+using PhotoGalleryApp.Utils;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -12,6 +13,8 @@ namespace PhotoGalleryApp.ViewModels
     /// </summary>
     abstract class MediaViewModel : ViewModelBase
     {
+        #region Fields and Properties
+
         protected Media _media;
         /// <summary>
         /// The Media object model that this view model refers to
@@ -21,18 +24,20 @@ namespace PhotoGalleryApp.ViewModels
             get { return _media; }
         }
 
-        public string Filepath
-        {
-            get { return _media.Filepath; }
-        }
-
 
         /// <summary>
-        /// Returns whether or not the media is a video (true) or an image (false). Subclasses
-        /// must override this to provide a return value. This is how users can distinguish between
-        /// instances of this abstract class/know what subclass to cast to.
+        /// The type of media this VM holds (video, image, etc.)
         /// </summary>
-        public abstract bool IsVideo();
+        public MediaFileType MediaType
+        {
+            get { return Media.MediaType; }
+        }
+
+        #endregion Fields and Properties
+
+
+
+        #region Methods
 
         /// <summary>
         /// Loads the media from disk, if the loading is not done automatically.
@@ -43,6 +48,9 @@ namespace PhotoGalleryApp.ViewModels
         /// Cancels any ongoing manually-triggered loading processes (any calls to LoadMedia())
         /// </summary>
         public abstract void CancelLoading();
+
+        #endregion Methods
+
 
 
         #region Static

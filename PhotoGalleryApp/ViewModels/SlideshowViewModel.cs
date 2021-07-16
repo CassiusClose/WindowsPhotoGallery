@@ -10,6 +10,7 @@ using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using PhotoGalleryApp.Models;
+using PhotoGalleryApp.Utils;
 
 namespace PhotoGalleryApp.ViewModels
 {
@@ -321,14 +322,20 @@ namespace PhotoGalleryApp.ViewModels
         /// <returns>The MediaViewModel that was created to hold the Media object.</returns>
         private MediaViewModel CreateMediaViewModel(Media media)
         {
-            if (media.IsVideo())
-                return new VideoViewModel(media as Video);
-            else
+            switch (media.MediaType)
             {
-                //Load images at 256 pixel thumbnail resolution, then at full size
-                ImageViewModel imageVM = new ImageViewModel(media as Image, 256, 0);
-                imageVM.PropertyChanged += new PropertyChangedEventHandler(Child_OnPropertyChanged);
-                return imageVM;
+                case MediaFileType.Video:
+                    return new VideoViewModel(media as Video);
+
+                case MediaFileType.Image:
+            
+                    //Load images at 256 pixel thumbnail resolution, then at full size
+                    ImageViewModel imageVM = new ImageViewModel(media as Image, 256, 0);
+                    imageVM.PropertyChanged += new PropertyChangedEventHandler(Child_OnPropertyChanged);
+                    return imageVM;
+
+                default:
+                    return null;
             }
         }
 
@@ -415,17 +422,19 @@ namespace PhotoGalleryApp.ViewModels
             // We don't have an event that gets called when the video is loaded, so just
             // treat it as if it's loaded, and if it's not then the screen will be blank
             // for a second.
-            if (CurrentMediaViewModel.IsVideo())
+            switch (CurrentMediaViewModel.MediaType)
             {
-                OnPropertyChanged("CurrentMediaViewModel");
-            }
-            else
-            {
-                // If the current image has been loaded (i.e., there isn't an old image
-                // still loaded), either the preview or the full resolution, then update the
-                // view to the user. Otherwise, when the image loads, the view will update.
-                if ((CurrentMediaViewModel as ImageViewModel).PreviewLoaded())
+                case MediaFileType.Video:
                     OnPropertyChanged("CurrentMediaViewModel");
+                    break;
+
+                case MediaFileType.Image:
+                    // If the current image has been loaded (i.e., there isn't an old image
+                    // still loaded), either the preview or the full resolution, then update the
+                    // view to the user. Otherwise, when the image loads, the view will update.
+                    if ((CurrentMediaViewModel as ImageViewModel).PreviewLoaded)
+                        OnPropertyChanged("CurrentMediaViewModel");
+                    break;
             }
 
 
@@ -500,18 +509,21 @@ namespace PhotoGalleryApp.ViewModels
             // We don't have an event that gets called when the video is loaded, so just
             // treat it as if it's loaded, and if it's not then the screen will be blank
             // for a second.
-            if (CurrentMediaViewModel.IsVideo())
+            switch (CurrentMediaViewModel.MediaType)
             {
-                OnPropertyChanged("CurrentMediaViewModel");
-            }
-            else
-            {
-                // If the current image has been loaded (i.e., there isn't an old image
-                // still loaded), either the preview or the full resolution, then update the
-                // view to the user. Otherwise, when the image loads, the view will update.
-                if ((CurrentMediaViewModel as ImageViewModel).PreviewLoaded())
+                case MediaFileType.Video:
                     OnPropertyChanged("CurrentMediaViewModel");
+                    break;
+
+                case MediaFileType.Image:
+                    // If the current image has been loaded (i.e., there isn't an old image
+                    // still loaded), either the preview or the full resolution, then update the
+                    // view to the user. Otherwise, when the image loads, the view will update.
+                    if ((CurrentMediaViewModel as ImageViewModel).PreviewLoaded)
+                        OnPropertyChanged("CurrentMediaViewModel");
+                    break;
             }
+
 
 
 
