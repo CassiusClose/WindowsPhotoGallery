@@ -150,7 +150,7 @@ namespace PhotoGalleryApp.ViewModels
          */
         private void Child_OnPropertyChanged(object sender, PropertyChangedEventArgs e)
         {
-            if (e.PropertyName == "Image")
+            if (e.PropertyName == "ImageData")
             {
                 // Only update if the current image is the one that's changed
                 ImageViewModel vm = sender as ImageViewModel;
