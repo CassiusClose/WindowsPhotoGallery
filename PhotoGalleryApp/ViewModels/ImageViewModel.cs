@@ -282,7 +282,6 @@ namespace PhotoGalleryApp.ViewModels
         }
 
 
-
         /**
          * Loads the VM's image into memory at the resolution specified by the given height.
          * Uses data from the Photo property to guide how to load the image.
@@ -290,19 +289,23 @@ namespace PhotoGalleryApp.ViewModels
         private BitmapImage LoadImage(int height)
         {
             BitmapImage image = new BitmapImage();
-            image.BeginInit();
-            // The path could be absolute (a user submitted image) or relative (a program-generated video thumbnail file)
-            image.UriSource = new Uri(_media.Filepath, UriKind.RelativeOrAbsolute);
+            using (FileStream stream = File.OpenRead(_media.Filepath))
+            {
+                image.BeginInit();
+                // The path could be absolute (a user submitted image) or relative (a program-generated video thumbnail file)
+                //image.UriSource = new Uri(_media.Filepath, UriKind.RelativeOrAbsolute);
+                image.StreamSource = stream;
 
-            // This seems to be very important for keeping the UI responsive when asynchronously loading images
-            image.CacheOption = BitmapCacheOption.OnLoad;
+                // This seems to be very important for keeping the UI responsive when asynchronously loading images
+                image.CacheOption = BitmapCacheOption.OnLoad;
 
-            // If a height is specified, only load the image at that height's corresponding resolution
-            if (height > 0)
-                image.DecodePixelHeight = height;
+                // If a height is specified, only load the image at that height's corresponding resolution
+                if (height > 0)
+                    image.DecodePixelHeight = height;
 
-            image.Rotation = _media.Rotation;
-            image.EndInit();
+                image.Rotation = _media.Rotation;
+                image.EndInit();
+            }
 
             // This allows _loadImage() to be called on a different thread. Normally, you can't load a BitmapImage
             // on a thread other than the main one.
