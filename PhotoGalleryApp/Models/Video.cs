@@ -64,10 +64,15 @@ namespace PhotoGalleryApp.Models
         /// If the video's thumbnail has not been created/loaded as an Image object,
         /// then extract the video's thumbnail, save it to disk, and create an
         /// Image object for it.
+        /// LoadThumbnail() is not called automatically. Users must call it manually on
+        /// a Video object.
         /// </summary>
         public void LoadThumbnail()
         {
-            if (Thumbnail != null)
+            if (Thumbnail != null && File.Exists(Thumbnail.Filepath))
+                return;
+
+            if (!File.Exists(Filepath))
                 return;
 
             string[] files = Directory.GetFiles(THUMBNAIL_DIRECTORY);

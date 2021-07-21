@@ -36,6 +36,8 @@ namespace PhotoGalleryApp.Models
                 Tags = new ObservableCollection<string>();
             else
                 Tags = tags;
+
+            Rotation = Rotation.Rotate0;
         }
 
 

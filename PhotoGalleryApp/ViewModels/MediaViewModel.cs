@@ -24,6 +24,13 @@ namespace PhotoGalleryApp.ViewModels
             get { return _media; }
         }
 
+        /// <summary>
+        /// The filepath of the media object this VM holds
+        /// </summary>
+        public string Filepath
+        {
+            get { return Media.Filepath; }
+        }
 
         /// <summary>
         /// The type of media this VM holds (video, image, etc.)

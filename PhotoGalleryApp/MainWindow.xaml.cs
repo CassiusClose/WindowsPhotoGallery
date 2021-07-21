@@ -1,10 +1,12 @@
-﻿using System;
+﻿using PhotoGalleryApp.Models;
+using PhotoGalleryApp.Utils;
+using PhotoGalleryApp.ViewModels;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows;
-using System.Windows.Controls;
 using System.Windows.Data;
 using System.Windows.Documents;
 using System.Windows.Input;
@@ -12,9 +14,9 @@ using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
-using PhotoGalleryApp.ViewModels;
-using PhotoGalleryApp.Models;
+
 using System.Collections.ObjectModel;
+using System.IO;
 
 namespace PhotoGalleryApp
 {
@@ -32,6 +34,18 @@ namespace PhotoGalleryApp
             nav = new NavigatorViewModel();
 
             MediaGallery gallery = MediaGallery.LoadGallery("gallery.xml");
+
+            for(int i = gallery.Count - 1; i >= 0; i--)
+            {
+                Media media = gallery[i];
+
+                if (!File.Exists(media.Filepath))
+                {
+                    Console.WriteLine("File not found, removing from gallery: " + media.Filepath);
+                    gallery.RemoveAt(i);
+                    continue;
+                }
+            }
 
             nav.NewPage(new GalleryViewModel(nav, gallery));
             DataContext = nav;

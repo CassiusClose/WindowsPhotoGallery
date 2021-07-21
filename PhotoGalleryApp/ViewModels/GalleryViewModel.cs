@@ -280,6 +280,33 @@ namespace PhotoGalleryApp.ViewModels
             return false;
         }
 
+        
+
+        /// <summary>
+        /// Creates and returns a MediaViewModel object, that holds the given Media object. Will be
+        /// either an ImageViewModel or VideoViewModel instance, depending on the type of media the
+        /// Media object contains.
+        /// </summary>
+        /// <param name="media">The Media object that the MediaViewModel will contain.</param>
+        /// <returns>A MediaViewModel which contains the Media object, either an ImageViewModel
+        /// or VideoViewModel.</returns>
+        public MediaViewModel CreateMediaViewModel(Media media)
+        {
+            switch(media.MediaType)
+            {
+                case MediaFileType.Video:               
+                    // Create the VideoVM in ThumbnailMode, which creates an ImageViewModel
+                    // for the thumbnail within the VM.
+                    return new VideoViewModel(media as Video, true, 0, ThumbnailHeight);
+
+                case MediaFileType.Image:
+                    return new ImageViewModel(media as Image, 0, ThumbnailHeight);
+
+                default:
+                    return null;
+            }
+        }
+
 
         #endregion Methods
 
@@ -324,32 +351,6 @@ namespace PhotoGalleryApp.ViewModels
                     _items.Add(vm);
                     ScrollChangedStopped(null, null);
                 }
-            }
-        }
-
-
-        /// <summary>
-        /// Creates and returns a MediaViewModel object, that holds the given Media object. Will be
-        /// either an ImageViewModel or VideoViewModel instance, depending on the type of media the
-        /// Media object contains.
-        /// </summary>
-        /// <param name="media">The Media object that the MediaViewModel will contain.</param>
-        /// <returns>A MediaViewModel which contains the Media object, either an ImageViewModel
-        /// or VideoViewModel.</returns>
-        public MediaViewModel CreateMediaViewModel(Media media)
-        {
-            switch(media.MediaType)
-            {
-                case MediaFileType.Video:               
-                    // Create the VideoVM in ThumbnailMode, which creates an ImageViewModel
-                    // for the thumbnail within the VM.
-                    return new VideoViewModel(media as Video, true, 0, ThumbnailHeight);
-
-                case MediaFileType.Image:
-                    return new ImageViewModel(media as Image, 0, ThumbnailHeight);
-
-                default:
-                    return null;
             }
         }
 

@@ -37,6 +37,9 @@ namespace PhotoGalleryApp.ViewModels
             // If thumbnail mode is activated, create a view model for the thumbnail
             if(ThumbnailMode)
             {
+                // The thumbnail is loaded here so that when the XmlDeserializer creates a Video object, it doesn't attempt to
+                // load the thumbnail until the deserialization is complete. Otherwise, the Video object would load a new
+                // thumbnail before its Thumbnail property is set by the deserializer.
                 video.LoadThumbnail();
                 _thumbnailViewModel = new ImageViewModel(video.Thumbnail, thumbnailPreviewHeight, thumbnailFinalHeight);
             }

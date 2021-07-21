@@ -43,11 +43,9 @@ namespace PhotoGalleryApp.Models
          */
         protected override void LoadMetadata()
         {
-            if (Filepath == null)
+            if (Filepath == null || !File.Exists(Filepath))
                 return;
 
-            // By default, don't rotate the image
-            Rotation = Rotation.Rotate0;
 
             // Load image metadata
             FileStream fs = new FileStream(Filepath, FileMode.Open, FileAccess.Read);
@@ -61,6 +59,7 @@ namespace PhotoGalleryApp.Models
 
 
             // Process any rotation metadata
+            Rotation = Rotation.Rotate0;
             if (meta != null && meta.ContainsQuery("System.Photo.Orientation"))
             {
                 ushort rotAmount = (ushort)meta.GetQuery("System.Photo.Orientation");
