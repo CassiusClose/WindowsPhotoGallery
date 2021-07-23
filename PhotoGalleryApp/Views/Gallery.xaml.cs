@@ -24,5 +24,16 @@ namespace PhotoGalleryApp.Views
         {
             InitializeComponent();
         }
+
+        /**
+         * If the user scrolls the mouse wheel when the mouse is anywhere within the ScrollViewer,
+         * scroll the ScrollViewer.
+         */
+        private void ScrollViewer_MouseWheel(object sender, MouseWheelEventArgs e)
+        {
+            int offset = e.Delta;
+            ImagesScrollViewer.ScrollToVerticalOffset(ImagesScrollViewer.VerticalOffset - offset);
+            e.Handled = true;
+        }
     }
 }

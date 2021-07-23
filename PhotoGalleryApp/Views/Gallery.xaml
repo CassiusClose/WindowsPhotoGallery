@@ -160,7 +160,7 @@
         </StackPanel>
 
         <!-- Display the images -->
-        <ScrollViewer Grid.Row="3" HorizontalScrollBarVisibility="Disabled">
+        <ScrollViewer Name="ImagesScrollViewer" Grid.Row="3" HorizontalScrollBarVisibility="Disabled" PreviewMouseWheel="ScrollViewer_MouseWheel">
             <!--
             Make the ScrollChanged event call a command in the view model.
             Gotten from https://stackoverflow.com/questions/25809655/wpf-mvvm-binding-command-to-event 
