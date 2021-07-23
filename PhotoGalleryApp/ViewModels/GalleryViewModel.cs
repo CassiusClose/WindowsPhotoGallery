@@ -257,27 +257,16 @@ namespace PhotoGalleryApp.ViewModels
             if (CurrentTags.Count == 0)
                 return true;
 
-
             MediaViewModel ivm = item as MediaViewModel;
             Media image = ivm.Media;
-            // For each tag in the image
-            foreach (string tag in image.Tags)
+
+            // If the image does not contain any of the selected tags, reject it
+            foreach(string tag in CurrentTags)
             {
-                bool found = false;
-                // See if the tag has been selected by the user
-                foreach (string t in CurrentTags)
-                {
-                    if (t == tag)
-                    {
-                        found = true;
-                        break;
-                    }
-                }
-                // If it has, accept the image
-                if (found)
-                    return true;
+                if (!image.Tags.Contains(tag))
+                    return false;
             }
-            return false;
+            return true;
         }
 
         
