@@ -24,9 +24,10 @@
 
         <!-- How to display a video -->
         <DataTemplate DataType="{x:Type vms:VideoViewModel}">
-            <MediaElement LoadedBehavior="Play" Source="{Binding Filepath, Mode=OneWay}"/>
+            <local:VideoDisplay/>
         </DataTemplate>
     </UserControl.Resources>
+    
 
     <Grid>
         <Grid.RowDefinitions>
@@ -63,7 +64,7 @@
         <!-- Left Button -->
         <Button Grid.Column="0" Grid.Row="1" Command="{Binding LeftCommand}" HorizontalAlignment="Left">Left</Button>
         
-        <!-- Image display -->
+        <!-- Media display -->
         <ContentControl Grid.Column="1" Grid.Row="1" Content="{Binding CurrentMediaViewModel}"/>
 
         <!-- Right Button -->

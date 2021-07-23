@@ -1,0 +1,27 @@
+﻿<UserControl x:Class="PhotoGalleryApp.Views.VideoDisplay"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             xmlns:local="clr-namespace:PhotoGalleryApp.Views"
+             mc:Ignorable="d" 
+             d:DesignHeight="450" d:DesignWidth="800">
+    
+    <DockPanel LastChildFill="True">
+        <!-- Video controls panel -->
+        <StackPanel DockPanel.Dock="Bottom">
+            <!-- Video position slider -->
+            <Slider Name="PositionSlider" IsMoveToPointEnabled="True" ValueChanged="PositionSlider_ValueChanged" Minimum="0" Maximum="0"/>
+            
+            <!-- Button controls -->
+            <StackPanel DockPanel.Dock="Bottom" Orientation="Horizontal" HorizontalAlignment="Center">
+                <!-- Play/Pause button -->
+                <ToggleButton Name="PlayPauseButton" Content="Pause" Click="PlayPauseButton_Click"/>
+            </StackPanel>
+        </StackPanel>
+        
+        <!-- Video player -->
+        <MediaElement Name="VideoPlayer" LoadedBehavior="Manual" Source="{Binding Filepath, Mode=OneWay}"
+                      MediaOpened="VideoPlayer_MediaOpened" ScrubbingEnabled="True"/>
+    </DockPanel>
+</UserControl>
