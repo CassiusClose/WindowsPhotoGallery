@@ -22,7 +22,8 @@
 
     <StackPanel>
         <!-- The textbox where the user enters the filtering text. -->
-        <TextBox AcceptsReturn="False" AcceptsTab="False" Text="{Binding TextInput, UpdateSourceTrigger=PropertyChanged}" Name="ChooserDropDownTextBox">
+        <TextBox Text="{Binding TextInput, UpdateSourceTrigger=PropertyChanged}" Name="ChooserDropDownTextBox"
+                 AcceptsReturn="True" AcceptsTab="True">
             <!-- Convert event handlers into VM commands -->
             <i:Interaction.Triggers>
                 <i:EventTrigger EventName="GotFocus">

@@ -89,7 +89,47 @@ namespace PhotoGalleryApp.ViewModels
             get { return _textInput; }
             set
             {
-                _textInput = value;
+                // Check if the user pressed Enter
+                if (value.Contains('\n') || value.Contains('\r'))
+                {
+                    // Choose the first item in the drop down and select it. If there
+                    // are no tags in the drop down (because the user has entered text
+                    // which doesn't match any tags), then create a new tag. Otherwise,
+                    // select the first tag in the list.
+                    if(Items.IsEmpty)
+                    {
+                        if(_showCreateButton)
+                            CreateNewItem();
+                    }
+                    else
+                    {
+                        Items.MoveCurrentToFirst();
+                        ItemSelected(Items.CurrentItem);
+                    }
+                    return;
+                }
+
+                // Check if the user pressed tab
+                if(value.Contains('\t'))
+                {
+                    // If the user pressed tab, fill the textbox with the text of the first
+                    // item on the list. If there are no tags in the dropdown list, then
+                    // do nothing (remove the tabs from the string and continue normally)
+                    if(Items.IsEmpty)
+                    {
+                        _textInput = value.Replace("\t", "");
+                    }
+                    else
+                    {
+                        Items.MoveCurrentToFirst();
+                        _textInput = (string)Items.CurrentItem;
+                    }
+                }
+                else
+                {
+                    _textInput = value;
+                }
+
 
                 // When the input changes, adjust the item filter
                 Items.Refresh();
@@ -208,6 +248,10 @@ namespace PhotoGalleryApp.ViewModels
         {
             ShowDropDown = false;
             TextInput = "";
+
+            // Send focus back to the main window. Not really MVVM, but it's a slight
+            // trangression and it's not clear how I would do it otherwise
+            ((MainWindow)Application.Current.MainWindow).SeizeFocus();
         }
 
 
