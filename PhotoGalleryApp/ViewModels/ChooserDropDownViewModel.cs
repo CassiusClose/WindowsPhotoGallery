@@ -18,6 +18,12 @@ namespace PhotoGalleryApp.ViewModels
     /// </summary>
     class ChooserDropDownViewModel : ViewModelBase
     {
+        /**
+         * The text that the Create New button in the drop-down list will have. The button, when 
+         * clicked on, is sent over to the VM like a regular tag, so the VM needs to know what text
+         * it contains to process it correctly.
+         */
+        private const string CREATE_NEW_TEXT = "Create New";
 
         #region Constructors
 
@@ -25,7 +31,7 @@ namespace PhotoGalleryApp.ViewModels
         /// Initializes a ChooserDropDown with a collection of items.
         /// </summary>
         /// <param name="items"></param>
-        public ChooserDropDownViewModel(ICollectionView items) : this(items, null) { }
+        public ChooserDropDownViewModel(CollectionViewSource items) : this(items, null) { }
 
 
         /// <summary>
@@ -35,7 +41,7 @@ namespace PhotoGalleryApp.ViewModels
         /// <param name="items">The items that will be choosable in the dropdown menu.</param>
         /// <param name="addTagCallback">A callback function that will be called when an item is
         /// either chosen or created.</param>
-        public ChooserDropDownViewModel(ICollectionView items, ItemCallback addTagCallback) : this(items, addTagCallback, true, true) { }
+        public ChooserDropDownViewModel(CollectionViewSource items, ItemCallback addTagCallback) : this(items, addTagCallback, true, true) { }
 
 
         /// <summary>
@@ -47,15 +53,15 @@ namespace PhotoGalleryApp.ViewModels
         /// either chosen or created.</param>
         /// <param name="showCreateButton">Whether the "create new item" button should be shown.</param>
         /// <param name="emptyTextShowsAll">Whether no input in the textbox should display nothing or all the drop-down's items.</param>
-        public ChooserDropDownViewModel(ICollectionView items, ItemCallback addTagCallback, bool showCreateButton, bool emptyTextShowsAll)
+        public ChooserDropDownViewModel(CollectionViewSource items, ItemCallback addTagCallback, bool showCreateButton, bool emptyTextShowsAll)
         {
             // Init commands
             _itemSelectedCommand = new RelayCommand(ItemSelected);
             _newItemCommand = new RelayCommand(CreateNewItem);
             _textboxFocusedCommand = new RelayCommand(TextboxFocused);
             _textboxUnfocusedCommand = new RelayCommand(TextboxUnfocused);
-
-            _showCreateButton = showCreateButton;
+            
+            CreateButtonVisible = showCreateButton;
             _emptyTextShowsAll = emptyTextShowsAll;
 
             ItemSelectedCallback = addTagCallback;
@@ -63,7 +69,8 @@ namespace PhotoGalleryApp.ViewModels
 
 
             // Setup collection of items
-            Items = items;
+            _itemsSource = items;
+
             Items.Filter += ItemFilter;
         }
 
@@ -73,10 +80,20 @@ namespace PhotoGalleryApp.ViewModels
 
         #region Fields and Properties
 
+        /**
+         * Store the items as a CollectionViewSource and have the ICollectionView
+         * request a new view from the CollectionViewSource every time its getter is
+         * called. Otherwise, if we kept the same ICollectionView the whole time, it
+         * could become stale and be garbage collected.
+         */
+        private CollectionViewSource _itemsSource;
         /// <summary>
         /// The items that can be chosen with the drop-down.
         /// </summary>
-        public ICollectionView Items { get; }
+        public ICollectionView Items 
+        { 
+            get { return _itemsSource.View; } 
+        }
 
 
 
@@ -89,40 +106,41 @@ namespace PhotoGalleryApp.ViewModels
             get { return _textInput; }
             set
             {
+                // Whether or not backspace was just typed.
+                bool isBackspace = _textInput.Length > value.Length;
+
                 // Check if the user pressed Enter
                 if (value.Contains('\n') || value.Contains('\r'))
                 {
-                    // Choose the first item in the drop down and select it. If there
-                    // are no tags in the drop down (because the user has entered text
-                    // which doesn't match any tags), then create a new tag. Otherwise,
-                    // select the first tag in the list.
-                    if(Items.IsEmpty)
+                    // If the user pressed eneter, find the selected item. If it's the Create New
+                    // button, then carry that out. Otherwise, select the chosen item.
+                    List<string> list = Items.Cast<string>().ToList();
+                    if (SelectedIndex < 0 || SelectedIndex >= list.Count || list[SelectedIndex] == CREATE_NEW_TEXT)
                     {
-                        if(_showCreateButton)
+                        if (_showCreateButton)
                             CreateNewItem();
                     }
                     else
                     {
-                        Items.MoveCurrentToFirst();
-                        ItemSelected(Items.CurrentItem);
+                        ItemSelected(list[SelectedIndex]);
                     }
                     return;
                 }
 
                 // Check if the user pressed tab
-                if(value.Contains('\t'))
+                if (value.Contains('\t'))
                 {
-                    // If the user pressed tab, fill the textbox with the text of the first
-                    // item on the list. If there are no tags in the dropdown list, then
-                    // do nothing (remove the tabs from the string and continue normally)
-                    if(Items.IsEmpty)
+                    // If the user pressed tab, fill the textbox with the text of the selected item.
+                    // If there are no tags in the dropdown list, then do nothing (remove the tabs
+                    // from the string and continue normally)
+                    List<string> list = Items.Cast<string>().ToList();
+                    if (SelectedIndex < 0 || SelectedIndex >= list.Count || list[SelectedIndex] == CREATE_NEW_TEXT)
                     {
                         _textInput = value.Replace("\t", "");
                     }
                     else
                     {
-                        Items.MoveCurrentToFirst();
-                        _textInput = (string)Items.CurrentItem;
+                        _textInput = (string)list[SelectedIndex];
                     }
                 }
                 else
@@ -136,6 +154,22 @@ namespace PhotoGalleryApp.ViewModels
 
                 OnPropertyChanged();
                 OnPropertyChanged("CreateButtonVisible");
+
+                List<string> l = Items.Cast<string>().ToList();
+                /* Conditions for not resetting the selected item to the first of the list:
+                 * - If the selected item can't be found (the list is empty, selected index is -1, etc.),
+                 * - If the selected item is not the first on the list & the user didn't backspace
+                 *      (if the user uses arrow keys to select something other than the first on the
+                 *      list, then keep that item selected as long as possible, if the user keeps
+                 *      typing. Backspacing resets the selection)
+                 */
+                if (SelectedIndex >= 0 && SelectedIndex < l.Count && (string) l[0] != (string) l[SelectedIndex] && !isBackspace)
+                {
+                }
+                else
+                {
+                    SelectedIndex = 0;
+                }
             }
         }
 
@@ -179,11 +213,17 @@ namespace PhotoGalleryApp.ViewModels
         {
             get
             {
-                // If there's no textbox input, don't show the button regardless.
-                if (TextInput == "")
+                // Hide the Create New button if there's no input (can't create an empty tag) or
+                // if the text exactly matches a tag (can't duplicate a tag)
+                if (TextInput == "" || Items.Contains(TextInput))
                     return false;
 
                 return _showCreateButton;
+            }
+            set
+            {
+                _showCreateButton = value;
+                OnPropertyChanged();
             }
         }
 
@@ -194,6 +234,20 @@ namespace PhotoGalleryApp.ViewModels
         private bool _emptyTextShowsAll;
 
 
+        private int _selectedIndex;
+        /// <summary>
+        /// The index of the selected item in the drop-down list. This might be -1 or greater than the
+        /// size of the Items property (because the Create New item is added in the XAML)
+        /// </summary>
+        public int SelectedIndex
+        {
+            get { return _selectedIndex; }
+            set
+            {
+                _selectedIndex = value;
+                OnPropertyChanged();
+            }
+        }
 
         #endregion Fields and Properties
 
@@ -275,7 +329,16 @@ namespace PhotoGalleryApp.ViewModels
         private void ItemSelected(object parameter)
         {
             if (ItemSelectedCallback != null)
-                ItemSelectedCallback(parameter as string, false);
+            {
+                string item = parameter as string;
+                // If the item selected was actually the Create New button, carry that out
+                if (item == CREATE_NEW_TEXT)
+                    CreateNewItem();
+                // Otherwise, process it as a normal tag
+                else
+                    ItemSelectedCallback(parameter as string, false);
+
+            }
 
             ClosePopup();
         }
@@ -343,7 +406,6 @@ namespace PhotoGalleryApp.ViewModels
             await Task.Delay(150); //HORRIBLE
             ClosePopup();
         }
-
 
         #endregion Commands
     }

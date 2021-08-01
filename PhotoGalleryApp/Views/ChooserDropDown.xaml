@@ -5,26 +5,45 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
              xmlns:local="clr-namespace:PhotoGalleryApp.Views"
              xmlns:i="clr-namespace:System.Windows.Interactivity;assembly=System.Windows.Interactivity"
-             xmlns:converters="clr-namespace:PhotoGalleryApp.Converters"
+             xmlns:System="clr-namespace:System;assembly=mscorlib"
              mc:Ignorable="d" 
-             d:DesignHeight="450" d:DesignWidth="800">
+             d:DesignHeight="450" d:DesignWidth="800"
+             x:Name="ChooserDropDownControl">
 
     <UserControl.Resources>
-        <!-- The template for each item in the drop-down. Each item is a button that, when clicked on, selects that item in the VM. -->
-        <DataTemplate x:Key="DropDownItemTemplate">
-            <Button Content="{Binding}"
-                    Command="{Binding Path=DataContext.ItemSelectedCommand, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType={x:Type local:ChooserDropDown}}}"
-                    CommandParameter="{Binding}"/>
-        </DataTemplate>
+        <!-- A collection which contains all the items to be displayed in the drop-down, as well as an additional string,
+        "Create New", which serves as the "create new item" button. If that button should be shown, this collection will
+        be used as the ItemSource for the dropdown ListBox. Otherwise, it will bind directly to the collection of items. -->
+        <CompositeCollection x:Key="ItemsCollection">
+            <CollectionContainer Collection="{Binding DataContext.Items, Source={x:Reference ChooserDropDownControl}}"/>
+            <System:String>Create New</System:String>
+        </CompositeCollection>
 
-        <converters:BoolToVisibilityConverter x:Key="BoolToVisConv"/>
+        
+        <!-- The style for the ListBox that holds the items in the drop-down list. -->
+        <Style TargetType="ListBox">
+            <Setter Property="ItemsSource" Value="{Binding Items}"/>
+            <!-- If the "Create New" button is visible, use the CompositeCollection above (which contains
+            the "Create New" string). Otherwise, just bind directly to the collection of items. -->
+            <Style.Triggers>
+                <DataTrigger Binding="{Binding CreateButtonVisible,Mode=OneWay}" Value="True">
+                    <Setter Property="ItemsSource" Value="{StaticResource ItemsCollection}"/>
+                </DataTrigger>
+            </Style.Triggers>
+        </Style>
+
+        <!-- The template for items in the drop-down list. -->
+        <DataTemplate x:Key="ListBoxItemTemplate" DataType="ListBoxItem">
+            <Label Content="{Binding}"/>
+        </DataTemplate>
     </UserControl.Resources>
 
     <StackPanel>
         <!-- The textbox where the user enters the filtering text. -->
         <TextBox Text="{Binding TextInput, UpdateSourceTrigger=PropertyChanged}" Name="ChooserDropDownTextBox"
-                 AcceptsReturn="True" AcceptsTab="True">
-            <!-- Convert event handlers into VM commands -->
+                 AcceptsReturn="True" AcceptsTab="True" PreviewKeyDown="Textbox_PreviewKeyDown"
+                 GotFocus="Textbox_Focused">
+            <!-- Events that trigger VM commands -->
             <i:Interaction.Triggers>
                 <i:EventTrigger EventName="GotFocus">
                     <i:InvokeCommandAction Command="{Binding TextboxFocusedCommand}"/>
@@ -40,11 +59,15 @@
             <Border Background="LightGray" Name="PopupBorder">
                 <StackPanel>
                     <!-- The list of items in the drop-down. -->
-                    <ItemsControl ItemsSource="{Binding Items, Mode=OneWay}" ItemTemplate="{StaticResource DropDownItemTemplate}"/>
-                    
-                    <!-- At the bottom of the drop-down, this button creates the text in the textbox as a new item. -->
-                    <Button Command="{Binding NewItemCommand}"
-                            Visibility="{Binding CreateButtonVisible, Converter={StaticResource BoolToVisConv}}">Create new</Button>
+                    <ListBox Name="DropDownListBox" SelectedIndex="{Binding SelectedIndex}" ItemTemplate="{StaticResource ListBoxItemTemplate}">
+                        <!-- Events that trigger VM commands -->
+                        <i:Interaction.Triggers>
+                            <i:EventTrigger EventName="PreviewMouseUp">
+                                <i:InvokeCommandAction Command="{Binding ItemSelectedCommand}"
+                                                       CommandParameter="{Binding SelectedItem, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=ListBox}}"/>
+                            </i:EventTrigger>
+                        </i:Interaction.Triggers>
+                    </ListBox>
                 </StackPanel>
             </Border>
         </Popup>

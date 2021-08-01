@@ -33,7 +33,7 @@ namespace PhotoGalleryApp.ViewModels
 
             // Init the tag chooser VM. AddTag will be called whenever an item is selected or
             // created from the drop-down.
-            _tagChooser = new ChooserDropDownViewModel(new CollectionViewSource { Source = gallery.Tags }.View, AddTag);
+            _tagChooser = new ChooserDropDownViewModel(new CollectionViewSource { Source = gallery.Tags }, AddTag);
         }
 
         #endregion Constructors
