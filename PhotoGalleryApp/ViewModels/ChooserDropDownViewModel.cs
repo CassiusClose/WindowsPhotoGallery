@@ -112,10 +112,10 @@ namespace PhotoGalleryApp.ViewModels
                 // Check if the user pressed Enter
                 if (value.Contains('\n') || value.Contains('\r'))
                 {
-                    // If the user pressed eneter, find the selected item. If it's the Create New
+                    // If the user pressed enter, find the selected item. If it's the Create New
                     // button, then carry that out. Otherwise, select the chosen item.
                     List<string> list = Items.Cast<string>().ToList();
-                    if (SelectedIndex < 0 || SelectedIndex >= list.Count || list[SelectedIndex] == CREATE_NEW_TEXT)
+                    if (SelectedIndex < 0 || SelectedIndex >= list.Count)
                     {
                         if (_showCreateButton)
                             CreateNewItem();
@@ -127,21 +127,52 @@ namespace PhotoGalleryApp.ViewModels
                     return;
                 }
 
-                // Check if the user pressed tab
+                // If the user pressed tab, then autofill the text up to the point where
+                // all of the items in the list share that text. So if the items in the
+                // list were "abcd", "abcde", and "abcdef", and if the text inputted was
+                // "a", then pressing tab would autofill the input to "abcd".
                 if (value.Contains('\t'))
                 {
-                    // If the user pressed tab, fill the textbox with the text of the selected item.
-                    // If there are no tags in the dropdown list, then do nothing (remove the tabs
-                    // from the string and continue normally)
                     List<string> list = Items.Cast<string>().ToList();
-                    if (SelectedIndex < 0 || SelectedIndex >= list.Count || list[SelectedIndex] == CREATE_NEW_TEXT)
+
+                    // Get length of shortest item - we'll be finding a string that
+                    // all of the tabs start with, so we only need to search them as
+                    // far as the shortest one.
+                    int minLen = int.MaxValue;
+                    foreach (string item in list)
+                        if (item.Length < minLen)
+                            minLen = item.Length;
+
+
+                    bool done = false; 
+                    // Start with what's already in the text input. That's guaranteed to be the
+                    // string that all of the items visible start with.
+                    string newText = _textInput;
+                    // Go through each character after the text input.
+                    for (int i = _textInput.Length; i < minLen; i++)
                     {
-                        _textInput = value.Replace("\t", "");
+                        char c = list[0][i]; // Get the first strings char
+                        // Compare to the chars of the rest of the strings
+                        for (int j = 1; j < list.Count; j++)
+                        {
+                            // If any of the strings have a char at this position that don't match
+                            // the others, then we've reached our stopping point - we can't autofill
+                            // this character.
+                            if (list[j][i] != c)
+                            {
+                                done = true;
+                                break;
+                            }
+                        }
+
+                        if(done) // If we've found a discontinuity, then don't include the char. We're done.
+                            break;
+                        else // Otherwise, the current position's character is shared by all strings, add it to the text
+                            newText += c;
                     }
-                    else
-                    {
-                        _textInput = (string)list[SelectedIndex];
-                    }
+
+                    _textInput = newText;
+
                 }
                 else
                 {
