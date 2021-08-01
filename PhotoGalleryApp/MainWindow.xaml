@@ -8,7 +8,8 @@
         mc:Ignorable="d"
         Title="MainWindow" Height="800" Width="1100"
         MouseDown="Window_MouseDown"
-        KeyDown="Window_KeyDown">
+        KeyDown="Window_KeyDown"
+        Deactivated="Window_Deactivated">
 
     <!-- Make the grid focusable so that clicking off of textboxes & other controls will
     defocus them by setting focus to this grid. -->

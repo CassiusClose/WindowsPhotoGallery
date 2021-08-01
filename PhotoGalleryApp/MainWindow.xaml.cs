@@ -86,5 +86,11 @@ namespace PhotoGalleryApp
         {
             nav.BroadcastKeyEvent(e.Key);
         }
+
+        private void Window_Deactivated(object sender, EventArgs e)
+        {
+            WindowGrid.Focus();
+            Keyboard.Focus(WindowGrid);
+        }
     }
 }
