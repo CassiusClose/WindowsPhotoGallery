@@ -72,7 +72,6 @@
     <Compile Include="Utils\MediaFileType.cs" />
     <Compile Include="Utils\MultiKeyDictionary.cs" />
     <Compile Include="Utils\RangeObservableCollection.cs" />
-    <Compile Include="ViewModels\ChooserDropDownViewModel.cs" />
     <Compile Include="ViewModels\GalleryViewModel.cs" />
     <Compile Include="ViewModels\MediaInfoViewModel.cs" />
     <Compile Include="ViewModels\SlideshowViewModel.cs" />

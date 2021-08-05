@@ -8,6 +8,7 @@ using System.Threading.Tasks;
 using System.Windows.Data;
 using System.Windows.Input;
 using PhotoGalleryApp.Models;
+using PhotoGalleryApp.Views;
 
 namespace PhotoGalleryApp.ViewModels
 {
@@ -29,20 +30,18 @@ namespace PhotoGalleryApp.ViewModels
             _removeTagCommand = new RelayCommand(RemoveTag);
 
             _photo = photo;
-            TagsView = CollectionViewSource.GetDefaultView(photo.Tags);
-
-            // Init the tag chooser VM. AddTag will be called whenever an item is selected or
-            // created from the drop-down.
-            _tagChooser = new ChooserDropDownViewModel(new CollectionViewSource { Source = gallery.Tags }, AddTag);
+            _gallery = gallery;
         }
 
         #endregion Constructors
 
 
+
         #region Fields and Properties
 
-        // The photo that contains all the information
+        // The photo & the containing gallery
         private Media _photo;
+        private MediaGallery _gallery;
 
 
         /// <summary>
@@ -54,23 +53,25 @@ namespace PhotoGalleryApp.ViewModels
         }
 
 
-
-
-        // A view which stores all the photo's tags
-        public ICollectionView TagsView { get; }
-
-
-
-        private ChooserDropDownViewModel _tagChooser;
         /// <summary>
-        /// The ViewModel that hold info for the drop-down list where the user can add tags to the photo.
+        /// A collection of the photo's tags
         /// </summary>
-        public ChooserDropDownViewModel TagChooser
+        public ObservableCollection<string> PhotoTags
         {
-            get { return _tagChooser; }
+            get { return _photo.Tags; }
+        }
+
+
+        /// <summary>
+        /// A collection of the containing gallery's tags
+        /// </summary>
+        public ObservableCollection<string> AllTags
+        {
+            get { return _gallery.Tags; }
         }
 
         #endregion Fields and Properties
+
 
 
         #region Methods
@@ -93,6 +94,21 @@ namespace PhotoGalleryApp.ViewModels
 
 
         #region Commands
+
+        /// <summary>
+        /// An event handler that adds the event's tag to this VM's Photo.
+        /// </summary>
+        /// <param name="sender">The element that this event was triggered on.</param>
+        /// <param name="args">The event's arguments, of type PhotoGalleryApp.Views.ItemChosenEventArgs</param>
+        public void AddTagToPhoto(object sender, EventArgs args)
+        {
+            ItemChosenEventArgs itemArgs = (ItemChosenEventArgs)args;
+            if (itemArgs.Item != null && !_photo.Tags.Contains(itemArgs.Item))
+                _photo.Tags.Add(itemArgs.Item);
+        }
+
+
+
 
         private RelayCommand _removeTagCommand;
         /// <summary>

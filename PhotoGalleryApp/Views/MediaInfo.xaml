@@ -3,18 +3,14 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             xmlns:i="clr-namespace:System.Windows.Interactivity;assembly=System.Windows.Interactivity"
              xmlns:local="clr-namespace:PhotoGalleryApp.Views"
              xmlns:vms="clr-namespace:PhotoGalleryApp.ViewModels"
+             xmlns:ei="http://schemas.microsoft.com/expression/2010/interactions"
              mc:Ignorable="d" 
              d:DesignHeight="450" d:DesignWidth="800">
 
     <UserControl.Resources>
-        <!-- The below ContentControl is bound to a ViewModel, so to use a certain View in the Navigator, you must
-             declare a DataTemplate here that links the binding of that ViewModel to display the desired view. -->
-        <DataTemplate DataType="{x:Type vms:ChooserDropDownViewModel}">
-            <local:ChooserDropDown/>
-        </DataTemplate>
-
         <Style TargetType="Label">
             <Setter Property="HorizontalContentAlignment" Value="Center"/>
         </Style>
@@ -54,9 +50,15 @@
 
         <!-- Display all image tags in horizontal wrapping view -->
         <Label>Tags:</Label>
-        <ItemsControl ItemsSource="{Binding Path=TagsView, Mode=OneWay}" Style="{StaticResource TagsList}"/>
+        <ItemsControl ItemsSource="{Binding Path=PhotoTags, Mode=OneWay}" Style="{StaticResource TagsList}"/>
 
         <!-- Drop-down chooser which lets the user add tags to the image-->
-        <ContentControl Content="{Binding TagChooser}"/>
+        <local:ChooserDropDown ItemsSource="{Binding AllTags, Mode=OneWay}" ShowCreateButton="True">
+            <i:Interaction.Triggers>
+                <i:EventTrigger EventName="ItemSelected">
+                    <ei:CallMethodAction TargetObject="{Binding}" MethodName="AddTag"/>
+                </i:EventTrigger>
+            </i:Interaction.Triggers>
+        </local:ChooserDropDown>
     </StackPanel>
 </UserControl>

@@ -7,15 +7,12 @@
              xmlns:converters="clr-namespace:PhotoGalleryApp.Converters"
              xmlns:vms="clr-namespace:PhotoGalleryApp.ViewModels"
              xmlns:i="clr-namespace:System.Windows.Interactivity;assembly=System.Windows.Interactivity"
+             xmlns:ei="http://schemas.microsoft.com/expression/2010/interactions"
              mc:Ignorable="d" 
              d:DesignHeight="450" d:DesignWidth="800">
 
     <UserControl.Resources>
         <converters:HeightARToWidthConverter x:Key="HeightARToWidth"/>
-
-        <DataTemplate DataType="{x:Type vms:ChooserDropDownViewModel}">
-            <local:ChooserDropDown/>
-        </DataTemplate>
 
         <Style x:Key="GalleryThumbnailImage" TargetType="Image">
             <Setter Property="MinHeight" Value="{Binding Path=DataContext.ThumbnailHeight, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType={x:Type local:Gallery}}}"/>
@@ -152,7 +149,13 @@
         <!-- Tag Filtering panel -->
         <StackPanel Grid.Row="2" Orientation="Horizontal">
             <!-- Drop down list that lets you add tags to the filter -->
-            <ContentControl Content="{Binding TagChooserDropDown}"/>
+\            <local:ChooserDropDown ItemsSource="{Binding AllTags}">
+                <i:Interaction.Triggers>
+                    <i:EventTrigger EventName="ItemSelected">
+                        <ei:CallMethodAction TargetObject="{Binding}" MethodName="AddTagToPhoto"/>
+                    </i:EventTrigger>
+                </i:Interaction.Triggers>
+            </local:ChooserDropDown>
 
 
             <!-- A list of all currently selected tags, clicking removes them -->

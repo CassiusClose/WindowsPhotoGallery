@@ -17,6 +17,7 @@ using System.Windows.Media.Imaging;
 using System.Windows.Threading;
 using System.Windows;
 using PhotoGalleryApp.Utils;
+using PhotoGalleryApp.Views;
 
 namespace PhotoGalleryApp.ViewModels
 {
@@ -54,8 +55,6 @@ namespace PhotoGalleryApp.ViewModels
             ImagesView.Filter += MediaFilter;
             CurrentTags.CollectionChanged += CurrentTags_CollectionChanged;
 
-            // Initialize the tag chooser drop-down
-            _tagChooserDropDown = new ChooserDropDownViewModel(new CollectionViewSource() { Source = gallery.Tags }, AddTag, false, true);
 
             // Load all the images in the gallery
             InitAndLoadAllMedia();
@@ -90,22 +89,6 @@ namespace PhotoGalleryApp.ViewModels
             set
             {
                 _gallery.Name = value;
-                OnPropertyChanged();
-            }
-        }
-
-
-        private ChooserDropDownViewModel _tagChooserDropDown;
-        /// <summary>
-        /// The ViewModel for a filterable drop-down list that lets the user choose which tags
-        /// to filter the images by.
-        /// </summary>
-        public ChooserDropDownViewModel TagChooserDropDown
-        {
-            get { return _tagChooserDropDown; }
-            set
-            {
-                _tagChooserDropDown = value;
                 OnPropertyChanged();
             }
         }
@@ -522,14 +505,15 @@ namespace PhotoGalleryApp.ViewModels
         #region Tag Commands
 
         /// <summary>
-        /// Adds the given tag to the list of selected tags, if it is not already added.
+        /// An event handler that adds the given tag to the list of selected tags, if it is not already added.
         /// </summary>
-        /// <param name="parameter">The tag to add, as a string.</param>
-        /// <param name="isNew">Whether or not the tag is being creatd or added.</param>
-        public void AddTag(string tag, bool isNew)
+        /// <param name="sender">The element that this event was triggered on.</param>
+        /// <param name="args">The event's arguments, of type PhotoGalleryApp.Views.ItemChosenEventArgs</param>
+        public void AddTagToFilter(object sender, EventArgs eArgs)
         {
-            if (!CurrentTags.Contains(tag))
-                CurrentTags.Add(tag);
+            ItemChosenEventArgs args = (ItemChosenEventArgs)eArgs;
+            if(args.Item != null && !CurrentTags.Contains(args.Item))
+                CurrentTags.Add(args.Item);
         }
 
 
@@ -550,6 +534,7 @@ namespace PhotoGalleryApp.ViewModels
         }
 
         #endregion Tag Commands
+
 
         #endregion Commands
     }
