@@ -52,7 +52,7 @@
         <Style TargetType="ListBox">
             <Setter Property="SelectedItem" Value="{Binding SelectedItem, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType={x:Type local:ChooserDropDown}}}"/>
             <Setter Property="ItemTemplate" Value="{StaticResource DropDownList_ItemTemplate}"/>
-
+            
             <!-- If the "Create New" button is visible, use the CompositeCollection above (which contains
             the "Create New" string). Otherwise, just bind directly to the collection of items. -->
             <Setter Property="ItemsSource" Value="{Binding Source={StaticResource ItemsViewSource}}"/>

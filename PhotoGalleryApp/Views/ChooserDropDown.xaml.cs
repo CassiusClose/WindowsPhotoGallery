@@ -91,8 +91,6 @@ namespace PhotoGalleryApp.Views
             ChooserDropDown control = (ChooserDropDown)d;
             if (control != null)
                 control.TextChanged();
-
-
         }
 
         /**
@@ -121,17 +119,23 @@ namespace PhotoGalleryApp.Views
             }
 
 
+            // The selected item before the view is refreshed
+            string origSel = (string)SelectedItem;
+
             // The text which filters the items has changed, so refresh the list of items
             RefreshView();
 
 
-            // There should always be an item selected in the drop-down list if it's opened, so get its index
+            // If the previously selected item is still in the list, but unselected, select it.
+            // Sometimes the listbox will lose a selection (possibly due to changing its ItemsSource),
+            // so this makes everything work as it should.
+            if (DropDownListBox.Items.Contains(origSel) && (string)SelectedItem != origSel)
+                DropDownListBox.SelectedItem = (string)origSel;
+
+            // And in case the selection index is invalid, then reset the selection to the first item.
             int selectedIndex = DropDownListBox.SelectedIndex;
-            // If the selected index is invalid, or if the textbox is empty, then select the first item in the
-            // list. This is to prevent the list from losing selection (sometimes changing the contents of the
-            // list can make it so no items are selected).
-            if (selectedIndex < 0 || selectedIndex >= DropDownListBox.Items.Count || Text == "")
-                DropDownListBox.SelectedIndex = 0; 
+            if (selectedIndex < 0 || selectedIndex >= DropDownListBox.Items.Count)
+                SelectFirst(); 
         }
 
 
@@ -289,14 +293,23 @@ namespace PhotoGalleryApp.Views
         {
             if (item != null)
             {
+                // If the "Create New Item" option was picked
                 if (item == (string)FindResource("CreateNewString"))
-                    ItemSelected.Invoke(this, new ItemChosenEventArgs(Text, true));
+                {
+                    // Only if the feature is enabled
+                    if(ShowCreateButton)
+                    {
+                        ItemSelected.Invoke(this, new ItemChosenEventArgs(Text, true));
+                        ClosePopup();
+                    }
+                }
+                // Normal item selection
                 else
+                {
                     ItemSelected.Invoke(this, new ItemChosenEventArgs(item, false));
+                    ClosePopup();
+                }
             }
-
-            // Close the box when an item is picked.
-            ClosePopup();
         }
 
 
@@ -351,6 +364,9 @@ namespace PhotoGalleryApp.Views
         private void AutofillText()
         {
             List<string> list = DropDownListBox.Items.Cast<string>().ToList();
+
+            if (list.Count == 0)
+                return;
 
             // Get length of shortest item - we'll be finding a string that
             // all of the tabs start with, so we only need to search them as

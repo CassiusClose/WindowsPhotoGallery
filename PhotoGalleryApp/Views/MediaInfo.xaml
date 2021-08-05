@@ -56,7 +56,7 @@
         <local:ChooserDropDown ItemsSource="{Binding AllTags, Mode=OneWay}" ShowCreateButton="True">
             <i:Interaction.Triggers>
                 <i:EventTrigger EventName="ItemSelected">
-                    <ei:CallMethodAction TargetObject="{Binding}" MethodName="AddTag"/>
+                    <ei:CallMethodAction TargetObject="{Binding}" MethodName="AddTagToPhoto"/>
                 </i:EventTrigger>
             </i:Interaction.Triggers>
         </local:ChooserDropDown>
