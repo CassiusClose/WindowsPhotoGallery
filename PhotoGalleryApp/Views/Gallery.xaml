@@ -149,7 +149,7 @@
         <!-- Tag Filtering panel -->
         <StackPanel Grid.Row="2" Orientation="Horizontal">
             <!-- Drop down list that lets you add tags to the filter -->
-            <local:ChooserDropDown ItemsSource="{Binding AllTags}">
+            <local:ChooserDropDown ItemsSource="{Binding AllTags}" ButtonText="Add Tag to Filter">
                 <i:Interaction.Triggers>
                     <i:EventTrigger EventName="ItemSelected">
                         <ei:CallMethodAction TargetObject="{Binding}" MethodName="AddTagToFilter"/>

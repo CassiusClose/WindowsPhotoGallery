@@ -20,10 +20,11 @@ namespace PhotoGalleryApp.Views
 {
     /// <summary>
     /// ChooserDropDown is a user control that functions as a drop-down list of items, filterable by what the user enters into
-    /// a textbox. It is similar in function to Gmail's "move to folder" feature. If the "Create New" button is enabled, then when
-    /// the user enters text that does not match an item on the list, one of the options on the list will be to create that
-    /// text as a new item. The user can select different items on the list with the up/down arrow keys. Pressing "Tab" will
-    /// autofill the text and pressing Enter will choose the selected item. When the user chooses an item, an event will fire.
+    /// a textbox. A button opens/closes a popup, which contains the textbox and list of items. It is similar in function to
+    /// Gmail's "move to folder" feature. If the "Create New" button is enabled, then when the user enters text that does not
+    /// match an item on the list, one of the options on the list will be to create that text as a new item. The user can select
+    /// different items on the list with the up/down arrow keys. Pressing "Tab" will autofill the text and pressing Enter will
+    /// choose the selected item. When the user chooses an item, an event will fire.
     /// </summary>
     public partial class ChooserDropDown : UserControl
     {
@@ -136,6 +137,20 @@ namespace PhotoGalleryApp.Views
             int selectedIndex = DropDownListBox.SelectedIndex;
             if (selectedIndex < 0 || selectedIndex >= DropDownListBox.Items.Count)
                 SelectFirst(); 
+        }
+
+
+
+        
+        public static readonly DependencyProperty ButtonTextProperty = DependencyProperty.Register("ButtonText", typeof(string), typeof(ChooserDropDown),
+            new PropertyMetadata("Drop Down"));
+        /// <summary>
+        /// The text that should display in the button that opens the popup.
+        /// </summary>
+        public string ButtonText
+        {
+            get { return (string)GetValue(ButtonTextProperty); }
+            set { SetValue(ButtonTextProperty, value); }
         }
 
 
@@ -334,6 +349,7 @@ namespace PhotoGalleryApp.Views
             Text = "";
             SelectFirst(); // Select the first item each time the popup opens
             PopupOpen = true;
+            DropDown_TextBox.Focus();
         }
 
         /**
@@ -363,6 +379,9 @@ namespace PhotoGalleryApp.Views
          */
         private void AutofillText()
         {
+            if (SelectedItem == null || SelectedItem == FindResource("CreateNewString"))
+                return;
+
             List<string> list = DropDownListBox.Items.Cast<string>().ToList();
 
             if (list.Count == 0)
@@ -409,7 +428,7 @@ namespace PhotoGalleryApp.Views
 
             Text = newText;
             // Set the textbox cursor to the end of the string
-            ChooserDropDownTextBox.CaretIndex = Text.Length;
+            DropDown_TextBox.CaretIndex = Text.Length;
         }
 
 
@@ -419,15 +438,19 @@ namespace PhotoGalleryApp.Views
 
         #region Event Handlers
 
-
         /**
-         * When the textbox gains focus (i.e. is clicked on when focus was elsewhere), open the drop-down list popup
+         * When the button is clicked on, either open or close the popup.
          */
-        private void Textbox_GotFocus(object sender, RoutedEventArgs e)
+        private void Button_Click(object sender, MouseButtonEventArgs e)
         {
-            OpenPopup();
+            if (!PopupOpen)
+                OpenPopup();
+            else
+                ClosePopup();
+            e.Handled = true;
         }
 
+      
         /**
          * When the textbox loses focus (is clicked off of, the window is hidden, etc.), close the drop-down list popup
          */

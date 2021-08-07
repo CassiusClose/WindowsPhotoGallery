@@ -53,7 +53,7 @@
         <ItemsControl ItemsSource="{Binding Path=PhotoTags, Mode=OneWay}" Style="{StaticResource TagsList}"/>
 
         <!-- Drop-down chooser which lets the user add tags to the image-->
-        <local:ChooserDropDown ItemsSource="{Binding AllTags, Mode=OneWay}" ShowCreateButton="True">
+        <local:ChooserDropDown ItemsSource="{Binding AllTags, Mode=OneWay}" ShowCreateButton="True" ButtonText="Add Tag">
             <i:Interaction.Triggers>
                 <i:EventTrigger EventName="ItemSelected">
                     <ei:CallMethodAction TargetObject="{Binding}" MethodName="AddTagToPhoto"/>

@@ -12,10 +12,11 @@
 
     <!--
     ChooserDropDown is a user control that functions as a drop-down list of items, filterable by what the user enters into
-    a textbox. It is similar in function to Gmail's "move to folder" feature. If the "Create New" button is enabled, then when
-    the user enters text that does not match an item on the list, one of the options on the list will be to create that
-    text as a new item. The user can select different items on the list with the up/down arrow keys. Pressing "Tab" will
-    autofill the text and pressing Enter will choose the selected item. When the user chooses an item, an event will fire.
+    a textbox. A button opens/closes a popup, which contains the textbox and list of items. It is similar in function to
+    Gmail's "move to folder" feature. If the "Create New" button is enabled, then when the user enters text that does not
+    match an item on the list, one of the options on the list will be to create that text as a new item. The user can select
+    different items on the list with the up/down arrow keys. Pressing "Tab" will autofill the text and pressing Enter will
+    choose the selected item. When the user chooses an item, an event will fire.
     -->
 
     <UserControl.Resources>
@@ -66,18 +67,22 @@
 
 
     <StackPanel>
-        <!-- The textbox where the user enters the filtering text. -->
-        <TextBox Name="ChooserDropDownTextBox"
-                 Text="{Binding Text, UpdateSourceTrigger=PropertyChanged, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType={x:Type local:ChooserDropDown}}}"
-                 AcceptsReturn="True" AcceptsTab="True" PreviewKeyDown="Textbox_PreviewKeyDown"
-                 GotFocus="Textbox_GotFocus" LostFocus="Textbox_LostFocus">
-        </TextBox>
+        <ToggleButton x:Name="DropDown_Button"
+                      IsChecked="{Binding PopupOpen, Mode=OneWay, UpdateSourceTrigger=PropertyChanged, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType={x:Type local:ChooserDropDown}}}"
+                      PreviewMouseLeftButtonDown="Button_Click"
+                      Content="{Binding ButtonText, Mode=OneTime, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType={x:Type local:ChooserDropDown}}}"/>
 
         <!-- The drop down list, which only opens if the user is typing in the above textbox. -->
         <Popup AllowsTransparency="True" Name="DropDownPopup"
                IsOpen="{Binding PopupOpen, Mode=OneWay, UpdateSourceTrigger=PropertyChanged, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType={x:Type local:ChooserDropDown}}}">
             <Border Background="LightGray" Name="PopupBorder">
                 <StackPanel>
+                    <!-- The textbox where the user enters the filtering text. -->
+                    <TextBox Name="DropDown_TextBox"
+                             Text="{Binding Text, UpdateSourceTrigger=PropertyChanged, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType={x:Type local:ChooserDropDown}}}"
+                             AcceptsReturn="True" AcceptsTab="True" PreviewKeyDown="Textbox_PreviewKeyDown"
+                             GotFocus="Textbox_GotFocus" LostFocus="Textbox_LostFocus">
+                    </TextBox>
                     <!-- The list of items in the drop-down. -->
                     <ListBox Name="DropDownListBox"/>
                 </StackPanel>
