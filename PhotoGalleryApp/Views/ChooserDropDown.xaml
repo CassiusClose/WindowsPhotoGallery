@@ -81,7 +81,7 @@
                     <TextBox Name="DropDown_TextBox"
                              Text="{Binding Text, UpdateSourceTrigger=PropertyChanged, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType={x:Type local:ChooserDropDown}}}"
                              AcceptsReturn="True" AcceptsTab="True" PreviewKeyDown="Textbox_PreviewKeyDown"
-                             LostFocus="Textbox_LostFocus">
+                             GotFocus="Textbox_GotFocus" LostFocus="Textbox_LostFocus">
                     </TextBox>
                     <!-- The list of items in the drop-down. -->
                     <ListBox Name="DropDownListBox"/>
