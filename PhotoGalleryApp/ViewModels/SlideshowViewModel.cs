@@ -36,8 +36,8 @@ namespace PhotoGalleryApp.ViewModels
         public SlideshowViewModel(List<Media> galleryItems, int index, MediaGallery gallery)
         {
             // Initialize commands
-            _leftCommand = new RelayCommand(Left);
-            _rightCommand = new RelayCommand(Right);
+            _leftCommand = new RelayCommand(Left, HasMultipleImages);
+            _rightCommand = new RelayCommand(Right, HasMultipleImages);
             _toggleInfoVisibilityCommand = new RelayCommand(ToggleInfoVisibility);
 
 
@@ -579,6 +579,15 @@ namespace PhotoGalleryApp.ViewModels
                 CurrentIndex = 0;
 
             MoveCacheRight();
+        }
+
+
+        /**
+         * Used to determine whether the left & right commands should be usable.
+         */
+        private bool HasMultipleImages()
+        {
+            return _galleryItems.Count > 1;
         }
 
 
