@@ -11,7 +11,7 @@ namespace PhotoGalleryApp.ViewModels
     /// <summary>
     /// An abstract ViewModel class for any media type, image or video. Subclasses should be made for each media type. 
     /// </summary>
-    abstract class MediaViewModel : ViewModelBase
+    public abstract class MediaViewModel : ViewModelBase
     {
         #region Fields and Properties
 
@@ -42,6 +42,24 @@ namespace PhotoGalleryApp.ViewModels
 
         #endregion Fields and Properties
 
+
+        private double _displayHeight;
+        public double DisplayHeight
+        {
+            get { return _displayHeight; }
+            set
+            {
+                _displayHeight = value;
+                OnPropertyChanged();
+                OnPropertyChanged("BorderHeight");
+            }
+        }
+
+
+        public double BorderHeight
+        {
+            get { return DisplayHeight + 6; }
+        }
 
 
         #region Methods

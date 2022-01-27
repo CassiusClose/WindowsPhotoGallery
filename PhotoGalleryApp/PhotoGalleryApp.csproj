@@ -84,12 +84,19 @@
     <Compile Include="Views\ChooserDropDown.xaml.cs">
       <DependentUpon>ChooserDropDown.xaml</DependentUpon>
     </Compile>
+    <Compile Include="Views\EvenWrapPanel.xaml.cs">
+      <DependentUpon>EvenWrapPanel.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Views\Gallery - Copy.xaml.cs">
+      <DependentUpon>Gallery - Copy.xaml</DependentUpon>
+    </Compile>
     <Compile Include="Views\Gallery.xaml.cs">
       <DependentUpon>Gallery.xaml</DependentUpon>
     </Compile>
     <Compile Include="Views\MediaInfo.xaml.cs">
       <DependentUpon>MediaInfo.xaml</DependentUpon>
     </Compile>
+    <Compile Include="Views\ScrollStoppedBehavior.cs" />
     <Compile Include="Views\Slideshow.xaml.cs">
       <DependentUpon>Slideshow.xaml</DependentUpon>
     </Compile>
@@ -114,6 +121,14 @@
     <Page Include="Views\ChooserDropDown.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Views\EvenWrapPanel.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Views\Gallery - Copy.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
     </Page>
     <Page Include="Views\Gallery.xaml">
       <SubType>Designer</SubType>

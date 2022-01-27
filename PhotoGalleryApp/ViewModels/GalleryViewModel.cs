@@ -144,6 +144,18 @@ namespace PhotoGalleryApp.ViewModels
         #endregion Fields and Properties
 
 
+        private int _galleryWidth;
+        public int GalleryWidth
+        {
+            get { return _galleryWidth; }
+            set
+            {
+                _galleryWidth = value;
+                OnPropertyChanged();
+            }
+        }
+
+
 
         #region Methods
 
@@ -162,6 +174,8 @@ namespace PhotoGalleryApp.ViewModels
             {
                 _items.Add(CreateMediaViewModel(_gallery[i]));
             }
+
+            Console.WriteLine("G: " + GalleryWidth);
 
             LoadAllMedia();
         }
@@ -268,10 +282,14 @@ namespace PhotoGalleryApp.ViewModels
                 case MediaFileType.Video:               
                     // Create the VideoVM in ThumbnailMode, which creates an ImageViewModel
                     // for the thumbnail within the VM.
-                    return new VideoViewModel(media as Video, true, 0, ThumbnailHeight);
+                    VideoViewModel videoVM = new VideoViewModel(media as Video, true, 0, ThumbnailHeight);
+                    videoVM.ThumbnailViewModel.DisplayHeight = ThumbnailHeight;
+                    return videoVM;
 
                 case MediaFileType.Image:
-                    return new ImageViewModel(media as Image, 0, ThumbnailHeight);
+                    ImageViewModel imageVM = new ImageViewModel(media as Image, 0, ThumbnailHeight);
+                    imageVM.DisplayHeight = ThumbnailHeight;
+                    return imageVM;
 
                 default:
                     return null;
@@ -357,6 +375,16 @@ namespace PhotoGalleryApp.ViewModels
             _navigator.NewPage(imagePage);
         }
 
+        
+        public void SelectItem(object sender, EventArgs eArgs)
+        {
+            PanelItemClickedEventArgs args = (PanelItemClickedEventArgs)eArgs;
+            if (args.Item != null)
+                OpenMedia(args.Item.Media);
+        }
+
+
+
 
 
         private RelayCommand _saveGalleryCommand;
@@ -415,6 +443,16 @@ namespace PhotoGalleryApp.ViewModels
             _scrollChangedTimer.Start();
         }
 
+        public void ScrollChangedS(object sender, RoutedEventArgs eArgs)
+        {
+            Console.WriteLine("SCROLL CHANGED");
+        }
+
+        public void Test()
+        {
+            Console.WriteLine("WROKED");
+        }
+
 
         /**
          * Called when the user has stopped scrolling on the gallery's ScrollViewer. This will figure out which
@@ -455,9 +493,9 @@ namespace PhotoGalleryApp.ViewModels
          */
         private bool AreImagesSelected(object parameter)
         {
-            System.Collections.IList list = parameter as System.Collections.IList;
+            /*System.Collections.IList list = parameter as System.Collections.IList;
             if (list.Count > 0)
-                return true;
+                return true;*/
             return false;
         }
 

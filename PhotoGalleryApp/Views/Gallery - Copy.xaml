@@ -1,4 +1,4 @@
-﻿<UserControl x:Class="PhotoGalleryApp.Views.Gallery"
+﻿<UserControl x:Class="PhotoGalleryApp.Views.GalleryCopy"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
@@ -156,7 +156,7 @@
         <StackPanel Grid.Row="1" Orientation="Horizontal">
             <Button Command="{Binding AddFilesCommand}">Add Images</Button>
             <Button Command="{Binding SaveGalleryCommand}">Save Gallery</Button>
-            <!--<Button CommandParameter="{Binding SelectedItems, ElementName=GalleryImageListBox}" Command="{Binding RemoveMediaCommand}">Remove Selected</Button>-->
+            <Button CommandParameter="{Binding SelectedItems, ElementName=GalleryImageListBox}" Command="{Binding RemoveMediaCommand}">Remove Selected</Button>
         </StackPanel>
 
         <!-- Tag Filtering panel -->
@@ -175,25 +175,12 @@
             <ItemsControl ItemsSource="{Binding Path=CurrentTags, Mode=OneWay}" Style="{StaticResource CurrentTagsList}"/>
         </StackPanel>
 
-        <local:EvenWrapPanel Grid.Row="3" ItemsSource="{Binding ImagesView, Mode=OneWay}" x:Name="evenWrapPanel">
-            <i:Interaction.Triggers>
-                <i:EventTrigger EventName="ItemClicked">
-                    <ei:CallMethodAction TargetObject="{Binding}" MethodName="SelectItem"/>
-                </i:EventTrigger>
-                <i:EventTrigger EventName="local:ScrollStoppedBehavior.ScrollStopped"
-                                SourceObject="{Binding RelativeSource={RelativeSource Mode=FindAncestor,AncestorType={x:Type local:EvenWrapPanel}}}"
-                                SourceName="evenWrapPanel">
-                    <ei:CallMethodAction TargetObject="{Binding}" MethodName="Test"/>
-                </i:EventTrigger>
-            </i:Interaction.Triggers>
-        </local:EvenWrapPanel>
-
         <!-- Display the images -->
-        <!--<ScrollViewer x:Name="ImagesScrollViewer" Grid.Row="3" HorizontalScrollBarVisibility="Disabled" PreviewMouseWheel="ScrollViewer_MouseWheel">
-            -
+        <ScrollViewer x:Name="ImagesScrollViewer" Grid.Row="3" HorizontalScrollBarVisibility="Disabled" PreviewMouseWheel="ScrollViewer_MouseWheel">
+            <!--
             Make the ScrollChanged event call a command in the view model.
             Gotten from https://stackoverflow.com/questions/25809655/wpf-mvvm-binding-command-to-event 
-            -
+            -->
             <i:Interaction.Triggers>
                 <i:EventTrigger EventName="ScrollChanged">
                     <i:InvokeCommandAction
@@ -206,6 +193,6 @@
                  x:Name="GalleryImageListBox" 
                  Style="{StaticResource GalleryBox}" 
                  ItemsSource="{Binding Path=ImagesView, Mode=OneWay}"/>
-        </ScrollViewer>-->
+        </ScrollViewer>
     </Grid>
 </UserControl>

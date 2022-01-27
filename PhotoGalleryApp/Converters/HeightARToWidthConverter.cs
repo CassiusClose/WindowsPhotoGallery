@@ -22,7 +22,7 @@ namespace PhotoGalleryApp.Converters
             }
 
             // Convert values
-            double height = (int)values[0];
+            double height = (double)values[0];
             double ar = (double)values[1];
 
             // Calculate

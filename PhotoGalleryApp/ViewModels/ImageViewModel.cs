@@ -61,7 +61,7 @@ namespace PhotoGalleryApp.ViewModels
 
         #endregion Constructors
 
-
+       
 
         #region Fields and Properties
 

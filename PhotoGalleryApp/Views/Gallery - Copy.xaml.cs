@@ -20,14 +20,11 @@ namespace PhotoGalleryApp.Views
     /// <summary>
     /// Interaction logic for Gallery.xaml
     /// </summary>
-    public partial class Gallery : UserControl
+    public partial class GalleryCopy : UserControl
     {
-        public Gallery()
+        public GalleryCopy()
         {
-            Console.WriteLine("WEFWF");
-
             InitializeComponent();
-
 
             Loaded += GalleryLoaded;
             SizeChanged += Gallery_SizeChanged;
@@ -45,7 +42,7 @@ namespace PhotoGalleryApp.Views
 
         public void MeasureSizes()
         {
-            /*double galleryWidth = GalleryImageListBox.ActualWidth - 5;
+            double galleryWidth = GalleryImageListBox.ActualWidth - 5;
             int thumbHeight = 200;
             List<MediaViewModel> list = GalleryImageListBox.Items.Cast<MediaViewModel>().ToList();
             int mediaIndex = 0;
@@ -129,18 +126,18 @@ namespace PhotoGalleryApp.Views
 
                     /*
                     double newWidth = (thumbHeight * vm.Photo.AspectRatio) + scale;
-                    double newHeight = newWidth / vm.Photo.AspectRatio;*
+                    double newHeight = newWidth / vm.Photo.AspectRatio;*/
                     //Console.WriteLine("NewSize: " + newWidth + ", " + newHeight);
                     mediaVM.DisplayHeight =  newHeight;
                     /*Console.WriteLine("\nPhoto: " + vm.Filepath);
                     Console.WriteLine("DispHeight: " + vm.DisplayHeight);
                     Console.WriteLine("DispWidth: " + vm.DisplayHeight * vm.AspectRatio);
-                    *
+                    */
                 }
 
 
                 mediaIndex += count;
-            }*/
+            }
 
         }
 
@@ -152,13 +149,9 @@ namespace PhotoGalleryApp.Views
         private void ScrollViewer_MouseWheel(object sender, MouseWheelEventArgs e)
         {
             int offset = e.Delta;
-            //ImagesScrollViewer.ScrollToVerticalOffset(ImagesScrollViewer.VerticalOffset - offset);
+            ImagesScrollViewer.ScrollToVerticalOffset(ImagesScrollViewer.VerticalOffset - offset);
             e.Handled = true;
         }
 
-        private void EvenWrapPanel_ScrollStopped(object sender, RoutedEventArgs e)
-        {
-            Console.WriteLine("THIS WORKS");
-        }
     }
 }
