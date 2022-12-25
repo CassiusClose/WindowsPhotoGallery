@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Windows.Media.Imaging;
 
 namespace PhotoGalleryApp.ViewModels
 {
@@ -38,6 +39,12 @@ namespace PhotoGalleryApp.ViewModels
         public MediaFileType MediaType
         {
             get { return Media.MediaType; }
+        }
+
+        public Rotation Rotation
+        {
+            get { 
+                return Media.Rotation; }
         }
 
         #endregion Fields and Properties

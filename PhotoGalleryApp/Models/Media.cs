@@ -30,14 +30,14 @@ namespace PhotoGalleryApp.Models
         /// <param name="tags">A list of tags that the media object should have.</param>
         public Media(string path, ObservableCollection<string> tags)
         {
+            Rotation = Rotation.Rotate0;
+
             Filepath = path;
 
             if (tags == null)
                 Tags = new ObservableCollection<string>();
             else
                 Tags = tags;
-
-            Rotation = Rotation.Rotate0;
         }
 
 
@@ -116,6 +116,7 @@ namespace PhotoGalleryApp.Models
         /// <summary>
         /// How much the image should be rotated.
         /// </summary>
+        [XmlIgnoreAttribute]
         public Rotation Rotation { get; set; }
 
 

@@ -20,20 +20,22 @@
 
         <!-- How to display an image -->
         <DataTemplate DataType="{x:Type vms:ImageViewModel}">
-            <Image Style="{StaticResource GalleryThumbnailImage}">
-                <!-- The height is determined above by the gallery settings. Below, calculate the width based on that height and
+            <Border BorderThickness="0" BorderBrush="Green">
+                <Image Style="{StaticResource GalleryThumbnailImage}" Stretch="Uniform">
+                    <!-- The height is determined above by the gallery settings. Below, calculate the width based on that height and
                                     the image's aspect ratio. -->
-                <Image.MinWidth>
-                    <MultiBinding Converter="{StaticResource HeightARToWidth}" Mode="OneWay">
-                        <Binding Path="DataContext.ThumbnailHeight" RelativeSource="{RelativeSource Mode=FindAncestor, AncestorType={x:Type local:Gallery}}"/>
-                        <Binding Path="AspectRatio"/>
-                    </MultiBinding>
-                </Image.MinWidth>
+                    <Image.MinWidth>
+                        <MultiBinding Converter="{StaticResource HeightARToWidth}" Mode="OneWay">
+                            <Binding Path="DataContext.ThumbnailHeight" RelativeSource="{RelativeSource Mode=FindAncestor, AncestorType={x:Type local:Gallery}}"/>
+                            <Binding Path="AspectRatio"/>
+                        </MultiBinding>
+                    </Image.MinWidth>
 
-                <Image.Source>
-                    <Binding Path="ImageData" Mode="OneWay"/>
-                </Image.Source>
-            </Image>
+                    <Image.Source>
+                        <Binding Path="ImageData" Mode="OneWay"/>
+                    </Image.Source>
+                </Image>
+            </Border>
         </DataTemplate>
 
         <!-- How to display an video -->
@@ -69,13 +71,7 @@
         <Style x:Key="GalleryBox" TargetType="ListBox">
             <Setter Property="ScrollViewer.HorizontalScrollBarVisibility" Value="Disabled"/>
             <Setter Property="SelectionMode" Value="Multiple"/>
-
-            <Setter Property="ItemContainerStyle">
-                <Setter.Value>
-                    <Style TargetType="ListBoxItem"> 
-                    </Style>
-                </Setter.Value>
-            </Setter>
+            <Setter Property="Padding" Value="0"/>
 
             <Setter Property="ItemsPanel">
                 <Setter.Value>
@@ -84,13 +80,12 @@
                     </ItemsPanelTemplate>
                 </Setter.Value>
             </Setter>
-            
+                        
             <!-- Each item is a clickable image. Clicking on the image will open it as a new page in the Navigator. -->
             <Setter Property="ItemTemplate">
                 <Setter.Value>
                     <DataTemplate>
-                        <Border MaxHeight="{Binding Path=DataContext.ThumbnailHeight, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType={x:Type local:Gallery}}}"
-                                Margin="3" Background="LightGray">
+                        <Border Margin="0,0,0,0" Padding="0,0,0,0" Background="LightGray" BorderThickness="0">
                             <Border.InputBindings>
                                 <MouseBinding MouseAction="LeftClick"
                                               Command="{Binding Path=DataContext.OpenMediaCommand, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType={x:Type local:Gallery}}}"
@@ -98,14 +93,14 @@
                             </Border.InputBindings>
                             <Grid>
                                 <!-- Display the image -->
-                                <ContentControl Content="{Binding}"/>
+                                <ContentControl Content="{Binding}" Padding="0" Margin="0"/>
                                 <!-- Display a selection button on top of the image -->
-                                <ToggleButton Grid.ZIndex="1" Width="50" Height="50" HorizontalAlignment="Left" VerticalAlignment="Top" 
+                                <!--<ToggleButton Grid.ZIndex="1" Width="50" Height="50" HorizontalAlignment="Left" VerticalAlignment="Top" 
                                               Command="{Binding Path=DataContext.SelectMediaCommand, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType={x:Type local:Gallery}}}" 
                                               CommandParameter="{Binding}"
                                               IsChecked="{Binding Path=IsSelected, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType={x:Type ListBoxItem}}}">Sel</ToggleButton>
                                 
-                            </Grid>
+                            --></Grid>
                         </Border>
                     </DataTemplate>
                 </Setter.Value>
@@ -179,7 +174,24 @@
             <ListBox
                  x:Name="GalleryImageListBox" 
                  Style="{StaticResource GalleryBox}" 
-                 ItemsSource="{Binding Path=ImagesView, Mode=OneWay}"/>
+                 ItemsSource="{Binding Path=ImagesView, Mode=OneWay}"
+                >
+                <ListBox.ItemContainerStyle>
+                    <Style TargetType="ListBoxItem">
+                        <Setter Property="Padding" Value="0"/>
+                        <Setter Property="Margin" Value="0"/>
+                        <Setter Property="MinHeight" Value="{Binding Path=DataContext.ThumbnailHeight, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType={x:Type local:Gallery}}}"/>
+                    </Style>
+                </ListBox.ItemContainerStyle>
+            </ListBox>
+
+
+            <!--<Setter Property="ItemContainerStyle">
+                <Setter.Value>
+                    
+                </Setter.Value>
+            </Setter>-->
+
         </ScrollViewer>
     </Grid>
 </UserControl>
