@@ -59,20 +59,31 @@ namespace PhotoGalleryApp.Models
          */
         private void UpdateTags()
         {
-            ObservableCollection<string> tags = new ObservableCollection<string>();
+            ObservableCollection<string> newTags = new ObservableCollection<string>();
+            ObservableCollection<string> allTags = new ObservableCollection<string>();
 
             foreach (Media p in Items)
             {
                 // For each tag in the photo
                 foreach (string tag in p.Tags)
                 {
-                    if (!tags.Contains(tag))
-                        tags.Add(tag);
+                    if (!allTags.Contains(tag))
+                        allTags.Add(tag);
+
+                    if (!newTags.Contains(tag) && !Tags.Contains(tag))
+                        newTags.Add(tag);
                 }
             }
 
-            // Update the tags list once with one notification to change listeners
-            Tags.ReplaceWith(tags);
+            ObservableCollection<string> removeTags = new ObservableCollection<string>();
+            for(int i = 0; i < Tags.Count; i++)
+            {
+                if (!allTags.Contains(Tags[i]))
+                    removeTags.Add(Tags[i]);
+            }
+
+            Tags.RemoveRange(removeTags);
+            Tags.AddRange(newTags);
         }
 
 

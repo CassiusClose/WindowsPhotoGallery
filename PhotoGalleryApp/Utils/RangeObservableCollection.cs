@@ -24,7 +24,7 @@ namespace PhotoGalleryApp.Utils
 
         /// <summary>
         /// Adds a list of items to this collection. The same as calling Add on each
-        /// item in the list, but only one notification is send out to observers.
+        /// item in the collection, but only one notification is sent out to observers.
         /// </summary>
         /// <param name="items">The list of items to add to the collection.</param>
         public void AddRange(IEnumerable<T> items)
@@ -33,38 +33,35 @@ namespace PhotoGalleryApp.Utils
                 return;
 
             notificationsEnabled = false;
-            foreach(T item in items)
-                Add(item);
-
-            notificationsEnabled = true;
-
-            // Send one change notification
-            // The 2nd argument of NotifyCollectionChangedEventArgs must contain only one item
-            OnCollectionChanged(new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Add, items.First()));
-        }
-
-        /// <summary>
-        /// Sets the collection's items to be those from the given list. Any previous items
-        /// in the collection are removed. Only one notification is sned out to observers.
-        /// </summary>
-        /// <param name="items">The items that will replace the current collection of items.</param>
-        public void ReplaceWith(IEnumerable<T> items)
-        {
-            if (items.Count<T>() == 0)
-                return;
-
-            notificationsEnabled = false;
-
-            Clear();
             foreach (T item in items)
                 Add(item);
 
             notificationsEnabled = true;
 
             // Send one change notification
-            OnCollectionChanged(new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Add, items.First()));
-
+            // The 2nd argument of NotifyCollectionChangedEventArgs must contain only one item
+            OnCollectionChanged(new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Add, items.ToList<T>()));
         }
+
+
+        /// <summary>
+        /// Removes a list of items from this collection. The same as calling Remove on
+        /// each item in the collection, but only one notification is sent out to observers.
+        /// </summary>
+        /// <param name="items"></param>
+        public void RemoveRange(IEnumerable<T> items)
+        {
+            if (items.Count<T>() == 0)
+                return;
+
+            notificationsEnabled = false;
+            foreach (T item in items)
+                Remove(item);
+            notificationsEnabled = true;
+
+            OnCollectionChanged(new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Remove, items.ToList<T>()));
+        }
+
 
         /**
          * This is the same as the ObservableCollection's method, but it's only called when

@@ -59,7 +59,9 @@ namespace PhotoGalleryApp.Views
         {
             ChooserDropDown control = (ChooserDropDown)d;
             if (control != null)
+            {
                 control.RefreshView();
+            }
         }
 
 

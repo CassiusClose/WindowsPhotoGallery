@@ -21,7 +21,7 @@ namespace PhotoGalleryApp.ViewModels
         #region Constructors
 
         /// <summary>
-        /// Initializes the VM to represent the given photo.
+        /// Initializes the VM to represent the given media.
         /// </summary>
         /// <param name="photo">The Photo from which to show information.</param>
         public MediaInfoViewModel(Media photo, MediaGallery gallery)
@@ -29,7 +29,7 @@ namespace PhotoGalleryApp.ViewModels
             //Init commands
             _removeTagCommand = new RelayCommand(RemoveTag);
 
-            _photo = photo;
+            _media = photo;
             _gallery = gallery;
         }
 
@@ -39,8 +39,8 @@ namespace PhotoGalleryApp.ViewModels
 
         #region Fields and Properties
 
-        // The photo & the containing gallery
-        private Media _photo;
+        // The media & the containing gallery
+        private Media _media;
         private MediaGallery _gallery;
 
 
@@ -49,7 +49,7 @@ namespace PhotoGalleryApp.ViewModels
         /// </summary>
         public string Path
         {
-            get { return _photo.Filepath; }
+            get { return _media.Filepath; }
         }
 
 
@@ -58,7 +58,7 @@ namespace PhotoGalleryApp.ViewModels
         /// </summary>
         public ObservableCollection<string> PhotoTags
         {
-            get { return _photo.Tags; }
+            get { return _media.Tags; }
         }
 
 
@@ -85,8 +85,8 @@ namespace PhotoGalleryApp.ViewModels
         public void AddTag(string tag, bool isNew)
         {
             // If the tag doesn't already exist in the photo's tag list, add it
-            if (isNew || !_photo.Tags.Contains(tag))
-                _photo.Tags.Add(tag);
+            if (isNew || !_media.Tags.Contains(tag))
+                _media.Tags.Add(tag);
         }
 
         #endregion Methods
@@ -96,15 +96,15 @@ namespace PhotoGalleryApp.ViewModels
         #region Commands
 
         /// <summary>
-        /// An event handler that adds the event's tag to this VM's Photo.
+        /// An event handler that adds the event's tag to this VM's Media.
         /// </summary>
         /// <param name="sender">The element that this event was triggered on.</param>
         /// <param name="args">The event's arguments, of type PhotoGalleryApp.Views.ItemChosenEventArgs</param>
         public void AddTagToPhoto(object sender, EventArgs args)
         {
             ItemChosenEventArgs itemArgs = (ItemChosenEventArgs)args;
-            if (itemArgs.Item != null && !_photo.Tags.Contains(itemArgs.Item))
-                _photo.Tags.Add(itemArgs.Item);
+            if (itemArgs.Item != null && !_media.Tags.Contains(itemArgs.Item))
+                _media.Tags.Add(itemArgs.Item);
         }
 
 
@@ -127,7 +127,7 @@ namespace PhotoGalleryApp.ViewModels
             if (tag == null)
                 return;
 
-            _photo.Tags.Remove(tag);
+            _media.Tags.Remove(tag);
         }
 
         #endregion Commands

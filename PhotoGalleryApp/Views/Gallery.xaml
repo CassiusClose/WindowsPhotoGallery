@@ -95,12 +95,12 @@
                                 <!-- Display the image -->
                                 <ContentControl Content="{Binding}" Padding="0" Margin="0"/>
                                 <!-- Display a selection button on top of the image -->
-                                <!--<ToggleButton Grid.ZIndex="1" Width="50" Height="50" HorizontalAlignment="Left" VerticalAlignment="Top" 
+                                <ToggleButton Grid.ZIndex="1" Width="50" Height="50" HorizontalAlignment="Left" VerticalAlignment="Top" 
                                               Command="{Binding Path=DataContext.SelectMediaCommand, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType={x:Type local:Gallery}}}" 
                                               CommandParameter="{Binding}"
                                               IsChecked="{Binding Path=IsSelected, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType={x:Type ListBoxItem}}}">Sel</ToggleButton>
                                 
-                            --></Grid>
+                            </Grid>
                         </Border>
                     </DataTemplate>
                 </Setter.Value>
@@ -139,6 +139,13 @@
             <Button Command="{Binding AddFilesCommand}">Add Images</Button>
             <Button Command="{Binding SaveGalleryCommand}">Save Gallery</Button>
             <Button CommandParameter="{Binding SelectedItems, ElementName=GalleryImageListBox}" Command="{Binding RemoveMediaCommand}">Remove Selected</Button>
+            <local:ChooserDropDown ItemsSource="{Binding AllTags}" ShowCreateButton="True" ButtonText="Add Tag to Selected">
+                <i:Interaction.Triggers>
+                    <i:EventTrigger EventName="ItemSelected">
+                        <ei:CallMethodAction TargetObject="{Binding}" MethodName="AddTagToSelected"/>
+                    </i:EventTrigger>
+                </i:Interaction.Triggers>
+            </local:ChooserDropDown>
         </StackPanel>
 
         <!-- Tag Filtering panel -->
@@ -181,6 +188,7 @@
                         <Setter Property="Padding" Value="0"/>
                         <Setter Property="Margin" Value="0"/>
                         <Setter Property="MinHeight" Value="{Binding Path=DataContext.ThumbnailHeight, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType={x:Type local:Gallery}}}"/>
+                        <Setter Property="IsSelected" Value="{Binding Mode=TwoWay, Path=IsSelected}"/>
                     </Style>
                 </ListBox.ItemContainerStyle>
             </ListBox>

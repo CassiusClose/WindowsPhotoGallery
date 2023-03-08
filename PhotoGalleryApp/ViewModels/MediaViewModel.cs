@@ -43,8 +43,24 @@ namespace PhotoGalleryApp.ViewModels
 
         public Rotation Rotation
         {
-            get { 
-                return Media.Rotation; }
+            get { return Media.Rotation; }
+        }
+
+        /*
+         * Whether the Media is selected in whatever parent container. I think this should be
+         * fine even if the Media is owned by several different parents, because each one will
+         * have a different MediaViewModel for the same Media, and hence different IsSelected
+         * properties.
+         */
+        private bool _isSelected;
+        public bool IsSelected
+        {
+            get { return _isSelected; } 
+            set
+            {
+                _isSelected = value;
+                OnPropertyChanged();
+            }
         }
 
         #endregion Fields and Properties

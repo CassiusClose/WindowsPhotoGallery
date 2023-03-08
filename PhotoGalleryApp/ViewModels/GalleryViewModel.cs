@@ -46,10 +46,11 @@ namespace PhotoGalleryApp.ViewModels
 
             // Setup gallery & images
             _gallery = gallery;
-            _items = new RangeObservableCollection<MediaViewModel>();
+            _items = new ObservableCollection<MediaViewModel>();
             ImagesView = CollectionViewSource.GetDefaultView(_items);
            
             CurrentTags = new ObservableCollection<string>();
+            _gallery.Tags.CollectionChanged += AllTags_CollectionChanged;
 
             // Setup the filter, after CurrentTags has been created
             ImagesView.Filter += MediaFilter;
@@ -72,7 +73,7 @@ namespace PhotoGalleryApp.ViewModels
         // The collection of photos in the gallery
         private MediaGallery _gallery;
         // The collection of images (image data) to display
-        private RangeObservableCollection<MediaViewModel> _items;
+        private ObservableCollection<MediaViewModel> _items;
 
         /// <summary>
         /// The gallery's current items (with any filtering & sorting applied)
@@ -100,7 +101,9 @@ namespace PhotoGalleryApp.ViewModels
         /// </summary>
         public ObservableCollection<string> AllTags
         {
-            get { return _gallery.Tags; }
+            get {
+                return _gallery.Tags; 
+            }
         }
 
 
@@ -126,8 +129,27 @@ namespace PhotoGalleryApp.ViewModels
          */
         private void CurrentTags_CollectionChanged(object sender, NotifyCollectionChangedEventArgs e)
         {
+            // Any time the collection of tags change, the items show in the gallery will change,
+            // but this will not automatically change which items are selected. So here, deselect
+            // any selected items that don't match the selected tags.
+            foreach (MediaViewModel vm in _items)
+            {
+                if(vm.IsSelected)
+                {
+                    if(!MediaValidWithCurrentTags(vm))
+                    {
+                        vm.IsSelected = false;
+                    }
+                }
+            }
+
             OnPropertyChanged("CurrentTags");
             ImagesView.Refresh();
+        }
+
+        private void AllTags_CollectionChanged(object sender, NotifyCollectionChangedEventArgs e)
+        {
+            OnPropertyChanged("AllTags");
         }
 
 
@@ -239,18 +261,44 @@ namespace PhotoGalleryApp.ViewModels
             if (CurrentTags.Count == 0)
                 return true;
 
-            MediaViewModel ivm = item as MediaViewModel;
-            Media image = ivm.Media;
+            MediaViewModel vm = item as MediaViewModel;
 
             // If the image does not contain any of the selected tags, reject it
+            return MediaValidWithCurrentTags(vm);
+        }
+
+
+        /*
+         * Whether the Media object represented by the given MediaViewModel is valid with
+         * the current list of selected tags. I.e., should this Media be displayed in the
+         * gallery.
+         * 
+         * "Valid" means the Media contains all the tags in the currently selected tag list.
+         */
+        private bool MediaValidWithCurrentTags(MediaViewModel vm)
+        {
+            Media media = vm.Media;
             foreach(string tag in CurrentTags)
             {
-                if (!image.Tags.Contains(tag))
+                if (!media.Tags.Contains(tag))
                     return false;
             }
             return true;
         }
 
+
+        private List<MediaViewModel> GetCurrentlySelectedItems()
+        {
+            List<MediaViewModel> selectedItems = new List<MediaViewModel>();
+
+            foreach(MediaViewModel vm in _items)
+            {
+                if (vm.IsSelected)
+                    selectedItems.Add(vm);
+            }
+
+            return selectedItems;
+        }
         
 
         /// <summary>
@@ -508,12 +556,37 @@ namespace PhotoGalleryApp.ViewModels
         /// An event handler that adds the given tag to the list of selected tags, if it is not already added.
         /// </summary>
         /// <param name="sender">The element that this event was triggered on.</param>
-        /// <param name="args">The event's arguments, of type PhotoGalleryApp.Views.ItemChosenEventArgs</param>
+        /// <param name="args">The event's arguments, of type PhotoGalleryApp.Views.ItemChosenEventArgs.</param>
         public void AddTagToFilter(object sender, EventArgs eArgs)
         {
             ItemChosenEventArgs args = (ItemChosenEventArgs)eArgs;
             if(args.Item != null && !CurrentTags.Contains(args.Item))
                 CurrentTags.Add(args.Item);
+        }
+
+
+
+
+        /// <summary>
+        /// An event handler that adds the given tag to each currently selected image.
+        /// </summary>
+        /// <param name="sender">The element that this event was triggered on.</param>
+        /// <param name="eArgs">The event's arguments, of type PhotoGalleryApp.Views.ItemChosenEventArgs.</param>
+        public void AddTagToSelected(object sender, EventArgs eArgs)
+        {
+            ItemChosenEventArgs args = (ItemChosenEventArgs)eArgs;
+            string tag = args.Item; 
+            if (tag != null)
+            {
+                List<MediaViewModel> vms = GetCurrentlySelectedItems();
+                foreach (MediaViewModel vm in vms)
+                {
+                    if (!vm.Media.Tags.Contains(tag)) 
+                    {
+                        vm.Media.Tags.Add(tag);
+                    }
+                }
+            }
         }
 
 
