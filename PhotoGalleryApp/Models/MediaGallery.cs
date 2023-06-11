@@ -31,6 +31,7 @@ namespace PhotoGalleryApp.Models
         {
             Name = name;
             Tags = new RangeObservableCollection<string>();
+            DisableTagUpdate = false;
         }
 
         #endregion Constructors
@@ -49,6 +50,10 @@ namespace PhotoGalleryApp.Models
         /// </summary>
         public RangeObservableCollection<string> Tags { get; private set; }
 
+        public event CallbackMediaTagsChanged MediaTagsChanged;
+
+        public bool DisableTagUpdate { get; set; }
+
         #endregion Fields and Properties
 
 
@@ -57,7 +62,7 @@ namespace PhotoGalleryApp.Models
         /**
          * Compiles the list of all tags from the images in the gallery.
          */
-        private void UpdateTags()
+        public void UpdateTags()
         {
             ObservableCollection<string> newTags = new ObservableCollection<string>();
             ObservableCollection<string> allTags = new ObservableCollection<string>();
@@ -84,6 +89,9 @@ namespace PhotoGalleryApp.Models
 
             Tags.RemoveRange(removeTags);
             Tags.AddRange(newTags);
+
+            if(MediaTagsChanged != null)
+                MediaTagsChanged();
         }
 
 
@@ -108,7 +116,8 @@ namespace PhotoGalleryApp.Models
          */
         private void MediaTags_CollectionChanged(object sender, NotifyCollectionChangedEventArgs e)
         {
-            UpdateTags();
+            if (!DisableTagUpdate)
+                UpdateTags();
         }
 
 
@@ -127,6 +136,8 @@ namespace PhotoGalleryApp.Models
 
         #endregion Methods
 
+
+        public delegate void CallbackMediaTagsChanged();
 
 
         #region Static

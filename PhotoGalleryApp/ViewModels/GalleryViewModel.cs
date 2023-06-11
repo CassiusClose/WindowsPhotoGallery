@@ -46,15 +46,16 @@ namespace PhotoGalleryApp.ViewModels
 
             // Setup gallery & images
             _gallery = gallery;
+            _gallery.MediaTagsChanged += MediaTagsChanged;
             _items = new ObservableCollection<MediaViewModel>();
             ImagesView = CollectionViewSource.GetDefaultView(_items);
            
-            CurrentTags = new ObservableCollection<string>();
+            FilterTags = new ObservableCollection<string>();
             _gallery.Tags.CollectionChanged += AllTags_CollectionChanged;
 
-            // Setup the filter, after CurrentTags has been created
+            // Setup the filter, after FilterTags has been created
             ImagesView.Filter += MediaFilter;
-            CurrentTags.CollectionChanged += CurrentTags_CollectionChanged;
+            FilterTags.CollectionChanged += FilterTags_CollectionChanged;
 
 
             // Load all the images in the gallery
@@ -109,16 +110,16 @@ namespace PhotoGalleryApp.ViewModels
 
 
 
-        private ObservableCollection<string> _currentTags;
+        private ObservableCollection<string> _filterTags;
         /// <summary>
         /// A collection of the tags currently selected to be displayed.
         /// </summary>
-        public ObservableCollection<string> CurrentTags
+        public ObservableCollection<string> FilterTags
         {
-            get { return _currentTags; }
+            get { return _filterTags; }
             set
             {
-                _currentTags = value;
+                _filterTags = value;
                 OnPropertyChanged();
                 ImagesView.Refresh();
             }
@@ -127,7 +128,7 @@ namespace PhotoGalleryApp.ViewModels
         /*
          * When the list of current tags changes, update the property.
          */
-        private void CurrentTags_CollectionChanged(object sender, NotifyCollectionChangedEventArgs e)
+        private void FilterTags_CollectionChanged(object sender, NotifyCollectionChangedEventArgs e)
         {
             // Any time the collection of tags change, the items show in the gallery will change,
             // but this will not automatically change which items are selected. So here, deselect
@@ -136,20 +137,26 @@ namespace PhotoGalleryApp.ViewModels
             {
                 if(vm.IsSelected)
                 {
-                    if(!MediaValidWithCurrentTags(vm))
+                    if(!MediaValidWithFilterTags(vm))
                     {
                         vm.IsSelected = false;
                     }
                 }
             }
 
-            OnPropertyChanged("CurrentTags");
+            OnPropertyChanged("FilterTags");
             ImagesView.Refresh();
         }
 
         private void AllTags_CollectionChanged(object sender, NotifyCollectionChangedEventArgs e)
         {
+            RemoveObsoleteTagsFromFilter();
             OnPropertyChanged("AllTags");
+        }
+
+        private void MediaTagsChanged()
+        {
+            ImagesView.Refresh(); 
         }
 
 
@@ -258,13 +265,13 @@ namespace PhotoGalleryApp.ViewModels
         public bool MediaFilter(object item)
         {
             // If no tags picked, show all of the images 
-            if (CurrentTags.Count == 0)
+            if (FilterTags.Count == 0)
                 return true;
 
             MediaViewModel vm = item as MediaViewModel;
 
             // If the image does not contain any of the selected tags, reject it
-            return MediaValidWithCurrentTags(vm);
+            return MediaValidWithFilterTags(vm);
         }
 
 
@@ -275,10 +282,10 @@ namespace PhotoGalleryApp.ViewModels
          * 
          * "Valid" means the Media contains all the tags in the currently selected tag list.
          */
-        private bool MediaValidWithCurrentTags(MediaViewModel vm)
+        private bool MediaValidWithFilterTags(MediaViewModel vm)
         {
             Media media = vm.Media;
-            foreach(string tag in CurrentTags)
+            foreach(string tag in FilterTags)
             {
                 if (!media.Tags.Contains(tag))
                     return false;
@@ -298,6 +305,24 @@ namespace PhotoGalleryApp.ViewModels
             }
 
             return selectedItems;
+        }
+
+
+        /*
+         * Remove any tags from the filter that don't exist any longer.
+         */
+        private void RemoveObsoleteTagsFromFilter()
+        {
+            for(int i = 0; i < _filterTags.Count; i++)
+            {
+                if (!AllTags.Contains(_filterTags[i]))
+                {
+                    _filterTags.RemoveAt(i);
+                    i--;
+                }
+            }
+
+            OnPropertyChanged("FilterTags");
         }
         
 
@@ -560,8 +585,8 @@ namespace PhotoGalleryApp.ViewModels
         public void AddTagToFilter(object sender, EventArgs eArgs)
         {
             ItemChosenEventArgs args = (ItemChosenEventArgs)eArgs;
-            if(args.Item != null && !CurrentTags.Contains(args.Item))
-                CurrentTags.Add(args.Item);
+            if(args.Item != null && !FilterTags.Contains(args.Item))
+                FilterTags.Add(args.Item);
         }
 
 
@@ -574,6 +599,7 @@ namespace PhotoGalleryApp.ViewModels
         /// <param name="eArgs">The event's arguments, of type PhotoGalleryApp.Views.ItemChosenEventArgs.</param>
         public void AddTagToSelected(object sender, EventArgs eArgs)
         {
+            _gallery.DisableTagUpdate = true;
             ItemChosenEventArgs args = (ItemChosenEventArgs)eArgs;
             string tag = args.Item; 
             if (tag != null)
@@ -587,6 +613,8 @@ namespace PhotoGalleryApp.ViewModels
                     }
                 }
             }
+            _gallery.DisableTagUpdate = false;
+            _gallery.UpdateTags();
         }
 
 
@@ -603,7 +631,7 @@ namespace PhotoGalleryApp.ViewModels
         /// <param name="parameter">The tag to remove, as a string.</param>
         public void RemoveTag(object parameter)
         {
-            CurrentTags.Remove(parameter as string);
+            FilterTags.Remove(parameter as string);
         }
 
         #endregion Tag Commands

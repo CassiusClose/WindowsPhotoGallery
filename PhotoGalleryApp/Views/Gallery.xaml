@@ -80,7 +80,7 @@
                     </ItemsPanelTemplate>
                 </Setter.Value>
             </Setter>
-                        
+
             <!-- Each item is a clickable image. Clicking on the image will open it as a new page in the Navigator. -->
             <Setter Property="ItemTemplate">
                 <Setter.Value>
@@ -108,7 +108,7 @@
         </Style>
 
         <!-- Wrapping, horizontal collection of current tags, each of which is a clickable string. Clicking removes the tag from the image filter -->
-        <Style x:Key="CurrentTagsList" BasedOn="{StaticResource HorizontalWrapItemsControl}" TargetType="ItemsControl">
+        <Style x:Key="FilterTagsList" BasedOn="{StaticResource HorizontalWrapItemsControl}" TargetType="ItemsControl">
             <Setter Property="ItemTemplate">
                 <Setter.Value>
                     <DataTemplate>
@@ -161,7 +161,7 @@
 
 
             <!-- A list of all currently selected tags, clicking removes them -->
-            <ItemsControl ItemsSource="{Binding Path=CurrentTags, Mode=OneWay}" Style="{StaticResource CurrentTagsList}"/>
+            <ItemsControl ItemsSource="{Binding Path=FilterTags, Mode=OneWay}" Style="{StaticResource FilterTagsList}"/>
         </StackPanel>
 
         <!-- Display the images -->
@@ -185,6 +185,8 @@
                 >
                 <ListBox.ItemContainerStyle>
                     <Style TargetType="ListBoxItem">
+                        <Setter Property="HorizontalContentAlignment" Value="Center"/>
+                        <Setter Property="VerticalContentAlignment" Value="Center"/>
                         <Setter Property="Padding" Value="0"/>
                         <Setter Property="Margin" Value="0"/>
                         <Setter Property="MinHeight" Value="{Binding Path=DataContext.ThumbnailHeight, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType={x:Type local:Gallery}}}"/>
