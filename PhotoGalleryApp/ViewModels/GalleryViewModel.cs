@@ -121,7 +121,8 @@ namespace PhotoGalleryApp.ViewModels
             {
                 _filterTags = value;
                 OnPropertyChanged();
-                ImagesView.Refresh();
+                Console.WriteLine("FilterTags Setter");
+                //ImagesView.Refresh();
             }
         }
 
@@ -133,29 +134,22 @@ namespace PhotoGalleryApp.ViewModels
             // Any time the collection of tags change, the items show in the gallery will change,
             // but this will not automatically change which items are selected. So here, deselect
             // any selected items that don't match the selected tags.
-            foreach (MediaViewModel vm in _items)
-            {
-                if(vm.IsSelected)
-                {
-                    if(!MediaValidWithFilterTags(vm))
-                    {
-                        vm.IsSelected = false;
-                    }
-                }
-            }
-
+            DeselectInvalidMedia();
             OnPropertyChanged("FilterTags");
             ImagesView.Refresh();
         }
 
         private void AllTags_CollectionChanged(object sender, NotifyCollectionChangedEventArgs e)
         {
+            Console.WriteLine("AllTags_CollectionChanged");
             RemoveObsoleteTagsFromFilter();
             OnPropertyChanged("AllTags");
         }
 
         private void MediaTagsChanged()
         {
+            Console.WriteLine("MediaTagsChanged");
+            DeselectInvalidMedia();
             ImagesView.Refresh(); 
         }
 
@@ -325,6 +319,24 @@ namespace PhotoGalleryApp.ViewModels
             OnPropertyChanged("FilterTags");
         }
         
+        /*
+         * Deselect any items that are currently selected, but aren't valid in the filter rules.
+         */
+        private void DeselectInvalidMedia()
+        {
+            foreach (MediaViewModel vm in _items)
+            {
+                if(vm.IsSelected)
+                {
+                    if(!MediaValidWithFilterTags(vm))
+                    {
+                        vm.IsSelected = false;
+                    }
+                }
+            }
+        }
+
+
 
         /// <summary>
         /// Creates and returns a MediaViewModel object, that holds the given Media object. Will be
@@ -591,7 +603,6 @@ namespace PhotoGalleryApp.ViewModels
 
 
 
-
         /// <summary>
         /// An event handler that adds the given tag to each currently selected image.
         /// </summary>
@@ -611,6 +622,25 @@ namespace PhotoGalleryApp.ViewModels
                     {
                         vm.Media.Tags.Add(tag);
                     }
+                }
+            }
+            _gallery.DisableTagUpdate = false;
+            _gallery.UpdateTags();
+        }
+
+
+        public void RemoveTagFromSelected(object sender, EventArgs eArgs)
+        {
+            _gallery.DisableTagUpdate = true;
+            ItemChosenEventArgs args = (ItemChosenEventArgs)eArgs;
+            string tag = args.Item;
+            if(tag != null)
+            {
+                List<MediaViewModel> vms = GetCurrentlySelectedItems();
+                foreach (MediaViewModel vm in vms)
+                {
+                    if (vm.Media.Tags.Contains(tag))
+                        vm.Media.Tags.Remove(tag);
                 }
             }
             _gallery.DisableTagUpdate = false;

@@ -146,6 +146,13 @@
                     </i:EventTrigger>
                 </i:Interaction.Triggers>
             </local:ChooserDropDown>
+            <local:ChooserDropDown ItemsSource="{Binding AllTags}" ButtonText="Remove Tag from Selected">
+                <i:Interaction.Triggers>
+                    <i:EventTrigger EventName="ItemSelected">
+                        <ei:CallMethodAction TargetObject="{Binding}" MethodName="RemoveTagFromSelected"/>
+                    </i:EventTrigger>
+                </i:Interaction.Triggers>
+            </local:ChooserDropDown>
         </StackPanel>
 
         <!-- Tag Filtering panel -->

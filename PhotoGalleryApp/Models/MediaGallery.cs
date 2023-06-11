@@ -116,6 +116,7 @@ namespace PhotoGalleryApp.Models
          */
         private void MediaTags_CollectionChanged(object sender, NotifyCollectionChangedEventArgs e)
         {
+            Console.WriteLine("MediaTags_CollectionChanged");
             if (!DisableTagUpdate)
                 UpdateTags();
         }
