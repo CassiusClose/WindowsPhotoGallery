@@ -8,7 +8,15 @@
              xmlns:converters="clr-namespace:PhotoGalleryApp.Converters"
              xmlns:diag="clr-namespace:System.Diagnostics;assembly=WindowsBase"
              mc:Ignorable="d" 
-             d:DesignHeight="450" d:DesignWidth="1000">
+             d:DesignHeight="450" d:DesignWidth="1000"
+
+             Loaded="UserControl_Loaded"
+             Focusable="True">
+
+    <UserControl.InputBindings>
+        <KeyBinding Key="Left" Command="{Binding LeftCommand}"/>
+        <KeyBinding Key="Right" Command="{Binding RightCommand}"/>
+    </UserControl.InputBindings>
 
     <UserControl.Resources>
         <!-- Configure all the possible ViewModels/Views which might be displayed in the sidebar. -->

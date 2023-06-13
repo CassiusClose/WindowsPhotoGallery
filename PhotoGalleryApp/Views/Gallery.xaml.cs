@@ -178,5 +178,19 @@ namespace PhotoGalleryApp.Views
             ImagesScrollViewer.ScrollToVerticalOffset(ImagesScrollViewer.VerticalOffset - offset);
             e.Handled = true;
         }
+
+        // When the user clicks anywhere on the control, keep focus on the top-level
+        // so key events are captured.
+        private void UserControl_MouseDown(object sender, MouseButtonEventArgs e)
+        {
+            this.Focus();
+            e.Handled = true;
+        }
+
+        // Seize focus when the control is loaded (when the navigator opens this page).
+        private void UserControl_Loaded(object sender, RoutedEventArgs e)
+        {
+            this.Focus();
+        }
     }
 }

@@ -109,49 +109,6 @@ namespace PhotoGalleryApp.ViewModels
             return _history.Count != 0;
         }
 
-
-        /// <summary>
-        /// Calls the given key's event handlers of the navigator's current page. Should be called whenever a
-        /// key is pressed.
-        /// </summary>
-        /// <param name="key">The key that was pressed.</param>
-        public void BroadcastKeyEvent(Key key)
-        {
-            if (KEYEVENT_HANDLERS.ContainsKeys(CurrentPage, key))
-                KEYEVENT_HANDLERS[CurrentPage, key]();
-        }
-
-
         #endregion Commands
-
-
-
-        #region Static
-
-        /// <summary>
-        /// A delegate for keyboard event handler functions.
-        /// </summary>
-        public delegate void KeyEventHandler();
-
-        /**
-         * Stores key event handlers based on ViewModel and Key. In other words, each page in the navigator
-         * can register its own key listeners. When a key is pressed, that key's listeners registered by the
-         * current page will be called.
-         */
-        private static MultiKeyDictionary<ViewModelBase, Key, KeyEventHandler> KEYEVENT_HANDLERS = new MultiKeyDictionary<ViewModelBase, Key, KeyEventHandler>();
-        
-        /// <summary>
-        /// Registers a key event handler function associated with a ViewModel page and Key. When the page is the navigator's current
-        /// page and the key is pressed, the function will be called.
-        /// </summary>
-        /// <param name="page">The ViewModel page that the key event handler is associated with.</param>
-        /// <param name="key">The Key that event handler is responding to.</param>
-        /// <param name="handler">The event handler function.</param>
-        public static void RegisterKeyEventHandler(ViewModelBase page, Key key, KeyEventHandler handler)
-        {
-           KEYEVENT_HANDLERS[page, key] = handler;
-        }
-
-        #endregion Static
     }
 }

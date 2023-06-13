@@ -34,11 +34,12 @@ namespace PhotoGalleryApp.ViewModels
             // Init commands
             _addFilesCommand = new RelayCommand(AddFiles);
             _selectMediaCommand = new RelayCommand(SelectMedia);
-            _removeMediaCommand = new RelayCommand(RemoveMedia, AreImagesSelected);
+            _removeMediaCommand = new RelayCommand(RemoveMedia, IsMediaSelected);
             _openMediaCommand = new RelayCommand(OpenMedia);
             _removeTagCommand = new RelayCommand(RemoveTag);
             _saveGalleryCommand = new RelayCommand(SaveGallery);
             _scrollChangedCommand = new RelayCommand(ScrollChanged);
+            _escapePressedCommand = new RelayCommand(EscapePressed);
 
             // Init scroll timer
             _scrollChangedTimer.Interval = new TimeSpan(0, 0, 0, 0, 150);
@@ -153,6 +154,13 @@ namespace PhotoGalleryApp.ViewModels
             ImagesView.Refresh(); 
         }
 
+
+        /*
+         * Stores the MediaViewModel that was last selected in the gallery, allowing for shift-click batch
+         * selection. This is only when there is a current selection. If there is nothing currently selected,
+         * this will be null.
+         */
+        private MediaViewModel lastSelectedMedia = null;
 
 
         /// <summary>
@@ -301,6 +309,52 @@ namespace PhotoGalleryApp.ViewModels
             return selectedItems;
         }
 
+        /*
+         * Returns whether any media in the currently visible list are selected.
+         */
+        private bool IsMediaSelected()
+        {
+            List<MediaViewModel> list = ImagesView.Cast<MediaViewModel>().ToList();
+            foreach (MediaViewModel vm in list)
+            {
+                if (vm.IsSelected)
+                    return true;
+            }
+            return false;
+        }
+
+        /*
+         * Selects all media in the currently visible list.
+         */
+        private void SelectAllMedia()
+        {
+            List<MediaViewModel> list = ImagesView.Cast<MediaViewModel>().ToList();
+            foreach (MediaViewModel vm in list)
+            {
+                if (!vm.IsSelected)
+                    vm.IsSelected = true;
+            }
+            UpdateSelectedCommandsCanExecute();
+        }
+
+        /*
+         * Deselects all media in the currently visible list. Media should be deselected
+         * when made not visible (doesn't pass the filter), so this method should result
+         * in all media being deselected.
+         */
+        private void DeselectAllMedia()
+        {
+            List<MediaViewModel> list = ImagesView.Cast<MediaViewModel>().ToList();
+            foreach (MediaViewModel vm in list)
+            {
+                if (vm.IsSelected)
+                    vm.IsSelected = false;
+            }
+            UpdateSelectedCommandsCanExecute();
+        }
+
+
+
 
         /*
          * Remove any tags from the filter that don't exist any longer.
@@ -353,10 +407,12 @@ namespace PhotoGalleryApp.ViewModels
                 case MediaFileType.Video:               
                     // Create the VideoVM in ThumbnailMode, which creates an ImageViewModel
                     // for the thumbnail within the VM.
-                    return new VideoViewModel(media as Video, true, 0, ThumbnailHeight);
+                    VideoViewModel vvm = new VideoViewModel(media as Video, true, 0, ThumbnailHeight);
+                    return vvm;
 
                 case MediaFileType.Image:
-                    return new ImageViewModel(media as Image, 0, ThumbnailHeight);
+                    ImageViewModel ivm = new ImageViewModel(media as Image, 0, ThumbnailHeight);
+                    return ivm;
 
                 default:
                     return null;
@@ -533,20 +589,6 @@ namespace PhotoGalleryApp.ViewModels
             _removeMediaCommand.InvokeCanExecuteChanged();
         }
 
-        /*
-         * A CanExecuteAction function for any command that deals with selected images.
-         * The command will be allowed to execute if at least one image in the gallery
-         * is selected.
-         */
-        private bool AreImagesSelected(object parameter)
-        {
-            System.Collections.IList list = parameter as System.Collections.IList;
-            if (list.Count > 0)
-                return true;
-            return false;
-        }
-
-
 
         private RelayCommand _selectMediaCommand;
         /// <summary>
@@ -555,10 +597,60 @@ namespace PhotoGalleryApp.ViewModels
         public ICommand SelectMediaCommand => _selectMediaCommand;
 
         /// <summary>
-        /// Notifies the gallery that the selection of images has changed.
+        /// Notifies the gallery that the selection of images has changed, and handles shift-click
+        /// selection.
         /// </summary>
-        public void SelectMedia()
+        public void SelectMedia(object parameter)
         {
+            MediaViewModel vm = parameter as MediaViewModel;
+            // Was the most recent click a select or deselect action
+            bool selected = vm.IsSelected;
+
+            List<MediaViewModel> list = ImagesView.Cast<MediaViewModel>().ToList();
+
+            // Shift-clicking should select a range of media
+            if(Keyboard.Modifiers == ModifierKeys.Shift)
+            {
+                // If nothing is selected, shift-click does nothing
+                if (lastSelectedMedia == null)
+                {
+                    vm.IsSelected = false;
+                }
+                // Otherwise, change selection status for all between prev and currently selected.
+                else
+                {
+                    int lastInd = list.IndexOf(lastSelectedMedia);
+                    int currInd = list.IndexOf(vm);
+                    int lowInd = lastInd;
+                    int hiInd = currInd;
+                    if (lastInd > currInd)
+                    {
+                        lowInd = currInd;
+                        hiInd = lastInd;
+                    }
+
+                    for (int i = lowInd; i <= hiInd; i++)
+                    {
+                        list[i].IsSelected = selected;
+                    }
+
+                    // When you shift click on an image, that image becomes the basis for later
+                    // shift-clicking. This is counter to how it works on Windows File Explorer
+                    // and Linux Nautilus.
+                    lastSelectedMedia = vm;
+                }
+            }
+            // Normal click
+            else
+            {
+                lastSelectedMedia = vm;
+            }
+
+            // If the action deselected all the remaining media, then clear the most recently selected media.
+            if (!IsMediaSelected())
+                lastSelectedMedia = null;
+
+            // Update the selection-sensitive commands to enable or disable them.
             UpdateSelectedCommandsCanExecute();
         }
 
@@ -666,6 +758,27 @@ namespace PhotoGalleryApp.ViewModels
 
         #endregion Tag Commands
 
+        #region KeyCommands
+
+        private RelayCommand _escapePressedCommand;
+        /// <summary>
+        /// A command which handles the escape key being pressed.
+        /// </summary>
+        public ICommand EscapePressedCommand => _escapePressedCommand;
+
+        /// <summary>
+        /// Handle the escape key being pressed. This deselects any selected media.
+        /// </summary>
+        public void EscapePressed(object parameter)
+        {
+            if (IsMediaSelected())
+            {
+                DeselectAllMedia();
+            }
+        }
+
+
+        #endregion
 
         #endregion Commands
     }

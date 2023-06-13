@@ -52,45 +52,5 @@ namespace PhotoGalleryApp
 
             InitializeComponent();
         }
-
-
-        /// <summary>
-        /// Gives mouse and keyboard focus to the window, taking it away from any UI element
-        /// that previously had focus. This can be called by ViewModels, and though it is not
-        /// quite MVVM, it can make code much simpler when the conditions for an element losing
-        /// focus are not straightforward and messy to implement in XAML & code behind.
-        /// </summary>
-        public void SeizeFocus()
-        {
-            Window_MouseDown(null, null);
-        }
-
-
-        /**
-         * When the user clicks on the "window", i.e. something that isn't focusable, like a
-         * panel, grid, or label, then this will be called. Here, we set focus & keyboard focus
-         * to the window's grid so that focus is lost elsewhere. This lets the user click off
-         * of a textbox, for example, and have it lose focus.
-         */
-        private void Window_MouseDown(object sender, MouseButtonEventArgs e)
-        {
-            WindowGrid.Focus();
-            Keyboard.Focus(WindowGrid);
-        }
-         
-
-        /**
-         * KeyDown events will be send to the navigator to be passed on to the current page.
-         */
-        private void Window_KeyDown(object sender, KeyEventArgs e)
-        {
-            nav.BroadcastKeyEvent(e.Key);
-        }
-
-        private void Window_Deactivated(object sender, EventArgs e)
-        {
-            WindowGrid.Focus();
-            Keyboard.Focus(WindowGrid);
-        }
     }
 }

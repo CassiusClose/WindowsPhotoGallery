@@ -40,11 +40,7 @@ namespace PhotoGalleryApp.ViewModels
             _rightCommand = new RelayCommand(Right, HasMultipleImages);
             _toggleInfoVisibilityCommand = new RelayCommand(ToggleInfoVisibility);
 
-
-            // Register key listeners
-            NavigatorViewModel.RegisterKeyEventHandler(this, Key.Left, Left);
-            NavigatorViewModel.RegisterKeyEventHandler(this, Key.Right, Right);
-
+            
             _galleryItems = galleryItems;
             CurrentIndex = index;
 

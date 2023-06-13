@@ -31,6 +31,61 @@ namespace PhotoGalleryApp.Views
         public ChooserDropDown()
         {
             InitializeComponent();
+
+            this.Loaded += UserControl_Loaded;
+        }
+
+        // Hook into MainWindow events
+        public void UserControl_Loaded(object sender, EventArgs e)
+        {
+            Window.GetWindow(this).Deactivated += Window_Deactivated;
+            Window.GetWindow(this).Activated += Window_Activated;
+        }
+
+        
+        // When the window is deactivated, keep track of if popup was open
+        // so it can be opened again.
+        private bool PopupOpenWhenDeactivated = false;
+
+        
+        // Called when the user switches applications
+        private void Window_Deactivated(object sender, EventArgs e)
+        {
+            // If the popup is open, close the popup.
+            if (PopupOpen)
+            {
+                PopupOpenWhenDeactivated = true;
+                ClosePopup();
+
+                /*
+                 * It's slightly convoluted, but ClosePopup() doesn't change
+                 * PopupOpen. It just shifts the focus to the parent element,
+                 * and the PopupOpen and Text properties change on the
+                 * LostFocus handler. Even though this isn't super intuitive,
+                 * it's handy because different events can choose whether to 
+                 * clear the textbox or not. Here, don't clear the textbox,
+                 * because the text needs to be restored when the user switches
+                 * back to the application.
+                 */
+                PopupOpen = false;
+                
+            }
+        }
+
+        // Called when the user switches from another application back to this one
+        private void Window_Activated(object sender, EventArgs e)
+        {
+            // If the popup was open when the user switched away, reopen it
+            if (PopupOpenWhenDeactivated)
+            {
+                // For some unknown reason, when the window is being reactivated, to focus on
+                // content in a popup, focus must first be set to something in the main window,
+                // not in the popup. I'm not sure why this is, but it's the only way I could
+                // get it to work.
+                Window.GetWindow(this).Focus();
+                OpenPopup();
+                PopupOpenWhenDeactivated = false;
+            }
         }
 
         
@@ -348,7 +403,6 @@ namespace PhotoGalleryApp.Views
          */
         private void OpenPopup()
         {
-            Text = "";
             SelectFirst(); // Select the first item each time the popup opens
             PopupOpen = true;
             DropDown_TextBox.Focus();
@@ -356,11 +410,21 @@ namespace PhotoGalleryApp.Views
 
         /**
          * Closes the drop-down list popup box. Does this by taking focus away from this user control, so
-         * the rest of the popup-closing code is in Textbox_LostFocus().
+         * the rest of the popup-closing code is in Textbox_LostFocus(). This is because there are cases
+         * where the popup will close without this method being called, such as when the user clicks away
+         * from the dropdown. That will trigger the LostFocus event., but not 
          */
         private void ClosePopup()
         {
-            ((MainWindow)Application.Current.MainWindow).SeizeFocus();
+            // Set focus to parent focusable element
+            //https://stackoverflow.com/questions/21934347/set-focus-back-to-its-parent
+            FrameworkElement parent = (FrameworkElement)this.Parent;
+            while(parent != null && parent is IInputElement && !((IInputElement)parent).Focusable)
+            {
+                parent = (FrameworkElement)parent.Parent;
+            }
+            DependencyObject scope = FocusManager.GetFocusScope(this);
+            FocusManager.SetFocusedElement(scope, parent as IInputElement);
         }
 
 
@@ -454,10 +518,19 @@ namespace PhotoGalleryApp.Views
 
       
         /**
-         * When the textbox loses focus (is clicked off of, the window is hidden, etc.), close the drop-down list popup
+         * When the textbox loses focus (is clicked off of, the window is hidden, etc.), close the drop-down list popup and
+         * clear the textbox.
          */
         private void Textbox_LostFocus(object sender, RoutedEventArgs e)
         {
+            // If the window is being deactivated, the Deactivated event handler needs
+            // to know whether the popup is open or not to restore that state when the
+            // window is reactivated. So keep the popup open for now. The Deactivated
+            // event handler will close it.
+            Window win = Window.GetWindow(this);
+            if (win != null && !win.IsActive)
+                return;
+
             Text = "";
             PopupOpen = false;
         }
@@ -472,14 +545,15 @@ namespace PhotoGalleryApp.Views
             if (item != null)
                 ChooseItem(item.Content as string);
 
+            e.Handled = true;
         }
 
    
 
         /**
-         * Handles non-text key input to the textbox, such as "enter", "tab" functionality
+         * Handles non-text key input to the control, such as "enter", "tab" functionality
          */
-        private void Textbox_PreviewKeyDown(object sender, KeyEventArgs e)
+        private void UserControl_PreviewKeyDown(object sender, KeyEventArgs e)
         {
             switch (e.Key)
             {
@@ -512,6 +586,15 @@ namespace PhotoGalleryApp.Views
                         DropDownListBox.SelectedIndex = 0;
                     else
                         DropDownListBox.SelectedIndex += 1;
+                    break;
+
+                // Pressing escape closes the popup, and pass focus to its parent
+                case Key.Escape:
+                    if (PopupOpen)
+                    {
+                        ClosePopup();
+                        e.Handled = true;
+                    }
                     break;
             }
         }

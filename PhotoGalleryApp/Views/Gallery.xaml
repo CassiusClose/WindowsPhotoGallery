@@ -9,7 +9,15 @@
              xmlns:i="clr-namespace:System.Windows.Interactivity;assembly=System.Windows.Interactivity"
              xmlns:ei="http://schemas.microsoft.com/expression/2010/interactions"
              mc:Ignorable="d" 
-             d:DesignHeight="450" d:DesignWidth="800">
+             d:DesignHeight="450" d:DesignWidth="800"
+             
+             Focusable="True"
+             MouseDown="UserControl_MouseDown"
+             Loaded="UserControl_Loaded">
+
+    <UserControl.InputBindings>
+        <KeyBinding Key="Esc" Command="{Binding EscapePressedCommand}"/>
+    </UserControl.InputBindings>
 
     <UserControl.Resources>
         <converters:HeightARToWidthConverter x:Key="HeightARToWidth"/>
@@ -121,9 +129,9 @@
         </Style>
 
     </UserControl.Resources>
-    
-    
-    <Grid>
+
+    <!-- Transparent background allows for mouse events to be captured --> 
+    <Grid Background="Transparent">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto"/>

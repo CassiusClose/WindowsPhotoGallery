@@ -24,5 +24,11 @@ namespace PhotoGalleryApp.Views
         {
             InitializeComponent();
         }
+
+        // Seize focus when the control is loaded (when the navigator opens this page).
+        private void UserControl_Loaded(object sender, RoutedEventArgs e)
+        {
+            this.Focus();
+        }
     }
 }
