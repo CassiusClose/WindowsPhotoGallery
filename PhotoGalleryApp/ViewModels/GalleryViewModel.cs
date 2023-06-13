@@ -309,6 +309,17 @@ namespace PhotoGalleryApp.ViewModels
             return selectedItems;
         }
 
+
+        /// <summary>
+        ///  Returns whether there is media selected in the gallery. Acts as a bindable property for
+        ///  the IsMediaSelected() method, for the buttons that don't use commands and must bind
+        ///  IsEnabled directly.
+        /// </summary>
+        public bool MediaSelected
+        {
+            get { return IsMediaSelected(); }
+        }
+
         /*
          * Returns whether any media in the currently visible list are selected.
          */
@@ -582,11 +593,13 @@ namespace PhotoGalleryApp.ViewModels
 
         /*
          * Notifies all commands that deal with selected images that 
-         * the selection has changed.
+         * the selection has changed. This should be called by this VM
+         * whenever the selection is changed.
          */
         private void UpdateSelectedCommandsCanExecute()
         {
             _removeMediaCommand.InvokeCanExecuteChanged();
+            OnPropertyChanged("MediaSelected");
         }
 
 

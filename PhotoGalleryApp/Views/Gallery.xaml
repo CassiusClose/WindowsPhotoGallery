@@ -147,14 +147,18 @@
             <Button Command="{Binding AddFilesCommand}">Add Images</Button>
             <Button Command="{Binding SaveGalleryCommand}">Save Gallery</Button>
             <Button CommandParameter="{Binding SelectedItems, ElementName=GalleryImageListBox}" Command="{Binding RemoveMediaCommand}">Remove Selected</Button>
-            <local:ChooserDropDown ItemsSource="{Binding AllTags}" ShowCreateButton="True" ButtonText="Add Tag to Selected">
+            <local:ChooserDropDown ItemsSource="{Binding AllTags}" 
+                                   ShowCreateButton="True" ButtonText="Add Tag to Selected"
+                                   IsEnabled="{Binding MediaSelected}">
                 <i:Interaction.Triggers>
                     <i:EventTrigger EventName="ItemSelected">
                         <ei:CallMethodAction TargetObject="{Binding}" MethodName="AddTagToSelected"/>
                     </i:EventTrigger>
                 </i:Interaction.Triggers>
             </local:ChooserDropDown>
-            <local:ChooserDropDown ItemsSource="{Binding AllTags}" ButtonText="Remove Tag from Selected">
+            <local:ChooserDropDown ItemsSource="{Binding AllTags}"
+                                   ButtonText="Remove Tag from Selected"
+                                   IsEnabled="{Binding MediaSelected}">
                 <i:Interaction.Triggers>
                     <i:EventTrigger EventName="ItemSelected">
                         <ei:CallMethodAction TargetObject="{Binding}" MethodName="RemoveTagFromSelected"/>
