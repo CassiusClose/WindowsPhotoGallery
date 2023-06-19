@@ -39,7 +39,7 @@
                 <Setter.Value>
                     <DataTemplate>
                         <Button Content="{Binding}"
-                                Command="{Binding Path=DataContext.RemoveTagCommand, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType={x:Type local:Gallery}}}"
+                                Command="{Binding Path=DataContext.RemoveTagFromFilterCommand, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType={x:Type local:Gallery}}}"
                                 CommandParameter="{Binding}"/>
                     </DataTemplate>
                 </Setter.Value>

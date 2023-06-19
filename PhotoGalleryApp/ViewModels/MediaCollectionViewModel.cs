@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Collections.Specialized;
 using System.ComponentModel;
 using System.Linq;
 using System.Text;
@@ -36,6 +37,7 @@ namespace PhotoGalleryApp.ViewModels
 
             // Init media lists
             MediaCollectionModel = collection;
+            MediaCollectionModel.MediaTagsChanged += MediaTagsChanged;
             _mediaList = new ObservableCollection<MediaViewModel>();
             MediaView = CollectionViewSource.GetDefaultView(_mediaList);
 
@@ -45,7 +47,11 @@ namespace PhotoGalleryApp.ViewModels
 
             // Load all the media in the collection 
             InitAndLoadAllMedia();
+            // Don't need this handler for the initialization of the VMs, so hook it after
+            MediaCollectionModel.CollectionChanged += MediaCollection_CollectionChanged;
         }
+
+
 
 
         /// <summary>
@@ -62,6 +68,39 @@ namespace PhotoGalleryApp.ViewModels
         public ICollectionView MediaView { get; }
 
 
+        /// <summary>
+        /// Prevents the ICollectionView MediaView that provides the view with images from refreshing. There are some
+        /// functions, such as removing media from the collection, where a refresh is not needed and only causes
+        /// (harmless) binding errors.
+        /// </summary>
+        public bool DisableMediaViewRefresh = false;
+
+        /*
+         * When any media changes its tags, refresh the view
+         */
+        private void MediaTagsChanged()
+        {
+            if (!DisableMediaViewRefresh)
+                MediaView.Refresh();
+        }
+
+        /*
+         * When Media is removed from the collection, remove the MediaViewModel from the corresponding _mediaList.
+         */
+        private void MediaCollection_CollectionChanged(object sender, NotifyCollectionChangedEventArgs e)
+        {
+            for(int i = _mediaList.Count()-1; i >= 0; i--)
+            {
+                if (!MediaCollectionModel.Contains(_mediaList[i].Media))
+                    _mediaList.RemoveAt(i);
+            }
+
+            //TODO Should load priority media if that's happening
+            LoadAllMedia();
+        }
+
+
+
 
 
         /// <summary>
@@ -72,7 +111,6 @@ namespace PhotoGalleryApp.ViewModels
         {
             get { return 200; }
         }
-
 
 
 
@@ -94,8 +132,6 @@ namespace PhotoGalleryApp.ViewModels
             _mediaList.Add(vm);
             ScrollChangedStopped(null, null);
         }
-
-
 
 
         #region Open Media
@@ -350,10 +386,13 @@ namespace PhotoGalleryApp.ViewModels
             // Load the images one at a time
             foreach (MediaViewModel item in images)
             {
-                if (taskID == _imageLoadID)
-                    await Task.Run(() => { item.LoadMedia(); });
                 // If this task is outdated (there's a newer task ID out there), then cancel
-                else
+                if (taskID != _imageLoadID)
+                    break;
+                    
+                await Task.Run(() => { item.LoadMedia(); });
+
+                if (taskID != _imageLoadID)
                     break;
             }
 

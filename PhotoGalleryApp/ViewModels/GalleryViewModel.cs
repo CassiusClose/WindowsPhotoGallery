@@ -33,7 +33,7 @@ namespace PhotoGalleryApp.ViewModels
 
             // Init commands
             _addFilesCommand = new RelayCommand(AddFiles);
-            _removeTagCommand = new RelayCommand(RemoveTag);
+            _removeTagFromFilterCommand = new RelayCommand(RemoveTagFromFilter);
             _saveGalleryCommand = new RelayCommand(SaveGallery);
             _escapePressedCommand = new RelayCommand(EscapePressed);
 
@@ -147,7 +147,6 @@ namespace PhotoGalleryApp.ViewModels
         private void MediaTagsChanged()
         {
             DeselectInvalidMedia();
-            MediaCollectionVM.MediaView.Refresh(); 
         }
 
 
@@ -308,17 +307,17 @@ namespace PhotoGalleryApp.ViewModels
 
 
 
-        private RelayCommand _removeTagCommand;
+        private RelayCommand _removeTagFromFilterCommand;
         /// <summary>
         /// A command which removes a tag from the list of selected tags.
         /// </summary>
-        public ICommand RemoveTagCommand => _removeTagCommand;
+        public ICommand RemoveTagFromFilterCommand => _removeTagFromFilterCommand;
 
         /// <summary>
         /// Removes the given tag from the list of selected tags.
         /// </summary>
         /// <param name="parameter">The tag to remove, as a string.</param>
-        public void RemoveTag(object parameter)
+        public void RemoveTagFromFilter(object parameter)
         {
             FilterTags.Remove(parameter as string);
         }
@@ -445,22 +444,26 @@ namespace PhotoGalleryApp.ViewModels
         #endregion SaveGallery
 
 
-        #region RemoveMedia
+        #region RemoveSelected
 
         /// <summary>
         /// Removes the given images from the gallery.
         /// </summary>
         /// <param name="parameter">The list of images to remove, of type System.Windows.Controls.SelectedItemCollection (from ListBox SelectedItems).</param>
-        public void RemoveMedia(object parameter)
+        public void RemoveSelected(object sender, EventArgs eArgs)
         {
-            System.Collections.IList list = parameter as System.Collections.IList;
-            List<Media> photos = list.Cast<Media>().ToList();
-            foreach (Media p in photos)
-                MediaCollectionVM.MediaCollectionModel.Remove(p);
+            MediaCollectionVM.DisableMediaViewRefresh = true;
+
+            List<MediaViewModel> vms = MediaCollectionVM.GetCurrentlySelectedItems();
+            foreach(MediaViewModel vm in vms)
+            {
+                MediaCollectionVM.MediaCollectionModel.Remove(vm.Media);
+            }
+
+            MediaCollectionVM.TriggerMediaSelectedChanged();
+            MediaCollectionVM.DisableMediaViewRefresh = true;
         }
-
-        #endregion RemoveMedia
-
+        #endregion RemoveSelected
 
         #region KeyCommands
 
