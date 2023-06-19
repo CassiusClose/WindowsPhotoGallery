@@ -42,56 +42,13 @@ namespace PhotoGalleryApp.Views
             Window.GetWindow(this).Activated += Window_Activated;
         }
 
-        
-        // When the window is deactivated, keep track of if popup was open
-        // so it can be opened again.
-        private bool PopupOpenWhenDeactivated = false;
 
-        
-        // Called when the user switches applications
-        private void Window_Deactivated(object sender, EventArgs e)
-        {
-            // If the popup is open, close the popup.
-            if (PopupOpen)
-            {
-                PopupOpenWhenDeactivated = true;
-                ClosePopup();
 
-                /*
-                 * It's slightly convoluted, but ClosePopup() doesn't change
-                 * PopupOpen. It just shifts the focus to the parent element,
-                 * and the PopupOpen and Text properties change on the
-                 * LostFocus handler. Even though this isn't super intuitive,
-                 * it's handy because different events can choose whether to 
-                 * clear the textbox or not. Here, don't clear the textbox,
-                 * because the text needs to be restored when the user switches
-                 * back to the application.
-                 */
-                PopupOpen = false;
-                
-            }
-        }
-
-        // Called when the user switches from another application back to this one
-        private void Window_Activated(object sender, EventArgs e)
-        {
-            // If the popup was open when the user switched away, reopen it
-            if (PopupOpenWhenDeactivated)
-            {
-                // For some unknown reason, when the window is being reactivated, to focus on
-                // content in a popup, focus must first be set to something in the main window,
-                // not in the popup. I'm not sure why this is, but it's the only way I could
-                // get it to work.
-                Window.GetWindow(this).Focus();
-                OpenPopup();
-                PopupOpenWhenDeactivated = false;
-            }
-        }
-
-        
-       
         #region DependencyProperties
 
+        /* Read/Write Properties */
+
+        #region ItemsSourceProperty
         public static readonly DependencyProperty ItemsSourceProperty = DependencyProperty.Register("ItemsSource", typeof(ObservableCollection<string>), typeof(ChooserDropDown),
             new FrameworkPropertyMetadata
             {
@@ -118,13 +75,10 @@ namespace PhotoGalleryApp.Views
                 control.RefreshView();
             }
         }
+        #endregion ItemsSourceProperty
 
 
-
-
-
-
-
+        #region TextProperty
         public static readonly DependencyProperty TextProperty = DependencyProperty.Register("Text", typeof(string), typeof(ChooserDropDown),
             new FrameworkPropertyMetadata
             {
@@ -195,10 +149,10 @@ namespace PhotoGalleryApp.Views
             if (selectedIndex < 0 || selectedIndex >= DropDownListBox.Items.Count)
                 SelectFirst(); 
         }
+        #endregion TextProperty
 
 
-
-        
+        #region ButtonTextProperty
         public static readonly DependencyProperty ButtonTextProperty = DependencyProperty.Register("ButtonText", typeof(string), typeof(ChooserDropDown),
             new PropertyMetadata("Drop Down"));
         /// <summary>
@@ -209,10 +163,10 @@ namespace PhotoGalleryApp.Views
             get { return (string)GetValue(ButtonTextProperty); }
             set { SetValue(ButtonTextProperty, value); }
         }
+        #endregion ButtonTextProperty
 
 
-
-
+        #region SelectedItemProperty
         public static readonly DependencyProperty SelectedItemProperty = DependencyProperty.Register("SelectedItem", typeof(object), typeof(ChooserDropDown));
         /// <summary>
         /// The item currently selected in the control's drop-down list.
@@ -222,11 +176,10 @@ namespace PhotoGalleryApp.Views
             get { return (object)GetValue(SelectedItemProperty); }
             set { SetValue(SelectedItemProperty, value); }
         }
+        #endregion SelectedItemProperty
 
 
-
-
-
+        #region ShowCreateButtonProperty
         public static readonly DependencyProperty ShowCreateButtonProperty = DependencyProperty.Register("ShowCreateButton", typeof(bool), typeof(ChooserDropDown),
             new PropertyMetadata(false));
         /// <summary>
@@ -237,10 +190,26 @@ namespace PhotoGalleryApp.Views
             get { return (bool)GetValue(ShowCreateButtonProperty); }
             set { SetValue(ShowCreateButtonProperty, value); }
         }
+        #endregion ShowCreateButtonProperty
 
 
+        #region EmptyTextShowsAllProperty
+        public static readonly DependencyProperty EmptyTextShowsAllProperty = DependencyProperty.Register("EmptyTextShowsAll", typeof(bool), typeof(ChooserDropDown),
+            new PropertyMetadata(true));
+        /// <summary>
+        /// When the textbox is empty, whether the control should display nothing (false) or every item on the list (true).
+        /// </summary>
+        public bool EmptyTextShowsAll
+        {
+            get { return (bool)GetValue(EmptyTextShowsAllProperty); }
+            set { SetValue(EmptyTextShowsAllProperty, value); }
+        }
+        #endregion EmptyTextShowsAllProperty
 
 
+        /* Read-only Properties */
+
+        #region CreateButtonVisibleProperty
         // Read-only property - the user should set ShowCreateButton to enable the feature, and this will control the button's visibility
         // in more detail (even if the feature is enabled, the button will not always be visible)
         private static readonly DependencyPropertyKey CreateButtonVisiblePropertyKey = DependencyProperty.RegisterReadOnly("CreateButtonVisible", typeof(bool), typeof(ChooserDropDown),
@@ -256,24 +225,10 @@ namespace PhotoGalleryApp.Views
             get { return (bool)GetValue(CreateButtonVisibleProperty); }
             protected set { SetValue(CreateButtonVisiblePropertyKey, value); }
         }
+        #endregion CreateButtonVisibleProperty
 
 
-
-
-
-        public static readonly DependencyProperty EmptyTextShowsAllProperty = DependencyProperty.Register("EmptyTextShowsAll", typeof(bool), typeof(ChooserDropDown),
-            new PropertyMetadata(true));
-        /// <summary>
-        /// When the textbox is empty, whether the control should display nothing (false) or every item on the list (true).
-        /// </summary>
-        public bool EmptyTextShowsAll
-        {
-            get { return (bool)GetValue(EmptyTextShowsAllProperty); }
-            set { SetValue(EmptyTextShowsAllProperty, value); }
-        }
-
-
-
+        #region PopupOpenProperty
         // Read-only property, user shouldn't be able to control if the popup opens or not.
         private static readonly DependencyPropertyKey PopupOpenPropertyKey = DependencyProperty.RegisterReadOnly("PopupOpen", typeof(bool), typeof(ChooserDropDown), new PropertyMetadata(false));
         public static readonly DependencyProperty PopupOpenProperty = PopupOpenPropertyKey.DependencyProperty;
@@ -285,6 +240,7 @@ namespace PhotoGalleryApp.Views
             get { return (bool)GetValue(PopupOpenProperty); }
             protected set { SetValue(PopupOpenPropertyKey, value); }
         }
+        #endregion
 
         #endregion DependencyProperties
 
@@ -502,6 +458,7 @@ namespace PhotoGalleryApp.Views
 
 
 
+
         #region Event Handlers
 
         /**
@@ -598,6 +555,57 @@ namespace PhotoGalleryApp.Views
                     break;
             }
         }
+
+
+        #region Activation/Deactivation Handling
+
+        // When the window is deactivated, keep track of if popup was open
+        // so it can be opened again.
+        private bool PopupOpenWhenDeactivated = false;
+
+
+        // Called when the user switches applications
+        private void Window_Deactivated(object sender, EventArgs e)
+        {
+            // If the popup is open, close the popup.
+            if (PopupOpen)
+            {
+                PopupOpenWhenDeactivated = true;
+                ClosePopup();
+
+                /*
+                 * It's slightly convoluted, but ClosePopup() doesn't change
+                 * PopupOpen. It just shifts the focus to the parent element,
+                 * and the PopupOpen and Text properties change on the
+                 * LostFocus handler. Even though this isn't super intuitive,
+                 * it's handy because different events can choose whether to 
+                 * clear the textbox or not. Here, don't clear the textbox,
+                 * because the text needs to be restored when the user switches
+                 * back to the application.
+                 */
+                PopupOpen = false;
+
+            }
+        }
+
+        // Called when the user switches from another application back to this one
+        private void Window_Activated(object sender, EventArgs e)
+        {
+            // If the popup was open when the user switched away, reopen it
+            if (PopupOpenWhenDeactivated)
+            {
+                // For some unknown reason, when the window is being reactivated, to focus on
+                // content in a popup, focus must first be set to something in the main window,
+                // not in the popup. I'm not sure why this is, but it's the only way I could
+                // get it to work.
+                Window.GetWindow(this).Focus();
+                OpenPopup();
+                PopupOpenWhenDeactivated = false;
+            }
+        }
+
+        #endregion Activation/Deactivation Handling
+
 
         #endregion Event Handlers
     }

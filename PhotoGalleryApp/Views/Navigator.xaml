@@ -12,7 +12,7 @@
         <!-- The below ContentControl is bound to a ViewModel, so to use a certain View in the Navigator, you must
              declare a DataTemplate here that links the binding of that ViewModel to display the desired view. -->
         <DataTemplate DataType="{x:Type vms:GalleryViewModel}">
-            <local:Gallery ThumbnailHeight="{Binding ThumbnailHeight}"/>
+            <local:Gallery/>
         </DataTemplate>
 
         <DataTemplate DataType="{x:Type vms:SlideshowViewModel}">

@@ -99,6 +99,32 @@ namespace PhotoGalleryApp.ViewModels
             return photos;
         }
 
+
+        /// <summary>
+        /// Creates and returns a MediaViewModel object, that holds the given Media object. Will be
+        /// either an ImageViewModel or VideoViewModel instance, depending on the type of media the
+        /// Media object contains.
+        /// </summary>
+        /// <param name="media">The Media object that the MediaViewModel will contain.</param>
+        /// <returns>A MediaViewModel which contains the Media object, either an ImageViewModel
+        /// or VideoViewModel.</returns>
+        public static MediaViewModel CreateMediaViewModel(Media media, bool videoThumbnailMode, int previewHeight, int fullHeight)
+        {
+            switch(media.MediaType)
+            {
+                case MediaFileType.Video:               
+                    VideoViewModel vvm = new VideoViewModel(media as Video, videoThumbnailMode, previewHeight, fullHeight);
+                    return vvm;
+
+                case MediaFileType.Image:
+                    ImageViewModel ivm = new ImageViewModel(media as Image, previewHeight, fullHeight);
+                    return ivm;
+
+                default:
+                    return null;
+            }
+        }
+
         #endregion Static
     }
 }

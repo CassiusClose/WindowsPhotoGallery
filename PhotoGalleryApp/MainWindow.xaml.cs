@@ -33,7 +33,7 @@ namespace PhotoGalleryApp
         {
             nav = new NavigatorViewModel();
 
-            MediaGallery gallery = MediaGallery.LoadGallery("gallery.xml");
+            MediaCollection gallery = MediaCollection.LoadGallery("gallery.xml");
 
             for(int i = gallery.Count - 1; i >= 0; i--)
             {

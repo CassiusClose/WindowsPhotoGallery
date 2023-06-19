@@ -12,22 +12,22 @@ using System.Xml.Serialization;
 namespace PhotoGalleryApp.Models
 {
     /// <summary>
-    /// A collection of Media objects, can be both photo and video.
+    /// A collection of Media objects. 
     /// </summary>
-    public class MediaGallery : ObservableCollection<Media>
+    public class MediaCollection : ObservableCollection<Media>
     {
         #region Constructors
 
         /**
          * XML de-serialization requires a default constructor
          */
-        private MediaGallery() : this("Gallery") { }
+        private MediaCollection() : this("Gallery") { }
 
         /// <summary>
         /// Creates a MediaGallery object with the given name.
         /// </summary>
-        /// <param name="name">The name of the gallery.</param>
-        public MediaGallery(string name)
+        /// <param name="name">The name of the collection.</param>
+        public MediaCollection(string name)
         {
             Name = name;
             Tags = new RangeObservableCollection<string>();
@@ -40,18 +40,23 @@ namespace PhotoGalleryApp.Models
         #region Fields and Properties
 
         /// <summary>
-        /// The gallery's name.
+        /// The collection's name.
         /// </summary>
         public string Name;
 
         /// <summary>
-        /// A collection of all the tags present in the gallery (compiled from the tags of each image). Tags are not
+        /// A collection of all the tags present in the collection (compiled from the tags of each image). Tags are not
         /// added here, they are added to the media within the gallery, and those changes are reflected here.
         /// </summary>
         public RangeObservableCollection<string> Tags { get; private set; }
 
+        public delegate void CallbackMediaTagsChanged();
+        /// <summary>
+        /// An event triggered when the list of all tags in the collection changes.
+        /// </summary>
         public event CallbackMediaTagsChanged MediaTagsChanged;
 
+        //TODO Try with RangeObservableCollection
         public bool DisableTagUpdate { get; set; }
 
         #endregion Fields and Properties
@@ -59,9 +64,10 @@ namespace PhotoGalleryApp.Models
 
         #region Methods
 
-        /**
-         * Compiles the list of all tags from the images in the gallery.
-         */
+
+        /// <summary>
+        /// Compiles the list of all tags (Tags) from the images in the collection.
+        /// </summary>
         public void UpdateTags()
         {
             ObservableCollection<string> newTags = new ObservableCollection<string>();
@@ -96,14 +102,14 @@ namespace PhotoGalleryApp.Models
 
 
         /**
-         * Adds a media item to the gallery
+         * Adds a media item to the collection. 
          */
         protected override void InsertItem(int index, Media item)
         {
             // InsertItem is used internally by functions such as Add, so overriding here is enough
             base.InsertItem(index, item);
 
-            // Add handler for when the photo's tags change, so we can update this gallery's master list of tags
+            // Add handler for when the photo's tags change, so we can update this collections's master list of tags
             item.Tags.CollectionChanged += MediaTags_CollectionChanged;
 
             // When a photo is added, need to refresh the list of tags
@@ -112,18 +118,17 @@ namespace PhotoGalleryApp.Models
 
 
         /**
-         * ObservableCollection event handler: When a photo's tags update, need to refresh the list of tags in the gallery
+         * ObservableCollection event handler: When a photo's tags update, need to refresh the list of tags in the collection 
          */
         private void MediaTags_CollectionChanged(object sender, NotifyCollectionChangedEventArgs e)
         {
-            Console.WriteLine("MediaTags_CollectionChanged");
             if (!DisableTagUpdate)
                 UpdateTags();
         }
 
 
         /**
-         * Removes a media item from the gallery
+         * Removes a media item from the collection 
          */
         protected override void RemoveItem(int index)
         {
@@ -138,8 +143,6 @@ namespace PhotoGalleryApp.Models
         #endregion Methods
 
 
-        public delegate void CallbackMediaTagsChanged();
-
 
         #region Static
 
@@ -149,12 +152,12 @@ namespace PhotoGalleryApp.Models
         /// </summary>
         /// <param name="filename">The XMl file's name</param>
         /// <returns>The constructed PhotoGallery object.</returns>
-        public static MediaGallery LoadGallery(string filename)
+        public static MediaCollection LoadGallery(string filename)
         {
-            XmlSerializer serializer = new XmlSerializer(typeof(MediaGallery));
+            XmlSerializer serializer = new XmlSerializer(typeof(MediaCollection));
             FileStream fs = new FileStream(filename, FileMode.Open);
 
-            return (MediaGallery)serializer.Deserialize(fs);
+            return (MediaCollection)serializer.Deserialize(fs);
         }
 
 

@@ -33,7 +33,7 @@ namespace PhotoGalleryApp.ViewModels
         /// <param name="galleryItems">The Photos available to view in this vm.</param>
         /// <param name="index">The index of the currently selected Photo in the given list.</param>
         /// <param name="gallery">The PhotoGallery that these photos belong to.</param>
-        public SlideshowViewModel(List<Media> galleryItems, int index, MediaGallery gallery)
+        public SlideshowViewModel(List<Media> galleryItems, int index, MediaCollection gallery)
         {
             // Initialize commands
             _leftCommand = new RelayCommand(Left, HasMultipleImages);
@@ -81,7 +81,7 @@ namespace PhotoGalleryApp.ViewModels
         * The PhotoGallery that the viewable collection of images here belong to. This is
         * needed to instantiate MediaInfoViewModels, so it is saved here.
         */
-        private MediaGallery _gallery;
+        private MediaCollection _gallery;
 
 
 
@@ -308,14 +308,12 @@ namespace PhotoGalleryApp.ViewModels
         }
 
 
-        /// <summary>
-        /// Creates and returns a MediaViewModel that holds the given Media object. Initializes the
-        /// view model with settings specific to this slideshow's view. Depending on the type of media
-        /// file within the Media object, the returned object will either be an ImageViewModel or a
-        /// VideoViewModel.
-        /// </summary>
-        /// <param name="media">The Media object to create the MediaViewModel object around.</param>
-        /// <returns>The MediaViewModel that was created to hold the Media object.</returns>
+        /* 
+         * Creates and returns a MediaViewModel that holds the given Media object. Initializes the
+         * view model with settings specific to this slideshow's view. Depending on the type of media
+         * file within the Media object, the returned object will either be an ImageViewModel or a
+         * VideoViewModel.
+         */
         private MediaViewModel CreateMediaViewModel(Media media)
         {
             switch (media.MediaType)

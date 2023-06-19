@@ -65,7 +65,7 @@
     <Compile Include="Converters\HeightARToWidthConverter.cs" />
     <Compile Include="Models\Image.cs" />
     <Compile Include="Models\Media.cs" />
-    <Compile Include="Models\MediaGallery.cs" />
+    <Compile Include="Models\MediaCollection.cs" />
     <Compile Include="Models\Video.cs" />
     <Compile Include="Utils\DisplayUtils.cs" />
     <Compile Include="Utils\HandlingEventTrigger.cs" />
@@ -73,6 +73,7 @@
     <Compile Include="Utils\MultiKeyDictionary.cs" />
     <Compile Include="Utils\RangeObservableCollection.cs" />
     <Compile Include="ViewModels\GalleryViewModel.cs" />
+    <Compile Include="ViewModels\MediaCollectionViewModel.cs" />
     <Compile Include="ViewModels\MediaInfoViewModel.cs" />
     <Compile Include="ViewModels\SlideshowViewModel.cs" />
     <Compile Include="ViewModels\MediaViewModel.cs" />
@@ -86,6 +87,9 @@
     </Compile>
     <Compile Include="Views\Gallery.xaml.cs">
       <DependentUpon>Gallery.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Views\MediaCollection.xaml.cs">
+      <DependentUpon>MediaCollection.xaml</DependentUpon>
     </Compile>
     <Compile Include="Views\MediaInfo.xaml.cs">
       <DependentUpon>MediaInfo.xaml</DependentUpon>
@@ -116,6 +120,10 @@
       <Generator>MSBuild:Compile</Generator>
     </Page>
     <Page Include="Views\Gallery.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Views\MediaCollection.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>

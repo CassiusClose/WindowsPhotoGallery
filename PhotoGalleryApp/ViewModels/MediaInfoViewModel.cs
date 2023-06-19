@@ -24,7 +24,7 @@ namespace PhotoGalleryApp.ViewModels
         /// Initializes the VM to represent the given media.
         /// </summary>
         /// <param name="photo">The Photo from which to show information.</param>
-        public MediaInfoViewModel(Media photo, MediaGallery gallery)
+        public MediaInfoViewModel(Media photo, Models.MediaCollection gallery)
         {
             //Init commands
             _removeTagCommand = new RelayCommand(RemoveTag);
@@ -41,7 +41,7 @@ namespace PhotoGalleryApp.ViewModels
 
         // The media & the containing gallery
         private Media _media;
-        private MediaGallery _gallery;
+        private Models.MediaCollection _gallery;
 
 
         /// <summary>
