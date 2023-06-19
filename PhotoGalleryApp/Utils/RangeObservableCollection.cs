@@ -38,9 +38,8 @@ namespace PhotoGalleryApp.Utils
 
             notificationsEnabled = true;
 
-            // Send one change notification
-            // The 2nd argument of NotifyCollectionChangedEventArgs must contain only one item
-            OnCollectionChanged(new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Add, items.ToList<T>()));
+            // Send one change notification - Reset means collection has "dramatically changed".
+            OnCollectionChanged(new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Reset));
         }
 
 
@@ -59,7 +58,7 @@ namespace PhotoGalleryApp.Utils
                 Remove(item);
             notificationsEnabled = true;
 
-            OnCollectionChanged(new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Remove, items.ToList<T>()));
+            OnCollectionChanged(new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Reset));
         }
 
 

@@ -52,11 +52,14 @@ namespace PhotoGalleryApp.Models
 
         public delegate void CallbackMediaTagsChanged();
         /// <summary>
-        /// An event triggered when the list of all tags in the collection changes.
+        /// An event triggered when any media item's tags have changed.
         /// </summary>
         public event CallbackMediaTagsChanged MediaTagsChanged;
 
-        //TODO Try with RangeObservableCollection
+        /// <summary>
+        /// When this is true, the MediaTagsChanged event will not be triggered. Sometimes outside classes may want to change
+        /// the tags on several media items at once and receive a single notification for it, so they can use this for that.
+        /// </summary>
         public bool DisableTagUpdate { get; set; }
 
         #endregion Fields and Properties
@@ -73,10 +76,10 @@ namespace PhotoGalleryApp.Models
             ObservableCollection<string> newTags = new ObservableCollection<string>();
             ObservableCollection<string> allTags = new ObservableCollection<string>();
 
-            foreach (Media p in Items)
+            // Compile list of all tags from media, and list of tags that weren't previously in the list here
+            foreach (Media m in Items)
             {
-                // For each tag in the photo
-                foreach (string tag in p.Tags)
+                foreach (string tag in m.Tags)
                 {
                     if (!allTags.Contains(tag))
                         allTags.Add(tag);
@@ -86,6 +89,7 @@ namespace PhotoGalleryApp.Models
                 }
             }
 
+            // Compile list of tags that were in the list here but now don't exist
             ObservableCollection<string> removeTags = new ObservableCollection<string>();
             for(int i = 0; i < Tags.Count; i++)
             {
@@ -96,6 +100,8 @@ namespace PhotoGalleryApp.Models
             Tags.RemoveRange(removeTags);
             Tags.AddRange(newTags);
 
+            // Trigger update, even if the collection-wide tag list might not have changed. It's possible that some media
+            // gained or lost tags without the collection-wide list changing.
             if(MediaTagsChanged != null)
                 MediaTagsChanged();
         }
@@ -118,7 +124,7 @@ namespace PhotoGalleryApp.Models
 
 
         /**
-         * ObservableCollection event handler: When a photo's tags update, need to refresh the list of tags in the collection 
+         * ObservableCollection event handler: When a media items's tags update, need to refresh the list of tags in the collection 
          */
         private void MediaTags_CollectionChanged(object sender, NotifyCollectionChangedEventArgs e)
         {
