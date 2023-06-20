@@ -253,7 +253,7 @@ namespace PhotoGalleryApp.Views
         /// An Event which gets triggered anytime the user chooses to select an item on the
         /// drop-down list or create a new item. Arguments are stored in ItemChosenEventArgs.
         /// </summary>
-        public event EventHandler<ItemChosenEventArgs> ItemSelected;
+        public event EventHandler<ItemChosenEventArgs>? ItemSelected;
 
         #endregion Events
 
@@ -288,7 +288,7 @@ namespace PhotoGalleryApp.Views
             }
 
 
-            string item = e.Item as string;
+            string? item = e.Item as string;
             if (item == null)
             {
                 e.Accepted = false;
@@ -327,15 +327,25 @@ namespace PhotoGalleryApp.Views
                     // Only if the feature is enabled
                     if(ShowCreateButton)
                     {
-                        ItemSelected.Invoke(this, new ItemChosenEventArgs(Text, true));
-                        ClosePopup();
+                        if (ItemSelected != null)
+                        {
+                            ItemSelected.Invoke(this, new ItemChosenEventArgs(Text, true));
+                            ClosePopup();
+                        }
+                        else
+                            Console.WriteLine("ERROR: SHOULD NOT BE HERE (ChooserDropDown.xaml.cs: ChooseItem())");
                     }
                 }
                 // Normal item selection
                 else
                 {
-                    ItemSelected.Invoke(this, new ItemChosenEventArgs(item, false));
-                    ClosePopup();
+                    if(ItemSelected != null)
+                    {
+                        ItemSelected.Invoke(this, new ItemChosenEventArgs(item, false));
+                        ClosePopup();
+                    }
+                    else
+                        Console.WriteLine("ERROR: SHOULD NOT BE HERE (ChooserDropDown.xaml.cs: ChooseItem())");
                 }
             }
         }
@@ -500,7 +510,11 @@ namespace PhotoGalleryApp.Views
         {
             ListBoxItem item = (ListBoxItem)sender;
             if (item != null)
-                ChooseItem(item.Content as string);
+            {
+                string? s = item.Content as string;
+                if (s != null)
+                    ChooseItem(s);
+            }
 
             e.Handled = true;
         }
@@ -516,7 +530,9 @@ namespace PhotoGalleryApp.Views
             {
                 // Pressing enter chooses the selected item
                 case Key.Enter:
-                    ChooseItem(SelectedItem as string);
+                    string? s = SelectedItem as string;
+                    if (s != null)
+                        ChooseItem(s);
                     e.Handled = true;
                     break;
 
@@ -565,7 +581,7 @@ namespace PhotoGalleryApp.Views
 
 
         // Called when the user switches applications
-        private void Window_Deactivated(object sender, EventArgs e)
+        private void Window_Deactivated(object? sender, EventArgs e)
         {
             // If the popup is open, close the popup.
             if (PopupOpen)
@@ -589,7 +605,7 @@ namespace PhotoGalleryApp.Views
         }
 
         // Called when the user switches from another application back to this one
-        private void Window_Activated(object sender, EventArgs e)
+        private void Window_Activated(object? sender, EventArgs e)
         {
             // If the popup was open when the user switched away, reopen it
             if (PopupOpenWhenDeactivated)

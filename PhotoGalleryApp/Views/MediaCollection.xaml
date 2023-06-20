@@ -4,7 +4,7 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
              xmlns:local="clr-namespace:PhotoGalleryApp.Views"
-             xmlns:i="clr-namespace:System.Windows.Interactivity;assembly=System.Windows.Interactivity"
+             xmlns:ei="http://schemas.microsoft.com/xaml/behaviors"
              xmlns:converters="clr-namespace:PhotoGalleryApp.Converters"
              xmlns:vms="clr-namespace:PhotoGalleryApp.ViewModels"
              mc:Ignorable="d" 
@@ -110,14 +110,14 @@
         Make the ScrollChanged event call a command in the view model.
         Gotten from https://stackoverflow.com/questions/25809655/wpf-mvvm-binding-command-to-event 
         -->
-        <i:Interaction.Triggers>
-            <i:EventTrigger EventName="ScrollChanged">
-                <i:InvokeCommandAction
+        <ei:Interaction.Triggers>
+            <ei:EventTrigger EventName="ScrollChanged">
+                <ei:InvokeCommandAction
                     Command="{Binding ScrollChangedCommand}"
                     CommandParameter="{Binding RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=ScrollViewer}}"
                 />
-            </i:EventTrigger>
-        </i:Interaction.Triggers>
+            </ei:EventTrigger>
+        </ei:Interaction.Triggers>
         <ListBox
              x:Name="CollectionListBox" 
              Style="{StaticResource CollectionListBoxStyle}" 

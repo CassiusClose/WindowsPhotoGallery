@@ -3,10 +3,9 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
-             xmlns:i="clr-namespace:System.Windows.Interactivity;assembly=System.Windows.Interactivity"
              xmlns:local="clr-namespace:PhotoGalleryApp.Views"
              xmlns:vms="clr-namespace:PhotoGalleryApp.ViewModels"
-             xmlns:ei="http://schemas.microsoft.com/expression/2010/interactions"
+             xmlns:ei="http://schemas.microsoft.com/xaml/behaviors"
              mc:Ignorable="d" 
              d:DesignHeight="450" d:DesignWidth="800">
 
@@ -54,11 +53,11 @@
 
         <!-- Drop-down chooser which lets the user add tags to the image-->
         <local:ChooserDropDown ItemsSource="{Binding AllTags, Mode=OneWay}" ShowCreateButton="True" ButtonText="Add Tag">
-            <i:Interaction.Triggers>
-                <i:EventTrigger EventName="ItemSelected">
+            <ei:Interaction.Triggers>
+                <ei:EventTrigger EventName="ItemSelected">
                     <ei:CallMethodAction TargetObject="{Binding}" MethodName="AddTagToPhoto"/>
-                </i:EventTrigger>
-            </i:Interaction.Triggers>
+                </ei:EventTrigger>
+            </ei:Interaction.Triggers>
         </local:ChooserDropDown>
     </StackPanel>
 </UserControl>

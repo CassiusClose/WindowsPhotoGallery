@@ -5,8 +5,7 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
              xmlns:local="clr-namespace:PhotoGalleryApp.Views"
              xmlns:vms="clr-namespace:PhotoGalleryApp.ViewModels"
-             xmlns:i="clr-namespace:System.Windows.Interactivity;assembly=System.Windows.Interactivity"
-             xmlns:ei="http://schemas.microsoft.com/expression/2010/interactions"
+             xmlns:ei="http://schemas.microsoft.com/xaml/behaviors"
              mc:Ignorable="d" 
              d:DesignHeight="450" d:DesignWidth="800"
              
@@ -69,33 +68,33 @@
                 Content="Remove Selected"
                 IsEnabled="{Binding MediaSelected}"
                 >
-                <i:Interaction.Triggers>
-                    <i:EventTrigger EventName="Click">
+                <ei:Interaction.Triggers>
+                    <ei:EventTrigger EventName="Click">
                         <ei:CallMethodAction TargetObject="{Binding}" MethodName="RemoveSelected"/>
-                    </i:EventTrigger>
-                </i:Interaction.Triggers>
+                    </ei:EventTrigger>
+                </ei:Interaction.Triggers>
             </Button>
             <local:ChooserDropDown 
                 ItemsSource="{Binding AllTags}" 
                 ShowCreateButton="True" ButtonText="Add Tag to Selected"
                 IsEnabled="{Binding MediaSelected}"
                 >
-                <i:Interaction.Triggers>
-                    <i:EventTrigger EventName="ItemSelected">
+                <ei:Interaction.Triggers>
+                    <ei:EventTrigger EventName="ItemSelected">
                         <ei:CallMethodAction TargetObject="{Binding}" MethodName="AddTagToSelected"/>
-                    </i:EventTrigger>
-                </i:Interaction.Triggers>
+                    </ei:EventTrigger>
+                </ei:Interaction.Triggers>
             </local:ChooserDropDown>
             <local:ChooserDropDown
                 ItemsSource="{Binding AllTags}"
                 ButtonText="Remove Tag from Selected"
                 IsEnabled="{Binding MediaSelected}"
                 >
-                <i:Interaction.Triggers>
-                    <i:EventTrigger EventName="ItemSelected">
+                <ei:Interaction.Triggers>
+                    <ei:EventTrigger EventName="ItemSelected">
                         <ei:CallMethodAction TargetObject="{Binding}" MethodName="RemoveTagFromSelected"/>
-                    </i:EventTrigger>
-                </i:Interaction.Triggers>
+                    </ei:EventTrigger>
+                </ei:Interaction.Triggers>
             </local:ChooserDropDown>
         </StackPanel>
 
@@ -103,11 +102,11 @@
         <StackPanel Grid.Row="2" Orientation="Horizontal">
             <!-- Drop down list that lets you add tags to the filter -->
             <local:ChooserDropDown ItemsSource="{Binding AllTags}" ButtonText="Add Tag to Filter">
-                <i:Interaction.Triggers>
-                    <i:EventTrigger EventName="ItemSelected">
+                <ei:Interaction.Triggers>
+                    <ei:EventTrigger EventName="ItemSelected">
                         <ei:CallMethodAction TargetObject="{Binding}" MethodName="AddTagToFilter"/>
-                    </i:EventTrigger>
-                </i:Interaction.Triggers>
+                    </ei:EventTrigger>
+                </ei:Interaction.Triggers>
             </local:ChooserDropDown>
 
 

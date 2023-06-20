@@ -27,7 +27,7 @@ namespace PhotoGalleryApp.ViewModels
         private readonly Func<bool> _canExecuteAction_noarg;
         private bool _canExecuteActionHasArg;
 
-        public event EventHandler CanExecuteChanged;
+        public event EventHandler? CanExecuteChanged;
 
         #endregion Fields and Properties
          
@@ -95,7 +95,7 @@ namespace PhotoGalleryApp.ViewModels
         /// Executes the command.
         /// </summary>
         /// <param name="parameter">Argument to the command's execution function, if there is one.</param>
-        public void Execute(object parameter)
+        public void Execute(object? parameter)
         {
             if (_executeHasArg)
                 _execute_arg(parameter);
@@ -108,7 +108,7 @@ namespace PhotoGalleryApp.ViewModels
         /// </summary>
         /// <param name="parameter">Argument to the function that determines executable status, if there is one.</param>
         /// <returns>Whether or not this command can be executed.</returns>
-        public bool CanExecute(object parameter)
+        public bool CanExecute(object? parameter)
         {
             if(_canExecuteActionHasArg)
             {

@@ -19,7 +19,7 @@ namespace PhotoGalleryApp.ViewModels
     /// </remarks>
     public class ViewModelBase : INotifyPropertyChanged
     {
-        public event PropertyChangedEventHandler PropertyChanged;
+        public event PropertyChangedEventHandler? PropertyChanged;
 
         /// <summary>
         /// Signals that a property of the class has been changed.

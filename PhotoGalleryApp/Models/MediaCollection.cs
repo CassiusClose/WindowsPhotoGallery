@@ -54,7 +54,7 @@ namespace PhotoGalleryApp.Models
         /// <summary>
         /// An event triggered when any media item's tags have changed.
         /// </summary>
-        public event CallbackMediaTagsChanged MediaTagsChanged;
+        public event CallbackMediaTagsChanged? MediaTagsChanged;
 
         /// <summary>
         /// When this is true, the MediaTagsChanged event will not be triggered. Sometimes outside classes may want to change
@@ -126,7 +126,7 @@ namespace PhotoGalleryApp.Models
         /**
          * ObservableCollection event handler: When a media items's tags update, need to refresh the list of tags in the collection 
          */
-        private void MediaTags_CollectionChanged(object sender, NotifyCollectionChangedEventArgs e)
+        private void MediaTags_CollectionChanged(object? sender, NotifyCollectionChangedEventArgs e)
         {
             if (!DisableTagUpdate)
                 UpdateTags();
@@ -158,12 +158,11 @@ namespace PhotoGalleryApp.Models
         /// </summary>
         /// <param name="filename">The XMl file's name</param>
         /// <returns>The constructed PhotoGallery object.</returns>
-        public static MediaCollection LoadGallery(string filename)
+        public static MediaCollection? LoadGallery(string filename)
         {
             XmlSerializer serializer = new XmlSerializer(typeof(MediaCollection));
             FileStream fs = new FileStream(filename, FileMode.Open);
-
-            return (MediaCollection)serializer.Deserialize(fs);
+            return (MediaCollection?)serializer.Deserialize(fs);
         }
 
 
