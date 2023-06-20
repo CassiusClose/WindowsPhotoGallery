@@ -27,11 +27,13 @@ namespace PhotoGalleryApp
     {
         // The main content of the app is this Navigator VM that controls how pages are
         // loaded on top of each other. Just display nav, and nav will display the rest.
-        private NavigatorViewModel nav;
+        private NavigatorViewModel _nav;
+
+        private SidebarViewModel _sidebar;
 
         public MainWindow()
         {
-            nav = new NavigatorViewModel();
+            _nav = new NavigatorViewModel();
 
             MediaCollection gallery = MediaCollection.LoadGallery("gallery.xml");
 
@@ -47,10 +49,14 @@ namespace PhotoGalleryApp
                 }
             }
 
-            nav.NewPage(new GalleryViewModel(nav, gallery));
-            DataContext = nav;
+            _sidebar = new SidebarViewModel(_nav, gallery);
+
+            _nav.NewPage(new GalleryViewModel(_nav, gallery));
+            DataContext = _nav;
 
             InitializeComponent();
+
+            this.MainSidebar.DataContext = _sidebar;
         }
     }
 }

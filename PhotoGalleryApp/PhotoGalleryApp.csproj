@@ -73,8 +73,10 @@
     <Compile Include="Utils\MultiKeyDictionary.cs" />
     <Compile Include="Utils\RangeObservableCollection.cs" />
     <Compile Include="ViewModels\GalleryViewModel.cs" />
+    <Compile Include="ViewModels\MapViewModel.cs" />
     <Compile Include="ViewModels\MediaCollectionViewModel.cs" />
     <Compile Include="ViewModels\MediaInfoViewModel.cs" />
+    <Compile Include="ViewModels\SidebarViewModel.cs" />
     <Compile Include="ViewModels\SlideshowViewModel.cs" />
     <Compile Include="ViewModels\MediaViewModel.cs" />
     <Compile Include="ViewModels\NavigatorViewModel.cs" />
@@ -88,11 +90,17 @@
     <Compile Include="Views\Gallery.xaml.cs">
       <DependentUpon>Gallery.xaml</DependentUpon>
     </Compile>
+    <Compile Include="Views\Map.xaml.cs">
+      <DependentUpon>Map.xaml</DependentUpon>
+    </Compile>
     <Compile Include="Views\MediaCollection.xaml.cs">
       <DependentUpon>MediaCollection.xaml</DependentUpon>
     </Compile>
     <Compile Include="Views\MediaInfo.xaml.cs">
       <DependentUpon>MediaInfo.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Views\Sidebar.xaml.cs">
+      <DependentUpon>Sidebar.xaml</DependentUpon>
     </Compile>
     <Compile Include="Views\Slideshow.xaml.cs">
       <DependentUpon>Slideshow.xaml</DependentUpon>
@@ -123,11 +131,19 @@
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
+    <Page Include="Views\Map.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
     <Page Include="Views\MediaCollection.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
     <Page Include="Views\MediaInfo.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Views\Sidebar.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>

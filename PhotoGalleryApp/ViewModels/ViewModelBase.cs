@@ -17,7 +17,7 @@ namespace PhotoGalleryApp.ViewModels
     /// and
     /// <see href="https://intellitect.com/getting-started-model-view-viewmodel-mvvm-pattern-using-windows-presentation-framework-wpf/"/>
     /// </remarks>
-    class ViewModelBase : INotifyPropertyChanged
+    public class ViewModelBase : INotifyPropertyChanged
     {
         public event PropertyChangedEventHandler PropertyChanged;
 

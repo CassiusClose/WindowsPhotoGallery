@@ -12,7 +12,7 @@ namespace PhotoGalleryApp.ViewModels
     /// <summary>
     /// A navigator ViewModel that maintains a history of "pages" (ViewModels w/ corresponding Views) and allows navigation between them.
     /// </summary>
-    class NavigatorViewModel : ViewModelBase
+    public class NavigatorViewModel : ViewModelBase
     {
         #region Constructors
 

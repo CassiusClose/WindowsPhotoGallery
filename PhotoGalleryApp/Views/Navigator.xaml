@@ -18,6 +18,10 @@
         <DataTemplate DataType="{x:Type vms:SlideshowViewModel}">
             <local:Slideshow/>
         </DataTemplate>
+
+        <DataTemplate DataType="{x:Type vms:MapViewModel}">
+            <local:Map/>
+        </DataTemplate>
     </UserControl.Resources>
 
     <Grid>

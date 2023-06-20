@@ -11,6 +11,14 @@
     <!-- Make the grid focusable so that clicking off of textboxes & other controls will
     defocus them by setting focus to this grid. -->
     <Grid Focusable="True" Name="WindowGrid">
-        <views:Navigator/>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="40"/>
+            <ColumnDefinition/> 
+        </Grid.ColumnDefinitions>
+        <views:Sidebar
+            x:Name="MainSidebar"
+            Grid.Column="0"
+            />
+        <views:Navigator Grid.Column="1"/>
     </Grid>
 </Window>

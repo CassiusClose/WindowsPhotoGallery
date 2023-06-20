@@ -407,6 +407,7 @@ namespace PhotoGalleryApp.ViewModels
         #region Scroll Events
 
         // TODO Avoid this?
+        // Use: https://stackoverflow.com/questions/27641606/loading-a-large-amount-of-images-to-be-displayed-in-a-wrappanel/27865101#27865101
         // Stores a copy of the collection display's ScrollViewer, used to determine what images are currently in view
         private System.Windows.Controls.ScrollViewer _scrollViewer;
 
