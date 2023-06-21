@@ -4,10 +4,67 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
              xmlns:local="clr-namespace:PhotoGalleryApp.Views"
+             xmlns:m="clr-namespace:Microsoft.Maps.MapControl.WPF;assembly=Microsoft.Maps.MapControl.WPF"
              mc:Ignorable="d" 
-             d:DesignHeight="450" d:DesignWidth="800">
-    <StackPanel>
-        <Label>Maps</Label>
-        <!--<controls:MapControl/>-->
-    </StackPanel>
+             d:DesignHeight="450" d:DesignWidth="800"
+             Loaded="UserControl_Loaded">
+
+    <Grid x:Name="ControlContainer" VerticalAlignment="Stretch">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="30"/>
+            <RowDefinition/>
+        </Grid.RowDefinitions>
+
+        <StackPanel
+            Orientation="Horizontal"
+            Grid.Row="0"
+            >
+            <Label
+                Grid.Row="0" 
+                Content="Maps"
+                />
+            <Button 
+                Content="Add Location"
+                Command="{Binding AddLocationCommand}"
+                />
+
+        </StackPanel>
+        <m:Map 
+            Grid.Row="1"
+            VerticalAlignment="Stretch"
+            x:Name="MapView"
+            Mode="Aerial"
+            ViewChangeOnFrame="MapView_ViewChangeOnFrame"
+            >
+        </m:Map>
+        <Canvas
+            x:Name="MapOverlay"
+            Grid.Row="1"
+            Grid.ZIndex="1"
+            SizeChanged="Canvas_SizeChanged"
+            ClipToBounds="True"
+            >
+            <Border 
+                x:Name="Popup"
+                BorderThickness="2"
+                BorderBrush="Black"
+                Height="200"
+                Width="100"
+                Background="White"
+                Visibility="Hidden"
+                Canvas.Left="20"
+                Canvas.Top="20"
+                >
+                <StackPanel>
+                    <Label>Nassau</Label>
+                    <Button
+                        Content="Click Me"
+                        />
+                </StackPanel>
+            </Border>
+            
+        </Canvas>
+
+            
+    </Grid>
 </UserControl>

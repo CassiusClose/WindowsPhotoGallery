@@ -51,7 +51,8 @@ namespace PhotoGalleryApp
 
             _sidebar = new SidebarViewModel(_nav, gallery);
 
-            _nav.NewPage(new GalleryViewModel(_nav, gallery));
+            //_nav.NewPage(new GalleryViewModel(_nav, gallery));
+            _nav.NewPage(new MapViewModel(_nav));
             DataContext = _nav;
 
             InitializeComponent();

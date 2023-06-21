@@ -20,7 +20,8 @@
         </DataTemplate>
 
         <DataTemplate DataType="{x:Type vms:MapViewModel}">
-            <local:Map/>
+            <local:Map 
+                LocationsSource="{Binding Locations}"/>
         </DataTemplate>
     </UserControl.Resources>
 
