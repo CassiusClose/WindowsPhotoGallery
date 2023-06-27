@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Linq;
+using System.Security.Permissions;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Data;
@@ -45,7 +46,7 @@ namespace PhotoGalleryApp.ViewModels
 
 
         /// <summary>
-        /// The filepath that the image is located at.
+        /// The filepath that the media is located at.
         /// </summary>
         public string Path
         {
@@ -54,7 +55,16 @@ namespace PhotoGalleryApp.ViewModels
 
 
         /// <summary>
-        /// A collection of the photo's tags
+        /// The DateTime that the media was created at.
+        /// </summary>
+        public DateTime Timestamp
+        {
+            get { return _media.Timestamp; }
+        }
+
+
+        /// <summary>
+        /// A collection of the media's tags
         /// </summary>
         public ObservableCollection<string> PhotoTags
         {
@@ -77,14 +87,14 @@ namespace PhotoGalleryApp.ViewModels
         #region Methods
 
         /// <summary>
-        /// Adds the given tag to this VM's photo's list of tags. Will update the containing PhotoGallery's
+        /// Adds the given tag to this VM's media's list of tags. Will update the containing PhotoGallery's
         /// list of all tags.
         /// </summary>
         /// <param name="tag">The tag to be added.</param>
         /// <param name="isNew">False if the tag already exists in the gallery and true if it doesn't.</param>
         public void AddTag(string tag, bool isNew)
         {
-            // If the tag doesn't already exist in the photo's tag list, add it
+            // If the tag doesn't already exist in the media's tag list, add it
             if (isNew || !_media.Tags.Contains(tag))
                 _media.Tags.Add(tag);
         }
@@ -112,15 +122,15 @@ namespace PhotoGalleryApp.ViewModels
 
         private RelayCommand _removeTagCommand;
         /// <summary>
-        /// A command which attempts to remove the given tag from the photo. If the tag does not belong to the photo,
+        /// A command which attempts to remove the given tag from the media. If the tag does not belong to the media,
         /// nothing happens.
         /// </summary>
         public ICommand RemoveTagCommand => _removeTagCommand;
 
         /// <summary>
-        /// Attempts to remove the given tag from the photo. If the tag does not belong to the photo, nothing happens.
+        /// Attempts to remove the given tag from the media. If the tag does not belong to the media, nothing happens.
         /// </summary>
-        /// <param name="parameter">The string tag to remove from the photo.</param>
+        /// <param name="parameter">The string tag to remove from the media.</param>
         public void RemoveTag(object parameter)
         {
             string tag = parameter as string;

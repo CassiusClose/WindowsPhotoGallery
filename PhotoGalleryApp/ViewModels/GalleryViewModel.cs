@@ -17,6 +17,7 @@ using System.Windows.Media.Imaging;
 using System.Windows.Threading;
 using System.Windows;
 using PhotoGalleryApp.Utils;
+using System.Diagnostics;
 
 namespace PhotoGalleryApp.ViewModels
 {
@@ -39,7 +40,7 @@ namespace PhotoGalleryApp.ViewModels
 
             // Init the media collection
             mediaCollection.MediaTagsChanged += MediaTagsChanged;
-            _mediaCollectionVM = new MediaCollectionViewModel(mediaCollection);
+            _mediaCollectionVM = new MediaCollectionViewModel(mediaCollection, new SortDescription("Timestamp", ListSortDirection.Ascending));
             _mediaCollectionVM.MediaSelectedChanged += MediaSelectedChanged;
             _mediaCollectionVM.MediaOpened += MediaOpened;
 
@@ -461,7 +462,7 @@ namespace PhotoGalleryApp.ViewModels
             }
 
             MediaCollectionVM.TriggerMediaSelectedChanged();
-            MediaCollectionVM.DisableMediaViewRefresh = true;
+            MediaCollectionVM.DisableMediaViewRefresh = false;
         }
         #endregion RemoveSelected
 

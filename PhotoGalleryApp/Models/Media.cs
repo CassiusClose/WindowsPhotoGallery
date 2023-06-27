@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -86,8 +87,15 @@ namespace PhotoGalleryApp.Models
                     else if(MediaType == MediaFileType.Image  && (Extension != ".jpg" && Extension != ".jpeg" && Extension != ".png"))
                         throw new Exception("Tried to set an video file as the path of a Image model.");
 
-                    // Load the media's metadata
-                    LoadMetadata();
+                    if (Filepath == null || !File.Exists(Filepath))
+                    {
+                        Trace.WriteLine("Error: File not found (" + Filepath + ")");
+                    }
+                    else
+                    {
+                        // Load the media's metadata
+                        LoadMetadata();
+                    }
                 }
             }
         }
@@ -144,6 +152,16 @@ namespace PhotoGalleryApp.Models
         public float AspectRatio
         {
             get { return Width / (float) Height;  }
+        }
+
+
+        protected DateTime _timestamp;
+        /// <summary>
+        /// The DateTime that this media was created.
+        /// </summary>
+        public DateTime Timestamp
+        {
+            get { return _timestamp; }
         }
 
 

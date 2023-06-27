@@ -1,7 +1,10 @@
-﻿using PhotoGalleryApp.Utils;
+﻿using Microsoft.VisualBasic;
+using PhotoGalleryApp.Utils;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Diagnostics;
+using System.DirectoryServices.ActiveDirectory;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -43,15 +46,10 @@ namespace PhotoGalleryApp.Models
          */
         protected override void LoadMetadata()
         {
-            if (Filepath == null || !File.Exists(Filepath))
-                return;
-
-
             // Load image metadata
             FileStream fs = new FileStream(Filepath, FileMode.Open, FileAccess.Read);
             BitmapFrame frame = BitmapFrame.Create(fs, BitmapCreateOptions.DelayCreation, BitmapCacheOption.None);
             BitmapMetadata meta = frame.Metadata as BitmapMetadata;
-
 
             // Image size
             _width = frame.PixelWidth;
@@ -77,7 +75,40 @@ namespace PhotoGalleryApp.Models
                 }
             }
 
+            LoadTimestamp(meta);
+
             fs.Close();
+        }
+
+        /*
+         * Read in timestamp metadata and pick the best one. Look at FileCreated, FileModified,
+         * and DateTaken (from exif metadata) if possible, and choose the earliest one. If the
+         * filename is in the yyyymmdd_hhmmss.ext format, use that instead.
+         */
+        private void LoadTimestamp(BitmapMetadata meta)
+        {
+            //TODO Error handling
+            DateTime? filenameDt = FileUtils.GetTimestampFromFilename(Path.GetFileNameWithoutExtension(Filepath));
+
+            List<DateTime> dates = new List<DateTime>();
+            dates.Add(File.GetCreationTime(Filepath));
+            dates.Add(File.GetLastWriteTime(Filepath));
+
+            if (meta.DateTaken != null)
+            {
+                dates.Add(DateTime.Parse(meta.DateTaken));
+            }
+
+            _timestamp = dates.Min<DateTime>();
+            if (filenameDt != null)
+            {
+                if(_timestamp < filenameDt)
+                {
+                    Trace.WriteLine("Info: File has date metadata earlier than the date in its filename. Are you sure this file is named correctly? (" + Filepath + ")");
+                }
+
+                _timestamp = (DateTime)filenameDt;
+            }
         }
 
 

@@ -34,6 +34,14 @@ namespace PhotoGalleryApp.ViewModels
         }
 
         /// <summary>
+        /// The DateTime that the media was created at
+        /// </summary>
+        public DateTime Timestamp
+        {
+            get { return Media.Timestamp; }
+        }
+
+        /// <summary>
         /// The type of media this VM holds (video, image, etc.)
         /// </summary>
         public MediaFileType MediaType

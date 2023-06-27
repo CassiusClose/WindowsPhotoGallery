@@ -47,6 +47,9 @@
         <Label>Path:</Label>
         <Label Content="{Binding Path}"/>
 
+        <Label>Timestamp:</Label>
+        <Label Content="{Binding Timestamp}"/>
+
         <!-- Display all image tags in horizontal wrapping view -->
         <Label>Tags:</Label>
         <ItemsControl ItemsSource="{Binding Path=PhotoTags, Mode=OneWay}" Style="{StaticResource TagsList}"/>

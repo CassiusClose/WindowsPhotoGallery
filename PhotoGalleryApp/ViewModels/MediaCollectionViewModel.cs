@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Collections.Specialized;
 using System.ComponentModel;
+using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -27,7 +28,19 @@ namespace PhotoGalleryApp.ViewModels
     /// </summary>
     class MediaCollectionViewModel : ViewModelBase
     {
-        public MediaCollectionViewModel(MediaCollection collection)
+        /// <summary>
+        /// Creates a new viewmodel associated with the given MediaCollection.
+        /// </summary>
+        /// <param name="collection">The MediaCollection model to be associated with</param>
+        public MediaCollectionViewModel(MediaCollection collection) : this(collection, null) { }
+
+        /// <summary>
+        /// Creates a new viewmodel associated with the given MediaCollection. The provided sorting
+        /// rule is applied to the items View.
+        /// </summary>
+        /// <param name="collection">The MediaCollection model to be associated with</param>
+        /// <param name="sorting">A SortDescription object describing how to sort the collection of media. Can be null</param>
+        public MediaCollectionViewModel(MediaCollection collection, SortDescription? sorting)
         {
             // Init commands
             _selectMediaCommand = new RelayCommand(SelectMedia);
@@ -38,8 +51,13 @@ namespace PhotoGalleryApp.ViewModels
             // Init media lists
             MediaCollectionModel = collection;
             MediaCollectionModel.MediaTagsChanged += MediaTagsChanged;
+
             _mediaList = new ObservableCollection<MediaViewModel>();
+
             MediaView = CollectionViewSource.GetDefaultView(_mediaList);
+            if (sorting != null)
+                MediaView.SortDescriptions.Add((SortDescription)sorting);
+
 
             // Init scroll timer
             _scrollChangedTimer.Interval = new TimeSpan(0, 0, 0, 0, 150);
@@ -81,7 +99,7 @@ namespace PhotoGalleryApp.ViewModels
         private void MediaTagsChanged()
         {
             if (!DisableMediaViewRefresh)
-                MediaView.Refresh();
+                MediaView.Refresh(); 
         }
 
         /*
@@ -351,8 +369,9 @@ namespace PhotoGalleryApp.ViewModels
         private uint _imageLoadID = 0;
 
         /**
-         * Loads the thumbnail of every image in the collection. If this function or LoadPriorityImagesThenAll()
-         * is called after this function is, this function will stop loading its images.
+         * Loads the thumbnail of every image in the collection, including ones not included in the 
+         * filter. If this function or LoadPriorityImagesThenAll() is called after this function is,
+         * this function will stop loading its images.
          */
         private async void LoadAllMedia() 
         {

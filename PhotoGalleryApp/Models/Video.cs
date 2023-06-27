@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -56,7 +57,32 @@ namespace PhotoGalleryApp.Models
          */
         protected override void LoadMetadata()
         {
+            LoadDateTime();
+        }
 
+        /*
+         * Read in timestamp metadata and pick the best one. Look at FileCreated and FileModified,
+         * and choose the earliest one. If the filename is in the yyyymmdd_hhmmss.ext format, use that instead.
+         */
+        private void LoadDateTime()
+        {
+            //TODO Error handling
+            DateTime? filenameDt = FileUtils.GetTimestampFromFilename(Path.GetFileNameWithoutExtension(Filepath));
+
+            List<DateTime> dates = new List<DateTime>();
+            dates.Add(File.GetCreationTime(Filepath));
+            dates.Add(File.GetLastWriteTime(Filepath));
+
+            _timestamp = dates.Min<DateTime>();
+            if (filenameDt != null)
+            {
+                if(_timestamp < filenameDt)
+                {
+                    Trace.WriteLine("Info: File has date metadata earlier than the date in its filename. Are you sure this file is named correctly? (" + Filepath + ")");
+                }
+
+                _timestamp = (DateTime)filenameDt;
+            }
         }
 
 
