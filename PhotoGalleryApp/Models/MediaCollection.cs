@@ -18,18 +18,12 @@ namespace PhotoGalleryApp.Models
     {
         #region Constructors
 
-        /**
-         * XML de-serialization requires a default constructor
-         */
-        private MediaCollection() : this("Gallery") { }
-
         /// <summary>
         /// Creates a MediaGallery object with the given name.
         /// </summary>
         /// <param name="name">The name of the collection.</param>
-        public MediaCollection(string name)
+        public MediaCollection()
         {
-            Name = name;
             Tags = new RangeObservableCollection<string>();
             DisableTagUpdate = false;
         }
@@ -38,11 +32,6 @@ namespace PhotoGalleryApp.Models
 
 
         #region Fields and Properties
-
-        /// <summary>
-        /// The collection's name.
-        /// </summary>
-        public string Name;
 
         /// <summary>
         /// A collection of all the tags present in the collection (compiled from the tags of each image). Tags are not
@@ -147,25 +136,5 @@ namespace PhotoGalleryApp.Models
 
 
         #endregion Methods
-
-
-
-        #region Static
-
-
-        /// <summary>
-        /// De-serializes and creates a PhotoGallery instance from the given XML file
-        /// </summary>
-        /// <param name="filename">The XMl file's name</param>
-        /// <returns>The constructed PhotoGallery object.</returns>
-        public static MediaCollection? LoadGallery(string filename)
-        {
-            XmlSerializer serializer = new XmlSerializer(typeof(MediaCollection));
-            FileStream fs = new FileStream(filename, FileMode.Open);
-            return (MediaCollection?)serializer.Deserialize(fs);
-        }
-
-
-        #endregion Static
     }
 }

@@ -17,6 +17,7 @@ using System.Windows.Shapes;
 
 using System.Collections.ObjectModel;
 using System.IO;
+using System.Diagnostics;
 
 namespace PhotoGalleryApp
 {
@@ -35,16 +36,17 @@ namespace PhotoGalleryApp
         {
             _nav = new NavigatorViewModel();
 
-            MediaCollection gallery = MediaCollection.LoadGallery("gallery.xml");
+            Gallery gallery = Gallery.LoadGallery("gallery.xml");
 
-            for(int i = gallery.Count - 1; i >= 0; i--)
+            MediaCollection coll = gallery.MediaList;
+            for(int i = coll.Count - 1; i >= 0; i--)
             {
-                Media media = gallery[i];
+                Media media = coll[i];
 
                 if (!File.Exists(media.Filepath))
                 {
                     Console.WriteLine("File not found, removing from gallery: " + media.Filepath);
-                    gallery.RemoveAt(i);
+                    coll.RemoveAt(i);
                     continue;
                 }
             }

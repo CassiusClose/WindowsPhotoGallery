@@ -23,6 +23,14 @@
             <local:Map 
                 LocationsSource="{Binding Locations}"/>
         </DataTemplate>
+
+        <DataTemplate DataType="{x:Type vms:EventsViewModel}">
+            <local:EventsView/>
+        </DataTemplate>
+
+        <DataTemplate DataType="{x:Type vms:EventViewModel}">
+            <local:EventPage/>
+        </DataTemplate>
     </UserControl.Resources>
 
     <Grid>

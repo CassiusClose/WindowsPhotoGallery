@@ -10,17 +10,18 @@ namespace PhotoGalleryApp.ViewModels
 {
     public class SidebarViewModel : ViewModelBase
     {
-        public SidebarViewModel(NavigatorViewModel nav, MediaCollection mediaCollection)
+        public SidebarViewModel(NavigatorViewModel nav, Gallery gallery)
         {
             _nav = nav;
-            _mediaCollection = mediaCollection;
+            _gallery = gallery;
 
             _sidebarGalleryCommand = new RelayCommand(OpenGallery);
             _sidebarMapCommand = new RelayCommand(OpenMap);
+            _sidebarEventsCommand = new RelayCommand(OpenEvents);
         }
 
         private NavigatorViewModel _nav;
-        private MediaCollection _mediaCollection;
+        private Gallery _gallery;
 
 
 
@@ -38,7 +39,7 @@ namespace PhotoGalleryApp.ViewModels
             //TODO Figure out how to switch between pages
             if (_nav.CurrentPage.GetType() != typeof(GalleryViewModel))
             {
-                _nav.NewPage(new GalleryViewModel(_nav, _mediaCollection));
+                _nav.NewPage(new GalleryViewModel(_nav, _gallery));
             }
         }
         
@@ -60,6 +61,20 @@ namespace PhotoGalleryApp.ViewModels
         }
 
 
+        private RelayCommand _sidebarEventsCommand;
+        public ICommand SidebarEventsCommand => _sidebarEventsCommand;
+
+        /// <summary>
+        /// Opens the events page
+        /// </summary>
+        /// <param name="parameter"></param>
+        public void OpenEvents(object parameter)
+        {
+            if(_nav.CurrentPage.GetType() != typeof(EventsViewModel))
+            {
+                _nav.NewPage(new EventsViewModel(_nav, _gallery));
+            }
+        }
 
     }
 }

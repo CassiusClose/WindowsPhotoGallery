@@ -1,0 +1,30 @@
+﻿<UserControl x:Class="PhotoGalleryApp.Views.EventsView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             xmlns:local="clr-namespace:PhotoGalleryApp.Views"
+             mc:Ignorable="d" 
+             d:DesignHeight="450" d:DesignWidth="800">
+    <UserControl.Resources>
+        <Style TargetType="ListBoxItem"/>
+    </UserControl.Resources>
+    <Grid>
+        <ListBox ItemsSource="{Binding EventsView}">
+            <ListBox.ItemTemplate>
+                <DataTemplate>
+                    <Border>
+                        <Border.InputBindings>
+                            <MouseBinding
+                                MouseAction="LeftClick"
+                                Command="{Binding Path=DataContext.OpenEventCommand, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType={x:Type local:EventsView}}}"
+                                CommandParameter="{Binding}"
+                                />
+                        </Border.InputBindings>
+                        <Label Content="{Binding Name}"></Label>
+                    </Border>
+                </DataTemplate>
+            </ListBox.ItemTemplate>
+        </ListBox>
+    </Grid>
+</UserControl>

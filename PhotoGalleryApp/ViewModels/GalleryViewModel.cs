@@ -28,9 +28,10 @@ namespace PhotoGalleryApp.ViewModels
     class GalleryViewModel : ViewModelBase
     {
         #region Constructors
-        public GalleryViewModel(NavigatorViewModel navigator, MediaCollection mediaCollection)
+        public GalleryViewModel(NavigatorViewModel navigator, Gallery gallery)
         {
             _navigator = navigator;
+            _gallery = gallery;
 
             // Init commands
             _addFilesCommand = new RelayCommand(AddFiles);
@@ -39,15 +40,21 @@ namespace PhotoGalleryApp.ViewModels
             _escapePressedCommand = new RelayCommand(EscapePressed);
 
             // Init the media collection
-            mediaCollection.MediaTagsChanged += MediaTagsChanged;
-            _mediaCollectionVM = new MediaCollectionViewModel(mediaCollection, new SortDescription("Timestamp", ListSortDirection.Ascending));
+            gallery.MediaList.MediaTagsChanged += MediaTagsChanged;
+            _mediaCollectionVM = new MediaCollectionViewModel(gallery.MediaList, new SortDescription("Timestamp", ListSortDirection.Ascending));
             _mediaCollectionVM.MediaSelectedChanged += MediaSelectedChanged;
             _mediaCollectionVM.MediaOpened += MediaOpened;
 
             // Setup tag-related things
             FilterTags = new ObservableCollection<string>();
             FilterTags.CollectionChanged += FilterTags_CollectionChanged;
-            mediaCollection.Tags.CollectionChanged += AllTags_CollectionChanged;
+            gallery.MediaList.Tags.CollectionChanged += AllTags_CollectionChanged;
+
+            _events = new ObservableCollection<EventViewModel>();
+            foreach (Event e in gallery.Events)
+            {
+                _events.Add(new EventViewModel(e));
+            }
 
             // Setup the filter, after FilterTags has been created
             _mediaCollectionVM.MediaView.Filter += MediaFilter;
@@ -62,6 +69,8 @@ namespace PhotoGalleryApp.ViewModels
         // A reference to the navigator so we can add pages to it
         private NavigatorViewModel _navigator;
 
+        private Gallery _gallery;
+
         // A reference to the MediaCollectionViewModel so the gallery controls and the collection can interact
         private MediaCollectionViewModel _mediaCollectionVM;
         public MediaCollectionViewModel MediaCollectionVM { get { return _mediaCollectionVM; } }
@@ -72,10 +81,10 @@ namespace PhotoGalleryApp.ViewModels
         /// </summary>
         public string GalleryName
         {
-            get { return MediaCollectionVM.MediaCollectionModel.Name; }
+            get { return _gallery.Name; }
             set
             {
-                MediaCollectionVM.MediaCollectionModel.Name = value;
+                _gallery.Name = value;
                 OnPropertyChanged();
             }
         }
@@ -351,6 +360,57 @@ namespace PhotoGalleryApp.ViewModels
         #endregion Selection
 
 
+        #region Events
+
+        private ObservableCollection<EventViewModel> _events;
+        public ObservableCollection<EventViewModel> Events { get { return _events; } }
+
+        /// <summary>
+        /// An event handler that adds the currently selected media to the given event.
+        /// </summary>
+        /// <param name="sender">The element that this event was triggered on.</param>
+        /// <param name="eArgs">The event's arguments, of type PhotoGalleryApp.Views.ItemChosenEventArgs.</param>
+        public void AddSelectedToEvent(object sender, EventArgs eArgs)
+        {
+            // Want only one change event to fire, even though we're changing several items in the MediaCollection.
+            // So disable updates and then trigger one at the end. See MediaCollection.UpdateTags() for more info.
+
+            MediaCollectionVM.MediaCollectionModel.DisableTagUpdate = true;
+
+            PhotoGalleryApp.Views.ItemChosenEventArgs args = (PhotoGalleryApp.Views.ItemChosenEventArgs)eArgs;
+            string eventName = args.Item;
+
+            Event evnt = null;
+            bool found = false;
+            foreach(EventViewModel e in Events)
+            {
+                //TODO Either don't allow events with same name or do the id some other way
+                if(e.Name == eventName)
+                {
+                    evnt = e.Event;
+                }
+            }
+            if(evnt == null)
+            {
+                evnt = new Event(eventName);
+                _gallery.Events.Add(evnt);
+            }
+
+            List<MediaViewModel> mediavms = MediaCollectionVM.GetCurrentlySelectedItems();
+            foreach(MediaViewModel mediavm in mediavms)
+            {
+                evnt.Collection.Add(mediavm.Media);
+            }
+            
+            MediaCollectionVM.MediaCollectionModel.DisableTagUpdate = false;
+            MediaCollectionVM.MediaCollectionModel.UpdateTags();
+        }
+
+
+        #endregion Events
+
+
+
         #region Commands
 
         #region AddFiles
@@ -436,9 +496,9 @@ namespace PhotoGalleryApp.ViewModels
         /// </summary>
         public void SaveGallery()
         {
-            XmlSerializer serializer = new XmlSerializer(typeof(MediaCollection));
+            XmlSerializer serializer = new XmlSerializer(typeof(Gallery));
             TextWriter writer = new StreamWriter("gallery.xml");
-            serializer.Serialize(writer, MediaCollectionVM.MediaCollectionModel);
+            serializer.Serialize(writer, _gallery);
             writer.Close();
         }
 
