@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Collections.Specialized;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -14,21 +15,26 @@ namespace PhotoGalleryApp.Models
     /// <summary>
     /// A collection of Media objects. 
     /// </summary>
-    public class MediaCollection : ObservableCollection<Media>
+    public class MediaCollection : ObservableCollection<ICollectable>
     {
         #region Constructors
+
+        public MediaCollection() : this("coll") { }
 
         /// <summary>
         /// Creates a MediaGallery object with the given name.
         /// </summary>
         /// <param name="name">The name of the collection.</param>
-        public MediaCollection()
+        public MediaCollection(string name)
         {
+            _name = name;
             Tags = new RangeObservableCollection<string>();
             DisableTagUpdate = false;
         }
 
         #endregion Constructors
+
+        private string _name;
 
 
         #region Fields and Properties
@@ -62,19 +68,36 @@ namespace PhotoGalleryApp.Models
         /// </summary>
         public void UpdateTags()
         {
+            Trace.WriteLine("Update Tags: " + _name);
             ObservableCollection<string> newTags = new ObservableCollection<string>();
             ObservableCollection<string> allTags = new ObservableCollection<string>();
 
             // Compile list of all tags from media, and list of tags that weren't previously in the list here
-            foreach (Media m in Items)
+            foreach(ICollectable i in Items)
             {
-                foreach (string tag in m.Tags)
+                if(i is Media)
                 {
-                    if (!allTags.Contains(tag))
-                        allTags.Add(tag);
+                    Media m = (Media)i;
+                    foreach (string tag in m.Tags)
+                    {
+                        if (!allTags.Contains(tag))
+                            allTags.Add(tag);
 
-                    if (!newTags.Contains(tag) && !Tags.Contains(tag))
-                        newTags.Add(tag);
+                        if (!newTags.Contains(tag) && !Tags.Contains(tag))
+                            newTags.Add(tag);
+                    }
+                }
+                else
+                {
+                    MediaCollection coll = ((Event)i).Collection;
+                    foreach (string tag in coll.Tags)
+                    {
+                        if (!allTags.Contains(tag))
+                            allTags.Add(tag);
+
+                        if (!newTags.Contains(tag) && !Tags.Contains(tag))
+                            newTags.Add(tag);
+                    }
                 }
             }
 
@@ -99,16 +122,34 @@ namespace PhotoGalleryApp.Models
         /**
          * Adds a media item to the collection. 
          */
-        protected override void InsertItem(int index, Media item)
+        protected override void InsertItem(int index, ICollectable item)
         {
             // InsertItem is used internally by functions such as Add, so overriding here is enough
             base.InsertItem(index, item);
 
-            // Add handler for when the photo's tags change, so we can update this collections's master list of tags
-            item.Tags.CollectionChanged += MediaTags_CollectionChanged;
+            AddTagsChangedListener(MediaTags_CollectionChanged);
 
             // When a photo is added, need to refresh the list of tags
             UpdateTags();
+        }
+
+        /*
+         * Recursively add a CollectionChanged listener to all items in this collection, and all
+         * items in any collections (Events) that may be nested in this collection.
+         */
+        private void AddTagsChangedListener(NotifyCollectionChangedEventHandler handler)
+        {
+            foreach(ICollectable i in Items)
+            {
+                if(i is Media)
+                {
+                    ((Media)i).Tags.CollectionChanged += handler;
+                }
+                else
+                {
+                    ((Event)i).Collection.AddTagsChangedListener(handler);
+                }
+            }
         }
 
 

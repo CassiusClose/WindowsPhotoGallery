@@ -24,9 +24,17 @@
         </Style>
 
 
+        <!-- How to display an event -->
+        <DataTemplate DataType="{x:Type vms:EventViewModel}">
+            <Grid>
+                <Label Content="Name"/>
+            </Grid>
+        </DataTemplate>
+
         <!-- How to display an image -->
         <DataTemplate DataType="{x:Type vms:ImageViewModel}">
-            <Border BorderThickness="0" BorderBrush="Green">
+            <Grid>
+                <!-- Display the image -->
                 <Image Style="{StaticResource CollectionThumbnailImage}" Stretch="Uniform">
                     <!-- Image height is determined by MediaCollection settings. Below, calculate the minimum width based on that
                          height and the image's aspect ratio. As the MediaCollection does its autofitting, it might change the
@@ -42,23 +50,39 @@
                         <Binding Path="ImageData" Mode="OneWay"/>
                     </Image.Source>
                 </Image>
-            </Border>
+
+                <!-- Display a selection button on top of the image -->
+                <ToggleButton Grid.ZIndex="1" Width="50" Height="50" HorizontalAlignment="Left" VerticalAlignment="Top" 
+                              Command="{Binding Path=DataContext.SelectMediaCommand, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType={x:Type local:MediaCollection}}}" 
+                              CommandParameter="{Binding}"
+                              IsChecked="{Binding Path=IsSelected, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType={x:Type ListBoxItem}}}">Sel</ToggleButton>
+
+            </Grid>
         </DataTemplate>
 
         <!-- How to display an video -->
         <DataTemplate DataType="{x:Type vms:VideoViewModel}">
-            <Image Style="{StaticResource CollectionThumbnailImage}">
-                <Image.MinWidth>
-                    <MultiBinding Converter="{StaticResource HeightARToWidth}" Mode="OneWay">
-                        <Binding Path="DataContext.ThumbnailHeight" RelativeSource="{RelativeSource Mode=FindAncestor, AncestorType={x:Type local:MediaCollection}}"/>
-                        <Binding Path="ThumbnailViewModel.AspectRatio"/>
-                    </MultiBinding>
-                </Image.MinWidth>
+            <Grid>
+                <Image Style="{StaticResource CollectionThumbnailImage}">
+                    <Image.MinWidth>
+                        <MultiBinding Converter="{StaticResource HeightARToWidth}" Mode="OneWay">
+                            <Binding Path="DataContext.ThumbnailHeight" RelativeSource="{RelativeSource Mode=FindAncestor, AncestorType={x:Type local:MediaCollection}}"/>
+                            <Binding Path="ThumbnailViewModel.AspectRatio"/>
+                        </MultiBinding>
+                    </Image.MinWidth>
 
-                <Image.Source>
-                    <Binding Path="ThumbnailViewModel.ImageData" Mode="OneWay"/>
-                </Image.Source>
-            </Image>
+                    <Image.Source>
+                        <Binding Path="ThumbnailViewModel.ImageData" Mode="OneWay"/>
+                    </Image.Source>
+                </Image>
+
+                <!-- Display a selection button on top of the image -->
+                <ToggleButton Grid.ZIndex="1" Width="50" Height="50" HorizontalAlignment="Left" VerticalAlignment="Top" 
+                              Command="{Binding Path=DataContext.SelectMediaCommand, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType={x:Type local:MediaCollection}}}" 
+                              CommandParameter="{Binding}"
+                              IsChecked="{Binding Path=IsSelected, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType={x:Type ListBoxItem}}}">Sel</ToggleButton>
+
+            </Grid>
         </DataTemplate>
 
         <!-- Horizontal, wrapping list of images -->
@@ -74,7 +98,7 @@
                     </ItemsPanelTemplate>
                 </Setter.Value>
             </Setter>
-
+            
             <!-- Each item is a clickable image. Clicking on the image will open it as a new page in the Navigator. -->
             <Setter Property="ItemTemplate">
                 <Setter.Value>
@@ -83,18 +107,10 @@
                             <Border.InputBindings>
                                 <MouseBinding MouseAction="LeftClick"
                                               Command="{Binding Path=DataContext.OpenMediaCommand, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType={x:Type local:MediaCollection}}}"
-                                              CommandParameter="{Binding Media}"/>
+                                              CommandParameter="{Binding}"/>
                             </Border.InputBindings>
-                            <Grid>
-                                <!-- Display the image -->
-                                <ContentControl Content="{Binding}" Padding="0" Margin="0"/>
-                                <!-- Display a selection button on top of the image -->
-                                <ToggleButton Grid.ZIndex="1" Width="50" Height="50" HorizontalAlignment="Left" VerticalAlignment="Top" 
-                                              Command="{Binding Path=DataContext.SelectMediaCommand, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType={x:Type local:MediaCollection}}}" 
-                                              CommandParameter="{Binding}"
-                                              IsChecked="{Binding Path=IsSelected, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType={x:Type ListBoxItem}}}">Sel</ToggleButton>
-                                
-                            </Grid>
+                            <!-- Display the image -->
+                            <ContentControl Content="{Binding}" Padding="0" Margin="0"/>
                         </Border>
                     </DataTemplate>
                 </Setter.Value>
@@ -125,8 +141,8 @@
             >
             <ListBox.ItemContainerStyle>
                 <Style TargetType="ListBoxItem">
-                    <Setter Property="HorizontalContentAlignment" Value="Center"/>
-                    <Setter Property="VerticalContentAlignment" Value="Center"/>
+                    <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
+                    <Setter Property="VerticalContentAlignment" Value="Stretch"/>
                     <Setter Property="Padding" Value="0"/>
                     <Setter Property="Margin" Value="0"/>
                     <Setter Property="MinHeight" Value="{Binding Path=DataContext.ThumbnailHeight, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType={x:Type local:MediaCollection}}}"/>

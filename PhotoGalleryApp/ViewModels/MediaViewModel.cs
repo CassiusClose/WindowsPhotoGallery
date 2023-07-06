@@ -12,7 +12,7 @@ namespace PhotoGalleryApp.ViewModels
     /// <summary>
     /// An abstract ViewModel class for any media type, image or video. Subclasses should be made for each media type. 
     /// </summary>
-    abstract class MediaViewModel : ViewModelBase
+    abstract class MediaViewModel : ICollectableViewModel
     {
         #region Fields and Properties
 
@@ -60,19 +60,14 @@ namespace PhotoGalleryApp.ViewModels
          * have a different MediaViewModel for the same Media, and hence different IsSelected
          * properties.
          */
-        private bool _isSelected;
-        public bool IsSelected
-        {
-            get { return _isSelected; } 
-            set
-            {
-                _isSelected = value;
-                OnPropertyChanged();
-            }
-        }
 
         #endregion Fields and Properties
 
+        /// <summary>
+        /// Returns the ICollectable model associated with this viewmodel
+        /// </summary>
+        /// <returns>The ICollectable model associated with this viewmodel</returns>
+        public override abstract ICollectable GetModel();
 
 
         #region Methods

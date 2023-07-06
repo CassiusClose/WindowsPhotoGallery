@@ -37,8 +37,10 @@ namespace PhotoGalleryApp
             _nav = new NavigatorViewModel();
 
             Gallery gallery = Gallery.LoadGallery("gallery.xml");
+            //Gallery gallery = new Gallery("Gallery", new MediaCollection());
 
-            MediaCollection coll = gallery.MediaList;
+            //TODO Check for missing media
+            /*MediaCollection coll = gallery.MediaList;
             for(int i = coll.Count - 1; i >= 0; i--)
             {
                 Media media = coll[i];
@@ -49,7 +51,7 @@ namespace PhotoGalleryApp
                     coll.RemoveAt(i);
                     continue;
                 }
-            }
+            }*/
 
             _sidebar = new SidebarViewModel(_nav, gallery);
 

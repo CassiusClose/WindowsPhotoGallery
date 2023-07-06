@@ -20,7 +20,7 @@ namespace PhotoGalleryApp.Models
      */
     [XmlInclude(typeof(Image))]
     [XmlInclude(typeof(Video))]
-    public abstract class Media
+    public abstract class Media : ICollectable
     {
         #region Constructors
 
@@ -55,7 +55,6 @@ namespace PhotoGalleryApp.Models
         protected Media() : this(null, null) { }
 
         #endregion Constructors
-
 
 
         #region Fields and Properties
@@ -170,6 +169,16 @@ namespace PhotoGalleryApp.Models
         /// A collection of tags associated with the image, used for easier sorting & filtering of images.
         /// </summary>
         public ObservableCollection<string> Tags { get; set; }
+
+
+        /// <summary>
+        /// Returns whether the class holds an media item or a collection of items. This returns false.
+        /// </summary>
+        /// <returns>Whether the class holds an media item or a collection of items</returns>
+        public override bool IsCollection()
+        {
+            return false;
+        }
 
         #endregion Fields and Properties
 

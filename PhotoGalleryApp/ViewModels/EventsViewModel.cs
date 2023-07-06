@@ -27,7 +27,7 @@ namespace PhotoGalleryApp.ViewModels
             _events = new ObservableCollection<EventViewModel>();
             foreach (Event e in gallery.Events)
             {
-                _events.Add(new EventViewModel(e));
+                _events.Add(new EventViewModel(e, _nav));
             }
             EventsView = CollectionViewSource.GetDefaultView(_events);
         }

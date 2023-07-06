@@ -12,6 +12,11 @@ namespace PhotoGalleryApp.Models
     /// <summary>
     /// Contains a user's entire session, including all of their media, events, locations, etc.
     /// </summary>
+    // This class stores MediaCollection, which is a collection of an abstract type, so have to
+    // include all possible subclasses to serialize.
+    [XmlInclude(typeof(Image))]
+    [XmlInclude(typeof(Video))]
+    [XmlInclude(typeof(Event))]
     public class Gallery
     {
         public Gallery() : this("Gallery", null) { }

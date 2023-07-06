@@ -113,8 +113,13 @@ namespace PhotoGalleryApp.Views
                 for (int j = i; j < itemsCount; j++)
                 {
                     ListBoxItem lbi = (ListBoxItem)CollectionListBox.ItemContainerGenerator.ContainerFromIndex(j);
-                    MediaViewModel vm = (MediaViewModel)lbi.Content;
-                    double ar = GetAR(vm);
+                    ICollectableViewModel vm = (ICollectableViewModel)lbi.Content;
+
+                    double ar;
+                    if (vm is MediaViewModel)
+                        ar = GetAR((MediaViewModel)vm);
+                    else
+                        ar = 1;
 
                     if (widthInRow + ThumbnailHeight * ar > containerWidth)
                     {
@@ -144,8 +149,12 @@ namespace PhotoGalleryApp.Views
                 {
                     ListBoxItem lbi = (ListBoxItem)CollectionListBox.ItemContainerGenerator.ContainerFromIndex(i);
 
-                    MediaViewModel vm = (MediaViewModel)lbi.Content;
-                    double ar = GetAR(vm);
+                    ICollectableViewModel vm = (ICollectableViewModel)lbi.Content;
+                    double ar;
+                    if (vm is MediaViewModel)
+                        ar = GetAR((MediaViewModel)vm);
+                    else
+                        ar = 1;
 
                     // Scale each image
                     // If ceiling, the rounding might push the actual width over the boundaries of the rows,

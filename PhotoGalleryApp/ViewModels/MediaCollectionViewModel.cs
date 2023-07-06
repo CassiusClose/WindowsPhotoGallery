@@ -32,7 +32,7 @@ namespace PhotoGalleryApp.ViewModels
         /// Creates a new viewmodel associated with the given MediaCollection.
         /// </summary>
         /// <param name="collection">The MediaCollection model to be associated with</param>
-        public MediaCollectionViewModel(MediaCollection collection) : this(collection, null) { }
+        public MediaCollectionViewModel(NavigatorViewModel nav, MediaCollection collection) : this(nav, collection, null) { }
 
         /// <summary>
         /// Creates a new viewmodel associated with the given MediaCollection. The provided sorting
@@ -40,8 +40,10 @@ namespace PhotoGalleryApp.ViewModels
         /// </summary>
         /// <param name="collection">The MediaCollection model to be associated with</param>
         /// <param name="sorting">A SortDescription object describing how to sort the collection of media. Can be null</param>
-        public MediaCollectionViewModel(MediaCollection collection, SortDescription? sorting)
+        public MediaCollectionViewModel(NavigatorViewModel nav, MediaCollection collection, SortDescription? sorting)
         {
+            _nav = nav;
+
             // Init commands
             _selectMediaCommand = new RelayCommand(SelectMedia);
             _scrollChangedCommand = new RelayCommand(ScrollChanged);
@@ -52,11 +54,11 @@ namespace PhotoGalleryApp.ViewModels
             MediaCollectionModel = collection;
             MediaCollectionModel.MediaTagsChanged += MediaTagsChanged;
 
-            _mediaList = new ObservableCollection<MediaViewModel>();
+            _mediaList = new ObservableCollection<ICollectableViewModel>();
 
-            MediaView = CollectionViewSource.GetDefaultView(_mediaList);
+            _mediaView = CollectionViewSource.GetDefaultView(_mediaList);
             if (sorting != null)
-                MediaView.SortDescriptions.Add((SortDescription)sorting);
+                _mediaView.SortDescriptions.Add((SortDescription)sorting);
 
 
             // Init scroll timer
@@ -71,6 +73,7 @@ namespace PhotoGalleryApp.ViewModels
 
 
 
+        private NavigatorViewModel _nav;
 
         /// <summary>
         /// The associated MediaCollection model. This contains Media model classes.
@@ -78,12 +81,17 @@ namespace PhotoGalleryApp.ViewModels
         public MediaCollection MediaCollectionModel;
 
         /* A list of all the MediaViewModels associated with each Media class in MediaCollection. */
-        private ObservableCollection<MediaViewModel> _mediaList;
+        private ObservableCollection<ICollectableViewModel> _mediaList;
+
+        private ICollectionView _mediaView;
 
         /// <summary>
         /// A list of the Collection's current items (with any filtering and sorting applied). (Full list is in MediaCollectionModel)
         /// </summary>
-        public ICollectionView MediaView { get; }
+        public ICollectionView MediaView { 
+            get { return _mediaView; }
+        }
+
 
 
         /// <summary>
@@ -109,8 +117,11 @@ namespace PhotoGalleryApp.ViewModels
         {
             for(int i = _mediaList.Count()-1; i >= 0; i--)
             {
-                if (!MediaCollectionModel.Contains(_mediaList[i].Media))
+                ICollectable model = _mediaList[i].GetModel();
+                if(!MediaCollectionModel.Contains(model))
+                {
                     _mediaList.RemoveAt(i);
+                }
             }
 
             //TODO Should load priority media if that's happening
@@ -137,24 +148,27 @@ namespace PhotoGalleryApp.ViewModels
         /// Returns a list of all the MediaViewModels in the collection.
         /// </summary>
         /// <returns>A list of all the MediaViewModels in the collection</returns>
-        public ObservableCollection<MediaViewModel> GetAllItems()
+        public ObservableCollection<ICollectableViewModel> GetAllItems()
         {
             return _mediaList;
         }
 
 
         //TODO This should update the MediaCollection as well.
-        public void AddMediaItem(MediaViewModel vm)
+        public void AddMediaItem(ICollectableViewModel vm)
         {
             _imageLoadID++;
+
             _mediaList.Add(vm);
+
+            //TODO is this right?
             ScrollChangedStopped(null, null);
         }
 
 
         #region Open Media
 
-        public delegate void CallbackMediaOpened(Media media);
+        public delegate void CallbackMediaOpened(ICollectableViewModel media);
         /// <summary>
         /// An event triggered when the user opens (clicks on) one of the Media items in the collection.
         /// </summary>
@@ -173,8 +187,9 @@ namespace PhotoGalleryApp.ViewModels
         /// <param name="parameter">The Media instance to open.</param>
         public void OpenMedia(object parameter)
         {
-            Media p = parameter as Media;
-            MediaOpened(p);
+            ICollectableViewModel p = parameter as ICollectableViewModel;
+            if(MediaOpened != null)
+                MediaOpened(p);
         }
 
         #endregion Open Media
@@ -187,7 +202,7 @@ namespace PhotoGalleryApp.ViewModels
          */
         public void SelectAllMedia()
         {
-            foreach (MediaViewModel vm in MediaView)
+            foreach (ICollectableViewModel vm in MediaView)
             {
                 if (!vm.IsSelected)
                     vm.IsSelected = true;
@@ -204,7 +219,7 @@ namespace PhotoGalleryApp.ViewModels
          * Media should be deselected when made not visible (doesn't pass the filter), so this method should
          * result in all media being deselected, even though it only processes the currently visible ones.
          */
-            foreach (MediaViewModel vm in MediaView)
+            foreach (ICollectableViewModel vm in MediaView)
             {
                 if (vm.IsSelected)
                     vm.IsSelected = false;
@@ -216,11 +231,11 @@ namespace PhotoGalleryApp.ViewModels
         /// Returns a list of the currently selected MediaViewModels.
         /// </summary>
         /// <returns>A list of the currently selected MediaViewModels</returns>
-        public List<MediaViewModel> GetCurrentlySelectedItems()
+        public List<ICollectableViewModel> GetCurrentlySelectedItems()
         {
-            List<MediaViewModel> selectedItems = new List<MediaViewModel>();
+            List<ICollectableViewModel> selectedItems = new List<ICollectableViewModel>();
 
-            foreach(MediaViewModel vm in MediaView)
+            foreach(ICollectableViewModel vm in MediaView)
             {
                 if (vm.IsSelected)
                     selectedItems.Add(vm);
@@ -235,7 +250,7 @@ namespace PhotoGalleryApp.ViewModels
          * selection. This is only when there is a current selection. If there is nothing currently selected,
          * this will be null.
          */
-        private MediaViewModel lastSelectedMedia = null;
+        private ICollectableViewModel? lastSelectedMedia = null;
 
 
         /// <summary>
@@ -245,7 +260,7 @@ namespace PhotoGalleryApp.ViewModels
         public bool IsMediaSelected()
         {
             // Only look at currently visible media. Any media that isn't visible should have be deselected
-            foreach (MediaViewModel vm in MediaView)
+            foreach (ICollectableViewModel vm in MediaView)
             {
                 if (vm.IsSelected)
                     return true;
@@ -282,11 +297,11 @@ namespace PhotoGalleryApp.ViewModels
         /// </summary>
         public void SelectMedia(object parameter)
         {
-            MediaViewModel vm = parameter as MediaViewModel;
+            ICollectableViewModel vm = (ICollectableViewModel)parameter;
             // Was the most recent click a select or deselect action
             bool selected = vm.IsSelected;
 
-            List<MediaViewModel> list = MediaView.Cast<MediaViewModel>().ToList();
+            List<ICollectableViewModel> list = MediaView.Cast<ICollectableViewModel>().ToList();
 
             // Shift-clicking should select a range of media
             if(Keyboard.Modifiers == ModifierKeys.Shift)
@@ -352,12 +367,14 @@ namespace PhotoGalleryApp.ViewModels
             // view.
             for (int i = 0; i < MediaCollectionModel.Count; i++)
             {
-                _mediaList.Add(MediaViewModel.CreateMediaViewModel(MediaCollectionModel[i], true, 0, ThumbnailHeight));
+                if (MediaCollectionModel[i] is Media)
+                    _mediaList.Add(MediaViewModel.CreateMediaViewModel((Media)MediaCollectionModel[i], true, 0, ThumbnailHeight));
+                else
+                    _mediaList.Add(new EventViewModel((Event)MediaCollectionModel[i], _nav));
             }
 
             LoadAllMedia();
         }
-
 
 
         /**
@@ -379,13 +396,14 @@ namespace PhotoGalleryApp.ViewModels
             uint taskID = ++_imageLoadID;
 
             // Load the images one at a time
-            foreach (MediaViewModel item in _mediaList)
+            foreach (ICollectableViewModel item in _mediaList)
             {
                 // If this task is outdated (there's a newer task ID out there), then cancel
                 if (taskID != _imageLoadID)
                     break;
 
-                await Task.Run(() => { item.LoadMedia(); });
+                if (item is MediaViewModel)
+                    await Task.Run(() => { ((MediaViewModel)item).LoadMedia(); });
 
                 if (taskID != _imageLoadID)
                     break;
@@ -397,19 +415,20 @@ namespace PhotoGalleryApp.ViewModels
          * the user can see. Once those images in view have been loaded, this calls LoadAllImages() to resume loading the
          * entire collection in the background.
          */
-        private async void LoadPriorityMediaThenAll(List<MediaViewModel> images)
+        private async void LoadPriorityMediaThenAll(List<ICollectableViewModel> items)
         {
             // Save this task's ID to a local variable
             uint taskID = ++_imageLoadID;
 
             // Load the images one at a time
-            foreach (MediaViewModel item in images)
+            foreach (ICollectableViewModel vm in items)
             {
                 // If this task is outdated (there's a newer task ID out there), then cancel
                 if (taskID != _imageLoadID)
                     break;
                     
-                await Task.Run(() => { item.LoadMedia(); });
+                if(vm is MediaViewModel)
+                    await Task.Run(() => { ((MediaViewModel)vm).LoadMedia(); });
 
                 if (taskID != _imageLoadID)
                     break;
@@ -474,11 +493,19 @@ namespace PhotoGalleryApp.ViewModels
             _scrollChangedTimer.Stop();
 
             // Get a list of the current images in view
-            System.Windows.Controls.ListBox lb = _scrollViewer.Content as System.Windows.Controls.ListBox;
-            List<MediaViewModel> list = DisplayUtils.GetVisibleItemsFromListBox(lb, Application.Current.MainWindow).Cast<MediaViewModel>().ToList();
+            if (_scrollViewer == null)
+            {
+                Trace.WriteLine("FIX THIS");
+                LoadAllMedia();
+            }
+            else
+            {
+                System.Windows.Controls.ListBox lb = _scrollViewer.Content as System.Windows.Controls.ListBox;
+                List<ICollectableViewModel> list = DisplayUtils.GetVisibleItemsFromListBox(lb, Application.Current.MainWindow).Cast<ICollectableViewModel>().ToList();
 
-            // Load the images in view, and once this is done, continue loading the rest of the images in the collection.
-            LoadPriorityMediaThenAll(list);
+                // Load the images in view, and once this is done, continue loading the rest of the images in the collection.
+                LoadPriorityMediaThenAll(list);
+            }
         }
         
         #endregion Scroll Events

@@ -61,6 +61,14 @@ namespace PhotoGalleryApp.ViewModels
 
         #endregion Constructors
 
+        /// <summary>
+        /// Returns the ICollectable model associated with this viewmodel
+        /// </summary>
+        /// <returns>The ICollectable model associated with this viewmodel</returns>
+        public override ICollectable GetModel()
+        {
+            return Media;
+        }
 
 
         #region Fields and Properties

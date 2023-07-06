@@ -12,7 +12,7 @@ namespace PhotoGalleryApp.Models
     /// Represents a singular event that happened and has media associated with it. Should have a range of time
     /// associated with it in the future.
     /// </summary>
-    public class Event
+    public class Event : ICollectable
     {
         /* Need this for the XML Deserialization */
         public Event() : this("Event") { }
@@ -24,7 +24,7 @@ namespace PhotoGalleryApp.Models
         public Event(string name)
         {
             _name = name;
-            _collection = new MediaCollection();
+            _collection = new MediaCollection(name);
         }
 
         private MediaCollection _collection;
@@ -45,5 +45,15 @@ namespace PhotoGalleryApp.Models
             get { return _name; } 
             set { _name = value; }
         }
+
+        /// <summary>
+        /// Returns whether the class holds an media item or a collection of items. This returns true.
+        /// </summary>
+        /// <returns>Whether the class holds an media item or a collection of items</returns>
+        public override bool IsCollection()
+        {
+            return true;
+        }
+
     }
 }

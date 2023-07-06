@@ -18,6 +18,7 @@ using System.Windows.Threading;
 using System.Windows;
 using PhotoGalleryApp.Utils;
 using System.Diagnostics;
+using System.Diagnostics.Eventing.Reader;
 
 namespace PhotoGalleryApp.ViewModels
 {
@@ -41,7 +42,7 @@ namespace PhotoGalleryApp.ViewModels
 
             // Init the media collection
             gallery.MediaList.MediaTagsChanged += MediaTagsChanged;
-            _mediaCollectionVM = new MediaCollectionViewModel(gallery.MediaList, new SortDescription("Timestamp", ListSortDirection.Ascending));
+            _mediaCollectionVM = new MediaCollectionViewModel(navigator, gallery.MediaList);//, new SortDescription("Timestamp", ListSortDirection.Ascending));
             _mediaCollectionVM.MediaSelectedChanged += MediaSelectedChanged;
             _mediaCollectionVM.MediaOpened += MediaOpened;
 
@@ -53,7 +54,7 @@ namespace PhotoGalleryApp.ViewModels
             _events = new ObservableCollection<EventViewModel>();
             foreach (Event e in gallery.Events)
             {
-                _events.Add(new EventViewModel(e));
+                _events.Add(new EventViewModel(e, _navigator));
             }
 
             // Setup the filter, after FilterTags has been created
@@ -173,7 +174,7 @@ namespace PhotoGalleryApp.ViewModels
             if (FilterTags.Count == 0)
                 return true;
 
-            MediaViewModel vm = item as MediaViewModel;
+            ICollectableViewModel vm = item as ICollectableViewModel;
 
             // If the image does not contain any of the selected tags, reject it
             return MediaValidWithFilterTags(vm);
@@ -187,15 +188,23 @@ namespace PhotoGalleryApp.ViewModels
          * 
          * "Valid" means the Media contains all the tags in the currently selected tag list.
          */
-        private bool MediaValidWithFilterTags(MediaViewModel vm)
+        private bool MediaValidWithFilterTags(ICollectableViewModel vm)
         {
-            Media media = vm.Media;
-            foreach(string tag in FilterTags)
+            if (vm is MediaViewModel)
             {
-                if (!media.Tags.Contains(tag))
-                    return false;
+                Media media = ((MediaViewModel)vm).Media;
+                foreach(string tag in FilterTags)
+                {
+                    if (!media.Tags.Contains(tag))
+                        return false;
+                }
+                return true;
             }
-            return true;
+            else
+            {
+                //TODO How to filter events?
+                return true;
+            }
         }
 
         /*
@@ -222,7 +231,7 @@ namespace PhotoGalleryApp.ViewModels
         private void DeselectInvalidMedia()
         {
             bool changed = false;
-            foreach (MediaViewModel vm in MediaCollectionVM.GetAllItems())
+            foreach (ICollectableViewModel vm in MediaCollectionVM.GetAllItems())
             {
                 if(vm.IsSelected)
                 {
@@ -273,12 +282,19 @@ namespace PhotoGalleryApp.ViewModels
             string tag = args.Item; 
             if (tag != null)
             {
-                List<MediaViewModel> vms = MediaCollectionVM.GetCurrentlySelectedItems();
-                foreach (MediaViewModel vm in vms)
-                {
-                    if (!vm.Media.Tags.Contains(tag)) 
+                List<ICollectableViewModel> vms = MediaCollectionVM.GetCurrentlySelectedItems();
+                foreach (ICollectableViewModel vm in vms)
+                { 
+                    if(vm is MediaViewModel)
+                    { 
+                        if (!((MediaViewModel)vm).Media.Tags.Contains(tag)) 
+                        {
+                            ((MediaViewModel)vm).Media.Tags.Add(tag);
+                        }
+                    }
+                    else
                     {
-                        vm.Media.Tags.Add(tag);
+                        Trace.WriteLine("Error: Events shouldn't be selectable");
                     }
                 }
             }
@@ -303,11 +319,14 @@ namespace PhotoGalleryApp.ViewModels
             string tag = args.Item;
             if(tag != null)
             {
-                List<MediaViewModel> vms = MediaCollectionVM.GetCurrentlySelectedItems();
-                foreach (MediaViewModel vm in vms)
+                List<ICollectableViewModel> vms = MediaCollectionVM.GetCurrentlySelectedItems();
+                foreach (ICollectableViewModel vm in vms)
                 {
-                    if (vm.Media.Tags.Contains(tag))
-                        vm.Media.Tags.Remove(tag);
+                    if (vm is MediaViewModel)
+                    {
+                        if (((MediaViewModel)vm).Media.Tags.Contains(tag))
+                            ((MediaViewModel)vm).Media.Tags.Remove(tag);
+                    }
                 }
             }
             
@@ -372,10 +391,12 @@ namespace PhotoGalleryApp.ViewModels
         /// <param name="eArgs">The event's arguments, of type PhotoGalleryApp.Views.ItemChosenEventArgs.</param>
         public void AddSelectedToEvent(object sender, EventArgs eArgs)
         {
+            //TODO 
+            throw new NotImplementedException();
             // Want only one change event to fire, even though we're changing several items in the MediaCollection.
             // So disable updates and then trigger one at the end. See MediaCollection.UpdateTags() for more info.
 
-            MediaCollectionVM.MediaCollectionModel.DisableTagUpdate = true;
+            /*MediaCollectionVM.MediaCollectionModel.DisableTagUpdate = true;
 
             PhotoGalleryApp.Views.ItemChosenEventArgs args = (PhotoGalleryApp.Views.ItemChosenEventArgs)eArgs;
             string eventName = args.Item;
@@ -396,14 +417,14 @@ namespace PhotoGalleryApp.ViewModels
                 _gallery.Events.Add(evnt);
             }
 
-            List<MediaViewModel> mediavms = MediaCollectionVM.GetCurrentlySelectedItems();
+            List<ICollectableViewModel> mediavms = MediaCollectionVM.GetCurrentlySelectedItems();
             foreach(MediaViewModel mediavm in mediavms)
             {
                 evnt.Collection.Add(mediavm.Media);
             }
             
             MediaCollectionVM.MediaCollectionModel.DisableTagUpdate = false;
-            MediaCollectionVM.MediaCollectionModel.UpdateTags();
+            MediaCollectionVM.MediaCollectionModel.UpdateTags();*/
         }
 
 
@@ -458,26 +479,40 @@ namespace PhotoGalleryApp.ViewModels
         #region OpenMedia
 
         /* Opens the given Media in a new Slideshow page. Is a callback for MediaCollectionViewModel. */
-        private void MediaOpened(Media m)
+        private void MediaOpened(ICollectableViewModel item)
         {
-            // Get a list of all the currently visible images
-            List<MediaViewModel> list = MediaCollectionVM.MediaView.Cast<MediaViewModel>().ToList();
-            List<Media> media = MediaViewModel.GetMediaList(list);
-
-            // Get the clicked on photo's index in the list of Photos
-            int index = 0;
-            for (int i = 0; i < list.Count; i++)
+            //TODO Can be more efficient
+            ICollectable m = item.GetModel();
+            if (m is Media)
             {
-                if (m == media[i])
+                // Get a list of all the currently visible images
+                List<ICollectableViewModel> list = MediaCollectionVM.MediaView.Cast<ICollectableViewModel>().ToList();
+                List<Media> media = new List<Media>(); //= MediaViewModel.GetMediaList(list);
+                foreach (ICollectableViewModel vm in list)
                 {
-                    index = i;
-                    break;
+                    if (vm is MediaViewModel)
+                        media.Add((Media)vm.GetModel());
                 }
-            }
 
-            // Create a new page to view the clicked image
-            SlideshowViewModel imagePage = new SlideshowViewModel(media, index, MediaCollectionVM.MediaCollectionModel);
-            _navigator.NewPage(imagePage);
+                // Get the clicked on photo's index in the list of Photos
+                int index = 0;
+                for (int i = 0; i < list.Count; i++)
+                {
+                    if (m == media[i])
+                    {
+                        index = i;
+                        break;
+                    }
+                }
+
+                // Create a new page to view the clicked image
+                SlideshowViewModel imagePage = new SlideshowViewModel(media, index, MediaCollectionVM.MediaCollectionModel);
+                _navigator.NewPage(imagePage);
+            }
+            else
+            {
+                _navigator.NewPage(item);
+            }
         }
 
         #endregion OpenMedia
@@ -515,10 +550,10 @@ namespace PhotoGalleryApp.ViewModels
         {
             MediaCollectionVM.DisableMediaViewRefresh = true;
 
-            List<MediaViewModel> vms = MediaCollectionVM.GetCurrentlySelectedItems();
-            foreach(MediaViewModel vm in vms)
+            List<ICollectableViewModel> vms = MediaCollectionVM.GetCurrentlySelectedItems();
+            foreach(ICollectableViewModel vm in vms)
             {
-                MediaCollectionVM.MediaCollectionModel.Remove(vm.Media);
+                MediaCollectionVM.MediaCollectionModel.Remove(vm.GetModel());
             }
 
             MediaCollectionVM.TriggerMediaSelectedChanged();
