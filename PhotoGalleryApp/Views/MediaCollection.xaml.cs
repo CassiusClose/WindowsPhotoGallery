@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.Collections.Specialized;
+using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -115,11 +116,8 @@ namespace PhotoGalleryApp.Views
                     ListBoxItem lbi = (ListBoxItem)CollectionListBox.ItemContainerGenerator.ContainerFromIndex(j);
                     ICollectableViewModel vm = (ICollectableViewModel)lbi.Content;
 
-                    double ar;
-                    if (vm is MediaViewModel)
-                        ar = GetAR((MediaViewModel)vm);
-                    else
-                        ar = 1;
+
+                    double ar = GetAR(vm);
 
                     if (widthInRow + ThumbnailHeight * ar > containerWidth)
                     {
@@ -150,11 +148,7 @@ namespace PhotoGalleryApp.Views
                     ListBoxItem lbi = (ListBoxItem)CollectionListBox.ItemContainerGenerator.ContainerFromIndex(i);
 
                     ICollectableViewModel vm = (ICollectableViewModel)lbi.Content;
-                    double ar;
-                    if (vm is MediaViewModel)
-                        ar = GetAR((MediaViewModel)vm);
-                    else
-                        ar = 1;
+                    double ar = GetAR(vm);
 
                     // Scale each image
                     // If ceiling, the rounding might push the actual width over the boundaries of the rows,
@@ -173,22 +167,43 @@ namespace PhotoGalleryApp.Views
 
 
         /*
-         * Returns the aspect ratio of a media VM object. Aspect ratio is stored without rotation info, so
+         * Returns the aspect ratio of a ICollectableVM object, either an image, the thumbnail of a 
+         * video, or the thumbnail for an event. Aspect ratio is stored without rotation info, so
          * apply that if needed.
          */
-        private double GetAR(MediaViewModel vm)
+        private double GetAR(ICollectableViewModel vm)
         {
+            if (vm == null)
+                return 1;
+
+            MediaViewModel mvm;
+
             double ar;
-            if (vm.MediaType == Utils.MediaFileType.Image)
+            if (vm is EventViewModel)
             {
-                ar = (vm as ImageViewModel).AspectRatio;
+                if (((EventViewModel)vm).Thumbnail != null)
+                    mvm = ((EventViewModel)vm).Thumbnail;
+                else
+                {
+                    return 1;
+                }
+            }
+            else
+                mvm = (MediaViewModel)vm; 
+
+            
+
+
+            if (mvm.MediaType == Utils.MediaFileType.Image)
+            {
+                ar = (mvm as ImageViewModel).AspectRatio;
             }
             else
             {
-                ar = (vm as VideoViewModel).ThumbnailViewModel.AspectRatio;
+                ar = (mvm as VideoViewModel).ThumbnailViewModel.AspectRatio;
             }
 
-            if (vm.Rotation == Rotation.Rotate90 || vm.Rotation == Rotation.Rotate270)
+            if (mvm.Rotation == Rotation.Rotate90 || mvm.Rotation == Rotation.Rotate270)
             {
                 ar = 1 / ar;
             }

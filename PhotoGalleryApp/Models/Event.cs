@@ -27,6 +27,9 @@ namespace PhotoGalleryApp.Models
             _collection = new MediaCollection(name);
         }
 
+
+        #region Fields and Properties
+
         private MediaCollection _collection;
         /// <summary>
         /// The media associated with the event
@@ -45,6 +48,22 @@ namespace PhotoGalleryApp.Models
             get { return _name; } 
             set { _name = value; }
         }
+
+        private Media? _thumbnail = null;
+        /// <summary>
+        /// The thumbnail to represent the event when viewed as a small tile. If null, there is
+        /// no selected thumbnail.
+        /// </summary>
+        public Media? Thumbnail
+        {
+            get { return _thumbnail; }
+            set { _thumbnail = value; }
+        }
+
+
+        #endregion Fields and Properties
+
+
 
         /// <summary>
         /// Returns whether the class holds an media item or a collection of items. This returns true.

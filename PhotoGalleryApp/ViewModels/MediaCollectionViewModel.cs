@@ -404,6 +404,8 @@ namespace PhotoGalleryApp.ViewModels
 
                 if (item is MediaViewModel)
                     await Task.Run(() => { ((MediaViewModel)item).LoadMedia(); });
+                else
+                    await Task.Run(() => { ((EventViewModel)item).LoadThumbnail(ThumbnailHeight); });
 
                 if (taskID != _imageLoadID)
                     break;
@@ -426,9 +428,11 @@ namespace PhotoGalleryApp.ViewModels
                 // If this task is outdated (there's a newer task ID out there), then cancel
                 if (taskID != _imageLoadID)
                     break;
-                    
-                if(vm is MediaViewModel)
+
+                if (vm is MediaViewModel)
                     await Task.Run(() => { ((MediaViewModel)vm).LoadMedia(); });
+                else
+                    await Task.Run(() => { ((EventViewModel)vm).LoadThumbnail(ThumbnailHeight); });
 
                 if (taskID != _imageLoadID)
                     break;

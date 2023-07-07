@@ -27,7 +27,24 @@
         <!-- How to display an event -->
         <DataTemplate DataType="{x:Type vms:EventViewModel}">
             <Grid>
-                <Label Content="Name"/>
+                <Image Style="{StaticResource CollectionThumbnailImage}">
+                    <Image.Source>
+                        <Binding Path="Thumbnail.ImageData" Mode="OneWay"/>
+                    </Image.Source>
+                </Image>
+
+                <Border
+                    Grid.ZIndex="1"
+                    Background="White"
+                    HorizontalAlignment="Left"
+                    VerticalAlignment="Bottom"
+                    Margin="10"
+                    BorderBrush="Black"
+                    BorderThickness="2"
+                    Padding="5"
+                    >
+                    <Label Content="{Binding Name}"/>
+                </Border>
             </Grid>
         </DataTemplate>
 
@@ -36,16 +53,6 @@
             <Grid>
                 <!-- Display the image -->
                 <Image Style="{StaticResource CollectionThumbnailImage}" Stretch="Uniform">
-                    <!-- Image height is determined by MediaCollection settings. Below, calculate the minimum width based on that
-                         height and the image's aspect ratio. As the MediaCollection does its autofitting, it might change the
-                         width of these items to be greater than the minimum width determined here. -->
-                    <Image.MinWidth>
-                        <MultiBinding Converter="{StaticResource HeightARToWidth}" Mode="OneWay">
-                            <Binding Path="DataContext.ThumbnailHeight" RelativeSource="{RelativeSource Mode=FindAncestor, AncestorType={x:Type local:MediaCollection}}"/>
-                            <Binding Path="AspectRatio"/>
-                        </MultiBinding>
-                    </Image.MinWidth>
-
                     <Image.Source>
                         <Binding Path="ImageData" Mode="OneWay"/>
                     </Image.Source>
@@ -64,13 +71,6 @@
         <DataTemplate DataType="{x:Type vms:VideoViewModel}">
             <Grid>
                 <Image Style="{StaticResource CollectionThumbnailImage}">
-                    <Image.MinWidth>
-                        <MultiBinding Converter="{StaticResource HeightARToWidth}" Mode="OneWay">
-                            <Binding Path="DataContext.ThumbnailHeight" RelativeSource="{RelativeSource Mode=FindAncestor, AncestorType={x:Type local:MediaCollection}}"/>
-                            <Binding Path="ThumbnailViewModel.AspectRatio"/>
-                        </MultiBinding>
-                    </Image.MinWidth>
-
                     <Image.Source>
                         <Binding Path="ThumbnailViewModel.ImageData" Mode="OneWay"/>
                     </Image.Source>
