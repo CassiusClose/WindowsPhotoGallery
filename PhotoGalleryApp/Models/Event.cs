@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Collections.Specialized;
+using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -25,6 +27,38 @@ namespace PhotoGalleryApp.Models
         {
             _name = name;
             _collection = new MediaCollection();
+            _collection.CollectionChanged += _mediaChanged;
+        }
+
+
+        /* 
+         * When changes in the collection, recalculate the time-range of the event.
+         */
+        private void _mediaChanged(object? sender, NotifyCollectionChangedEventArgs e)
+        {
+            //TODO For efficiency, detect what has changed and only use that to update timestamp
+            DateTime? earliest = null;
+            foreach(ICollectable c in _collection)
+            {
+                if(c is Media)
+                {
+                    DateTime t = ((Media)c).Timestamp;
+                    if (t < earliest || earliest == null)
+                        earliest = t;
+                }
+                else
+                {
+                    DateTime t = ((Event)c).StartTimestamp;
+                    if (t < earliest || earliest == null)
+                        earliest = t;
+                }
+            }
+
+
+            //TODO In a case like this, does anything update the viewmodels? Presumably the change action
+            // will come from a viewmodel, but what if there's another viewmodel that needs an update?
+            if(earliest != null)
+                _startTimestamp = (DateTime)earliest;
         }
 
 
@@ -58,6 +92,17 @@ namespace PhotoGalleryApp.Models
         {
             get { return _thumbnail; }
             set { _thumbnail = value; }
+        }
+
+
+        private DateTime _startTimestamp;
+        /// <summary>
+        /// The timestamp of the earliest media in the event.
+        /// </summary>
+        //TODO What if nothing in the event? Right now, default is year 1.
+        public DateTime StartTimestamp
+        {
+            get { return _startTimestamp; }
         }
 
 

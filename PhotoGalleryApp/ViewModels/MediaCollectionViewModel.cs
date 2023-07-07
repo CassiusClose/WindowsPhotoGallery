@@ -40,7 +40,7 @@ namespace PhotoGalleryApp.ViewModels
         /// </summary>
         /// <param name="collection">The MediaCollection model to be associated with</param>
         /// <param name="sorting">A SortDescription object describing how to sort the collection of media. Can be null</param>
-        public MediaCollectionViewModel(NavigatorViewModel nav, MediaCollection collection, SortDescription? sorting)
+        public MediaCollectionViewModel(NavigatorViewModel nav, MediaCollection collection, SortDescription? sorting, bool init=true)
         {
             _nav = nav;
 
@@ -66,7 +66,8 @@ namespace PhotoGalleryApp.ViewModels
             _scrollChangedTimer.Tick += ScrollChangedStopped;
 
             // Load all the media in the collection 
-            InitAndLoadAllMedia();
+            if(init)
+                InitAndLoadAllMedia();
             // Don't need this handler for the initialization of the VMs, so hook it after
             MediaCollectionModel.CollectionChanged += MediaCollection_CollectionChanged;
         }
@@ -153,18 +154,16 @@ namespace PhotoGalleryApp.ViewModels
             return _mediaList;
         }
 
-        /// <summary>
-        /// Adds a single Media item to the associated MediaCollection. If you have multiple items to
-        /// add, call AddMediaItems(). Calling this several times may call Refresh() on the MediaView
-        /// multiple times, which will cause binding errors.
-        /// </summary>
-        /// <param name="media">The Media object to add</param>
-        public void AddMediaItem(Media media)
+        private void _addMediaItem(ICollectable media)
         {
             // Disable Refresh, because it'll be called when adding to the MediaView
             DisableMediaViewRefresh = true;
 
-            MediaViewModel vm = MediaViewModel.CreateMediaViewModel(media, true, 0, ThumbnailHeight);
+            ICollectableViewModel vm;
+            if (media is Media)
+                vm = MediaViewModel.CreateMediaViewModel((Media)media, true, 0, ThumbnailHeight);
+            else
+                vm = new EventViewModel((Event)media, _nav);
 
             // 1) Add to the MediaCollection first, so the tags are updated
             MediaCollectionModel.Add(media);
@@ -172,32 +171,112 @@ namespace PhotoGalleryApp.ViewModels
             DisableMediaViewRefresh = false;
 
 
-            // Cancel existing load tasks
-            _imageLoadID++;
-
             // 2) Then update the View, which will cause a Refresh
             _mediaList.Add(vm);
+        }
+
+        /// <summary>
+        /// Adds a single Media item to the associated MediaCollection. If you have multiple items to
+        /// add, call AddMediaItems(). Calling this several times may call Refresh() on the MediaView
+        /// multiple times, which will cause binding errors.
+        /// </summary>
+        /// <param name="media">The Media object to add</param>
+        public void AddMediaItem(ICollectable media)
+        {
+            _addMediaItem(media);
+            // Cancel existing load tasks
+            _imageLoadID++;
 
             //TODO is this right?
             // Start another load task
             ScrollChangedStopped(null, null);
+
+            // Removing items will cause the view to remove them, but need to call Refresh() here
+            // to resort them as well.
+            MediaView.Refresh();
         }
+
 
         /// <summary>
         /// Adds multiple Media items to the associated MediaCollection
         /// </summary>
         /// <param name="media">The Media object to add</param>
-        public void AddMediaItems(List<Media> media)
+        public void AddMediaItems(List<ICollectable> media)
         {
             // Stop Refresh() from getting called, because adding the item will cause that.
             DisableMediaViewRefresh = true;
 
             foreach(Media m in media)
             {
-                AddMediaItem(m);
+                _addMediaItem(m);
             }
 
             DisableMediaViewRefresh = false;
+
+            _imageLoadID++;
+
+            //TODO is this right?
+            // Start another load task
+            LoadAllMedia();
+
+            // Removing items will cause the view to remove them, but need to call Refresh() her/
+            // to resort them as well.
+            //MediaView.Refresh();
+        }
+        
+
+        private void _removeMediaItem(ICollectableViewModel vm)
+        {
+            // Disable Refresh, because it'll be called when adding to the MediaView
+            DisableMediaViewRefresh = true;
+
+            // 1) Add to the MediaCollection first, so the tags are updated
+            MediaCollectionModel.Remove(vm.GetModel());
+
+            DisableMediaViewRefresh = false;
+
+            // 2) Then update the View, which will cause a Refresh
+            _mediaList.Remove(vm);
+
+        }
+
+        public void RemoveMediaItem(ICollectableViewModel vm)
+        {
+            _removeMediaItem(vm);
+
+            // Cancel existing load tasks
+            _imageLoadID++;
+
+            //TODO is this right?
+            // Start another load task
+            ScrollChangedStopped(null, null);
+
+            // Removing items will cause the view to remove them, but need to call Refresh() here
+            // to resort them as well.
+            MediaView.Refresh();
+        }
+
+        public void RemoveMediaItems(List<ICollectableViewModel> vms)
+        {
+            DisableMediaViewRefresh = true;
+
+            foreach(ICollectableViewModel vm in vms)
+            {
+                _removeMediaItem(vm);
+            }
+
+            DisableMediaViewRefresh = false;
+
+            // Cancel existing load tasks
+            _imageLoadID++;
+
+            //TODO is this right?
+            // Start another load task
+            ScrollChangedStopped(null, null);
+
+            // Removing items will cause the view to remove them, but need to call Refresh() here
+            // to resort them as well.
+            MediaView.Refresh();
         }
 
 

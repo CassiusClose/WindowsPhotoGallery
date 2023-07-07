@@ -15,12 +15,12 @@ namespace PhotoGalleryApp.ViewModels
     /// </summary>
     class EventViewModel : ICollectableViewModel
     {
-        public EventViewModel(Event evnt, NavigatorViewModel nav)
+        public EventViewModel(Event evnt, NavigatorViewModel nav, bool init=true)
         {
             _nav = nav;
             _event = evnt;
 
-            _mediaCollectionVM = new MediaCollectionViewModel(nav, _event.Collection);
+            _mediaCollectionVM = new MediaCollectionViewModel(nav, _event.Collection, null, init);
             _mediaCollectionVM.MediaOpened += MediaOpened;
         }
 
@@ -93,6 +93,14 @@ namespace PhotoGalleryApp.ViewModels
         public string Name
         {
             get { return _event.Name; }
+        }
+
+        /// <summary>
+        /// The event's timestamp used for sorting, the earliest timestamp of its media
+        /// </summary>
+        public DateTime Timestamp
+        {
+            get { return _event.StartTimestamp; }
         }
 
 

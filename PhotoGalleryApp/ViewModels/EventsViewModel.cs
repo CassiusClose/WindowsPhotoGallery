@@ -25,10 +25,11 @@ namespace PhotoGalleryApp.ViewModels
             _openEventCommand = new RelayCommand(OpenEvent);
 
             _events = new ObservableCollection<EventViewModel>();
-            foreach (Event e in gallery.Events)
+            //TODO Make this work
+            /*foreach (Event e in gallery.Events)
             {
                 _events.Add(new EventViewModel(e, _nav));
-            }
+            }*/
             EventsView = CollectionViewSource.GetDefaultView(_events);
         }
 

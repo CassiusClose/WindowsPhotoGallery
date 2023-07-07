@@ -42,20 +42,19 @@ namespace PhotoGalleryApp.ViewModels
 
             // Init the media collection
             gallery.MediaList.MediaTagsChanged += MediaTagsChanged;
-            _mediaCollectionVM = new MediaCollectionViewModel(navigator, gallery.MediaList);//, new SortDescription("Timestamp", ListSortDirection.Ascending));
+            _mediaCollectionVM = new MediaCollectionViewModel(navigator, gallery.MediaList, new SortDescription("Timestamp", ListSortDirection.Ascending));
             _mediaCollectionVM.MediaSelectedChanged += MediaSelectedChanged;
             _mediaCollectionVM.MediaOpened += MediaOpened;
+            gallery.MediaList.CollectionChanged += MediaCollectionChanged;
+
+            // Collect all the events from the media collection for the AddSelectedToEvent
+            // drop down
+            UpdateEventList();
 
             // Setup tag-related things
             FilterTags = new ObservableCollection<string>();
             FilterTags.CollectionChanged += FilterTags_CollectionChanged;
             gallery.MediaList.Tags.CollectionChanged += AllTags_CollectionChanged;
-
-            _events = new ObservableCollection<EventViewModel>();
-            foreach (Event e in gallery.Events)
-            {
-                _events.Add(new EventViewModel(e, _navigator));
-            }
 
             // Setup the filter, after FilterTags has been created
             _mediaCollectionVM.MediaView.Filter += MediaFilter;
@@ -381,8 +380,28 @@ namespace PhotoGalleryApp.ViewModels
 
         #region Events
 
-        private ObservableCollection<EventViewModel> _events;
+        private ObservableCollection<EventViewModel> _events = new ObservableCollection<EventViewModel>();
         public ObservableCollection<EventViewModel> Events { get { return _events; } }
+
+        /* When the media collection changes, rebuild the list of events */
+        private void MediaCollectionChanged(object? sender, NotifyCollectionChangedEventArgs e)
+        {
+            UpdateEventList();
+        }
+
+        /* Rebuild the list of events in the gallery's MediaCollection */
+        private void UpdateEventList()
+        {
+            //TODO Make more efficient
+            _events.Clear();
+
+            foreach(Event e in MediaCollectionVM.MediaCollectionModel.GetEvents())
+            {
+                _events.Add(new EventViewModel(e, _navigator, false));
+            }
+            OnPropertyChanged("Events");
+        }
+
 
         /// <summary>
         /// An event handler that adds the currently selected media to the given event.
@@ -391,40 +410,40 @@ namespace PhotoGalleryApp.ViewModels
         /// <param name="eArgs">The event's arguments, of type PhotoGalleryApp.Views.ItemChosenEventArgs.</param>
         public void AddSelectedToEvent(object sender, EventArgs eArgs)
         {
-            //TODO 
-            throw new NotImplementedException();
             // Want only one change event to fire, even though we're changing several items in the MediaCollection.
             // So disable updates and then trigger one at the end. See MediaCollection.UpdateTags() for more info.
-
-            /*MediaCollectionVM.MediaCollectionModel.DisableTagUpdate = true;
 
             PhotoGalleryApp.Views.ItemChosenEventArgs args = (PhotoGalleryApp.Views.ItemChosenEventArgs)eArgs;
             string eventName = args.Item;
 
-            Event evnt = null;
-            bool found = false;
+            EventViewModel? eventvm = null;
             foreach(EventViewModel e in Events)
             {
                 //TODO Either don't allow events with same name or do the id some other way
                 if(e.Name == eventName)
                 {
-                    evnt = e.Event;
+                    eventvm = e;
                 }
             }
-            if(evnt == null)
+            if(eventvm == null)
             {
-                evnt = new Event(eventName);
-                _gallery.Events.Add(evnt);
+                //TODO Allow creating new events
+                return;
+                /*evnt = new Event(eventName);
+                _gallery.Events.Add(evnt);*/
             }
 
+            // Build lists for batch operations
             List<ICollectableViewModel> mediavms = MediaCollectionVM.GetCurrentlySelectedItems();
-            foreach(MediaViewModel mediavm in mediavms)
+            List<ICollectable> media = new List<ICollectable>();
+            foreach(ICollectableViewModel cvm in mediavms)
             {
-                evnt.Collection.Add(mediavm.Media);
+                media.Add(cvm.GetModel());
             }
-            
-            MediaCollectionVM.MediaCollectionModel.DisableTagUpdate = false;
-            MediaCollectionVM.MediaCollectionModel.UpdateTags();*/
+
+            // Add to event and remove from here
+            eventvm.MediaCollectionVM.AddMediaItems(media);
+            MediaCollectionVM.RemoveMediaItems(mediavms);
         }
 
 
@@ -447,7 +466,7 @@ namespace PhotoGalleryApp.ViewModels
         /// </summary>
         public void AddFiles()
         {
-            List<Media> media = new List<Media>();
+            List<ICollectable> media = new List<ICollectable>();
 
             OpenFileDialog fileDialog = new OpenFileDialog();
             fileDialog.Multiselect = true;
@@ -512,7 +531,11 @@ namespace PhotoGalleryApp.ViewModels
             }
             else
             {
-                _navigator.NewPage(item);
+                // For some reason, pushing a new page with the existing EventViewModel will
+                // not display any media recently added to the event. Creating a new vm does
+                // work. Which is okay, because soon I'm going to separate the event page vm
+                // and the event tile with the MediaCollection view.
+                _navigator.NewPage(new EventViewModel((Event)item.GetModel(), _navigator));
             }
         }
 

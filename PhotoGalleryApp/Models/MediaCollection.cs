@@ -171,6 +171,30 @@ namespace PhotoGalleryApp.Models
         }
 
 
+        /// <summary>
+        /// Returns a list of all the Event objects nested in this collection.
+        /// </summary>
+        /// <returns>All the events contained in the collection.</returns>
+        public List<Event> GetEvents()
+        {
+            List<Event> events = new List<Event>();
+
+            foreach(ICollectable c in this)
+            {
+                if(c is Event)
+                {
+                    Event ev = (Event)c;
+                    events.Add(ev);
+
+                    foreach (Event e in ev.Collection.GetEvents())
+                        events.Add(e);
+                }
+            }
+
+            return events;
+        }
+
+
         #endregion Methods
     }
 }

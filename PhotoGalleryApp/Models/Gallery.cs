@@ -27,8 +27,6 @@ namespace PhotoGalleryApp.Models
 
             if(media != null)
                 _media = media;
-
-            _events = new ObservableCollection<Event>();
         }
 
 
@@ -51,17 +49,6 @@ namespace PhotoGalleryApp.Models
             get { return _media; } 
             set { _media = value; }
         }
-
-
-        private ObservableCollection<Event> _events;
-        /// <summary>
-        /// A list of all the events associated with the media in the gallery
-        /// </summary>
-        public ObservableCollection<Event> Events { 
-            get { return _events; } 
-            set { _events = value; }
-        }
-
 
         #region Static
 
