@@ -447,6 +447,8 @@ namespace PhotoGalleryApp.ViewModels
         /// </summary>
         public void AddFiles()
         {
+            List<Media> media = new List<Media>();
+
             OpenFileDialog fileDialog = new OpenFileDialog();
             fileDialog.Multiselect = true;
             fileDialog.Filter = "Media files (*.png;*.jpeg;*.jpg,*.mp4)|*.png;*.jpeg;*.jpg;*.mp4";
@@ -465,12 +467,11 @@ namespace PhotoGalleryApp.ViewModels
                     else
                         m = new Video(filename);
 
-                    MediaCollectionVM.MediaCollectionModel.Add(m);
-
-                    MediaViewModel vm = MediaViewModel.CreateMediaViewModel(m, true, 0, MediaCollectionVM.ThumbnailHeight);
-                    MediaCollectionVM.AddMediaItem(vm);
+                    media.Add(m);
                 }
             }
+
+            MediaCollectionVM.AddMediaItems(media);
         }
 
         #endregion AddFiles

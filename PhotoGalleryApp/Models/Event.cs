@@ -24,7 +24,7 @@ namespace PhotoGalleryApp.Models
         public Event(string name)
         {
             _name = name;
-            _collection = new MediaCollection(name);
+            _collection = new MediaCollection();
         }
 
 

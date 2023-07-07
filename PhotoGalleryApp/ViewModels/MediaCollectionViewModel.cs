@@ -153,16 +153,51 @@ namespace PhotoGalleryApp.ViewModels
             return _mediaList;
         }
 
-
-        //TODO This should update the MediaCollection as well.
-        public void AddMediaItem(ICollectableViewModel vm)
+        /// <summary>
+        /// Adds a single Media item to the associated MediaCollection. If you have multiple items to
+        /// add, call AddMediaItems(). Calling this several times may call Refresh() on the MediaView
+        /// multiple times, which will cause binding errors.
+        /// </summary>
+        /// <param name="media">The Media object to add</param>
+        public void AddMediaItem(Media media)
         {
+            // Disable Refresh, because it'll be called when adding to the MediaView
+            DisableMediaViewRefresh = true;
+
+            MediaViewModel vm = MediaViewModel.CreateMediaViewModel(media, true, 0, ThumbnailHeight);
+
+            // 1) Add to the MediaCollection first, so the tags are updated
+            MediaCollectionModel.Add(media);
+
+            DisableMediaViewRefresh = false;
+
+
+            // Cancel existing load tasks
             _imageLoadID++;
 
+            // 2) Then update the View, which will cause a Refresh
             _mediaList.Add(vm);
 
             //TODO is this right?
+            // Start another load task
             ScrollChangedStopped(null, null);
+        }
+
+        /// <summary>
+        /// Adds multiple Media items to the associated MediaCollection
+        /// </summary>
+        /// <param name="media">The Media object to add</param>
+        public void AddMediaItems(List<Media> media)
+        {
+            // Stop Refresh() from getting called, because adding the item will cause that.
+            DisableMediaViewRefresh = true;
+
+            foreach(Media m in media)
+            {
+                AddMediaItem(m);
+            }
+
+            DisableMediaViewRefresh = false;
         }
 
 

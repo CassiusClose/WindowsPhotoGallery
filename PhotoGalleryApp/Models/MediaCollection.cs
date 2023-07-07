@@ -19,22 +19,16 @@ namespace PhotoGalleryApp.Models
     {
         #region Constructors
 
-        public MediaCollection() : this("coll") { }
-
         /// <summary>
         /// Creates a MediaGallery object with the given name.
         /// </summary>
-        /// <param name="name">The name of the collection.</param>
-        public MediaCollection(string name)
+        public MediaCollection()
         {
-            _name = name;
             Tags = new RangeObservableCollection<string>();
             DisableTagUpdate = false;
         }
 
         #endregion Constructors
-
-        private string _name;
 
 
         #region Fields and Properties
@@ -68,7 +62,8 @@ namespace PhotoGalleryApp.Models
         /// </summary>
         public void UpdateTags()
         {
-            Trace.WriteLine("Update Tags: " + _name);
+            //TODO Could be more efficient, by only updating based on what has changed, either from add, remove, etc.
+
             ObservableCollection<string> newTags = new ObservableCollection<string>();
             ObservableCollection<string> allTags = new ObservableCollection<string>();
 
@@ -162,7 +157,7 @@ namespace PhotoGalleryApp.Models
                 UpdateTags();
         }
 
-
+        
         /**
          * Removes a media item from the collection 
          */
