@@ -24,6 +24,7 @@
         <local:MediaCollection
             Grid.Row="2"
             DataContext="{Binding MediaCollectionVM}"
+            EnableScroll="False"
             />
     </Grid>
 </UserControl>

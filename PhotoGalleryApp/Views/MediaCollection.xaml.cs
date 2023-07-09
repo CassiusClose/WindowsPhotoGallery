@@ -26,9 +26,8 @@ namespace PhotoGalleryApp.Views
         public MediaCollection()
         {
             InitializeComponent();
+
         }
-
-
 
         /*
          * In order to size the images properly, the collection needs to know the max thumbnail height in the code behind. To do this, make it a DependencyProperty.
@@ -41,6 +40,19 @@ namespace PhotoGalleryApp.Views
         }
 
 
+        public static readonly DependencyProperty EnableScrollProperty = DependencyProperty.Register("EnableScroll", typeof(bool), typeof(MediaCollection),
+            new UIPropertyMetadata(true));
+        public bool EnableScroll
+        {
+            get { return (bool)GetValue(EnableScrollProperty); }
+            set {
+                SetValue(EnableScrollProperty, value);
+                UpdateScrollBarVis();
+                RecalcImageSizes();
+            }
+        }
+
+
 
         /**
          * If the user scrolls the mouse wheel when the mouse is anywhere within the ScrollViewer,
@@ -48,8 +60,11 @@ namespace PhotoGalleryApp.Views
          */
         private void ScrollViewer_MouseWheel(object sender, MouseWheelEventArgs e)
         {
-            int offset = e.Delta;
-            ImagesScrollViewer.ScrollToVerticalOffset(ImagesScrollViewer.VerticalOffset - offset);
+            if (EnableScroll)
+            {
+                int offset = e.Delta;
+                MediaScrollViewer.ScrollToVerticalOffset(MediaScrollViewer.VerticalOffset - offset);
+            }
             e.Handled = true;
         }
 
@@ -70,6 +85,8 @@ namespace PhotoGalleryApp.Views
          */
         public void UserControl_Loaded(object sender, RoutedEventArgs args)
         {
+            UpdateScrollBarVis();
+
             RecalcImageSizes();
             ((INotifyCollectionChanged)CollectionListBox.Items).CollectionChanged += CollectionListBox_ItemsChanged;
         }
@@ -85,8 +102,20 @@ namespace PhotoGalleryApp.Views
 
 
 
+        private void UpdateScrollBarVis()
+        {
+            if (EnableScroll)
+                MediaScrollViewer.VerticalScrollBarVisibility = ScrollBarVisibility.Auto;
+            else
+                MediaScrollViewer.VerticalScrollBarVisibility = ScrollBarVisibility.Hidden;
+        }
+
+
+
+
 
         private const int COLLECTION_RIGHT_PADDING = 25;
+        private const int COLLECTION_RIGHT_PADDING_NOSCROLL = 10;
 
         /*
          * The images are displayed in rows, but could be different sizes. This takes an approach similar to the way Google Photos does it,
@@ -98,7 +127,12 @@ namespace PhotoGalleryApp.Views
             // What should be combined width of every image in each row at the end of this function. Subtract some from the container's width to account
             // for padding between images and possibly the scroll bar as well. There's probably a better way to do this, but I'm not sure what the
             // padding on the images is right now.
-            double containerWidth = this.ActualWidth - COLLECTION_RIGHT_PADDING;
+            double containerWidth;
+            if(EnableScroll)
+                containerWidth = this.ActualWidth - COLLECTION_RIGHT_PADDING;
+            else
+                containerWidth = this.ActualWidth - COLLECTION_RIGHT_PADDING_NOSCROLL;
+
 
             int itemsCount = CollectionListBox.Items.Count;
             for (int i = 0; i < itemsCount;)
