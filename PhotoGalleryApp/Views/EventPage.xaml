@@ -9,6 +9,7 @@
     <Grid>
         <Grid.RowDefinitions>
             <RowDefinition Height="40"/>
+            <RowDefinition Height="40"/>
             <RowDefinition/>
         </Grid.RowDefinitions>
 
@@ -16,8 +17,12 @@
             Grid.Row="0"  
             Content="{Binding Name}"
             />
-        <local:MediaCollection
+        <Label
             Grid.Row="1"
+            Content="{Binding TimeRangeDisplay}"
+            />
+        <local:MediaCollection
+            Grid.Row="2"
             DataContext="{Binding MediaCollectionVM}"
             />
     </Grid>

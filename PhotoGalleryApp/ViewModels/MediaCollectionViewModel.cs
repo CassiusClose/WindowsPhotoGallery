@@ -459,7 +459,8 @@ namespace PhotoGalleryApp.ViewModels
                 lastSelectedMedia = null;
 
             // Update the selection-sensitive commands to enable or disable them.
-            MediaSelectedChanged();
+            if(MediaSelectedChanged != null)
+                MediaSelectedChanged();
         }
 
         #endregion Media Selection

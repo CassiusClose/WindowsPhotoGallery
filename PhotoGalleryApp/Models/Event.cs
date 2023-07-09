@@ -31,36 +31,6 @@ namespace PhotoGalleryApp.Models
         }
 
 
-        /* 
-         * When changes in the collection, recalculate the time-range of the event.
-         */
-        private void _mediaChanged(object? sender, NotifyCollectionChangedEventArgs e)
-        {
-            //TODO For efficiency, detect what has changed and only use that to update timestamp
-            DateTime? earliest = null;
-            foreach(ICollectable c in _collection)
-            {
-                if(c is Media)
-                {
-                    DateTime t = ((Media)c).Timestamp;
-                    if (t < earliest || earliest == null)
-                        earliest = t;
-                }
-                else
-                {
-                    DateTime t = ((Event)c).StartTimestamp;
-                    if (t < earliest || earliest == null)
-                        earliest = t;
-                }
-            }
-
-
-            //TODO In a case like this, does anything update the viewmodels? Presumably the change action
-            // will come from a viewmodel, but what if there's another viewmodel that needs an update?
-            if(earliest != null)
-                _startTimestamp = (DateTime)earliest;
-        }
-
 
         #region Fields and Properties
 
@@ -106,8 +76,51 @@ namespace PhotoGalleryApp.Models
         }
 
 
+        private DateTime _endTimestamp;
+        public DateTime EndTimestamp
+        {
+            get { return _endTimestamp; }
+        }
+
+
         #endregion Fields and Properties
 
+
+        /* 
+         * When changes in the collection, recalculate the time-range of the event.
+         */
+        private void _mediaChanged(object? sender, NotifyCollectionChangedEventArgs e)
+        {
+            //TODO For efficiency, detect what has changed and only use that to update timestamp
+            DateTime? earliest = null;
+            DateTime? latest = null;
+            foreach(ICollectable c in _collection)
+            {
+                if(c is Media)
+                {
+                    DateTime t = ((Media)c).Timestamp;
+                    if (t < earliest || earliest == null)
+                        earliest = t;
+                    if (t > latest || latest == null)
+                        latest = t;
+                }
+                else
+                {
+                    DateTime t = ((Event)c).StartTimestamp;
+                    if (t < earliest || earliest == null)
+                        earliest = t;
+                    if (t > latest || latest == null)
+                        latest = t;
+                }
+            }
+
+            //TODO In a case like this, does anything update the viewmodels? Presumably the change action
+            // will come from a viewmodel, but what if there's another viewmodel that needs an update?
+            if(earliest != null)
+                _startTimestamp = (DateTime)earliest;
+            if (latest != null)
+                _endTimestamp = (DateTime)latest;
+        }
 
 
         /// <summary>

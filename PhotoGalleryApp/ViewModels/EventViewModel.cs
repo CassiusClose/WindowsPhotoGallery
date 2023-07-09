@@ -20,7 +20,7 @@ namespace PhotoGalleryApp.ViewModels
             _nav = nav;
             _event = evnt;
 
-            _mediaCollectionVM = new MediaCollectionViewModel(nav, _event.Collection, null);
+            _mediaCollectionVM = new MediaCollectionViewModel(nav, _event.Collection, new SortDescription("Timestamp", ListSortDirection.Ascending));
             _mediaCollectionVM.MediaOpened += MediaOpened;
         }
 
@@ -30,7 +30,7 @@ namespace PhotoGalleryApp.ViewModels
          */
         private void MediaOpened(ICollectableViewModel item)
         {
-            if(item is MediaViewModel)
+            if (item is MediaViewModel)
             {
                 // Get a list of all the currently visible images
                 //TODO Abstract here and galleryvm, and make efficient
@@ -92,6 +92,28 @@ namespace PhotoGalleryApp.ViewModels
         public DateTime Timestamp
         {
             get { return _event.StartTimestamp; }
+        }
+
+        public DateTime EndTimestamp
+        {
+            get { return _event.EndTimestamp; }
+        }
+
+        public string TimeRangeDisplay
+        {
+            get {
+                string start = Timestamp.Month.ToString() + "/" + Timestamp.Day.ToString() + "/" + Timestamp.Year.ToString();
+
+                if(Timestamp.Year == EndTimestamp.Year && Timestamp.Month == EndTimestamp.Month && Timestamp.Day == EndTimestamp.Day)
+                {
+                    return start;
+                }
+                else
+                {
+                    string end = EndTimestamp.Month.ToString() + "/" + EndTimestamp.Day.ToString() + "/" + EndTimestamp.Year.ToString();
+                    return start + " - " + end;
+                }
+            }
         }
 
 
