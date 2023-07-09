@@ -380,8 +380,8 @@ namespace PhotoGalleryApp.ViewModels
 
         #region Events
 
-        private ObservableCollection<EventViewModel> _events = new ObservableCollection<EventViewModel>();
-        public ObservableCollection<EventViewModel> Events { get { return _events; } }
+        private ObservableCollection<EventTileViewModel> _events = new ObservableCollection<EventTileViewModel>();
+        public ObservableCollection<EventTileViewModel> Events { get { return _events; } }
 
         /* When the media collection changes, rebuild the list of events */
         private void MediaCollectionChanged(object? sender, NotifyCollectionChangedEventArgs e)
@@ -397,7 +397,7 @@ namespace PhotoGalleryApp.ViewModels
 
             foreach(Event e in MediaCollectionVM.MediaCollectionModel.GetEvents())
             {
-                _events.Add(new EventViewModel(e, _navigator, false));
+                _events.Add(new EventTileViewModel(e, _navigator));
             }
             OnPropertyChanged("Events");
         }
@@ -416,8 +416,8 @@ namespace PhotoGalleryApp.ViewModels
             PhotoGalleryApp.Views.ItemChosenEventArgs args = (PhotoGalleryApp.Views.ItemChosenEventArgs)eArgs;
             string eventName = args.Item;
 
-            EventViewModel? eventvm = null;
-            foreach(EventViewModel e in Events)
+            EventTileViewModel? eventvm = null;
+            foreach(EventTileViewModel e in Events)
             {
                 //TODO Either don't allow events with same name or do the id some other way
                 if(e.Name == eventName)
@@ -435,14 +435,15 @@ namespace PhotoGalleryApp.ViewModels
 
             // Build lists for batch operations
             List<ICollectableViewModel> mediavms = MediaCollectionVM.GetCurrentlySelectedItems();
-            List<ICollectable> media = new List<ICollectable>();
+            //List<ICollectable> media = new List<ICollectable>();
             foreach(ICollectableViewModel cvm in mediavms)
             {
-                media.Add(cvm.GetModel());
+                //media.Add(cvm.GetModel());
+                ((Event)eventvm.GetModel()).Collection.Add(cvm.GetModel());
             }
 
             // Add to event and remove from here
-            eventvm.MediaCollectionVM.AddMediaItems(media);
+            //eventvm.MediaCollectionVM.AddMediaItems(media);
             MediaCollectionVM.RemoveMediaItems(mediavms);
         }
 

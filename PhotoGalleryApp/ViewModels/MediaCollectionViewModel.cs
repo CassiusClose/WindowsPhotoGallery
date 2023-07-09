@@ -40,7 +40,7 @@ namespace PhotoGalleryApp.ViewModels
         /// </summary>
         /// <param name="collection">The MediaCollection model to be associated with</param>
         /// <param name="sorting">A SortDescription object describing how to sort the collection of media. Can be null</param>
-        public MediaCollectionViewModel(NavigatorViewModel nav, MediaCollection collection, SortDescription? sorting, bool init=true)
+        public MediaCollectionViewModel(NavigatorViewModel nav, MediaCollection collection, SortDescription? sorting)
         {
             _nav = nav;
 
@@ -66,8 +66,7 @@ namespace PhotoGalleryApp.ViewModels
             _scrollChangedTimer.Tick += ScrollChangedStopped;
 
             // Load all the media in the collection 
-            if(init)
-                InitAndLoadAllMedia();
+            InitAndLoadAllMedia();
             // Don't need this handler for the initialization of the VMs, so hook it after
             MediaCollectionModel.CollectionChanged += MediaCollection_CollectionChanged;
         }
@@ -163,7 +162,7 @@ namespace PhotoGalleryApp.ViewModels
             if (media is Media)
                 vm = MediaViewModel.CreateMediaViewModel((Media)media, true, 0, ThumbnailHeight);
             else
-                vm = new EventViewModel((Event)media, _nav);
+                vm = new EventTileViewModel((Event)media, _nav);
 
             // 1) Add to the MediaCollection first, so the tags are updated
             MediaCollectionModel.Add(media);
@@ -484,7 +483,7 @@ namespace PhotoGalleryApp.ViewModels
                 if (MediaCollectionModel[i] is Media)
                     _mediaList.Add(MediaViewModel.CreateMediaViewModel((Media)MediaCollectionModel[i], true, 0, ThumbnailHeight));
                 else
-                    _mediaList.Add(new EventViewModel((Event)MediaCollectionModel[i], _nav));
+                    _mediaList.Add(new EventTileViewModel((Event)MediaCollectionModel[i], _nav));
             }
 
             LoadAllMedia();
@@ -519,7 +518,7 @@ namespace PhotoGalleryApp.ViewModels
                 if (item is MediaViewModel)
                     await Task.Run(() => { ((MediaViewModel)item).LoadMedia(); });
                 else
-                    await Task.Run(() => { ((EventViewModel)item).LoadThumbnail(ThumbnailHeight); });
+                    await Task.Run(() => { ((EventTileViewModel)item).LoadThumbnail(ThumbnailHeight); });
 
                 if (taskID != _imageLoadID)
                     break;
@@ -546,7 +545,7 @@ namespace PhotoGalleryApp.ViewModels
                 if (vm is MediaViewModel)
                     await Task.Run(() => { ((MediaViewModel)vm).LoadMedia(); });
                 else
-                    await Task.Run(() => { ((EventViewModel)vm).LoadThumbnail(ThumbnailHeight); });
+                    await Task.Run(() => { ((EventTileViewModel)vm).LoadThumbnail(ThumbnailHeight); });
 
                 if (taskID != _imageLoadID)
                     break;

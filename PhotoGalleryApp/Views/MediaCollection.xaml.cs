@@ -179,10 +179,10 @@ namespace PhotoGalleryApp.Views
             MediaViewModel mvm;
 
             double ar;
-            if (vm is EventViewModel)
+            if (vm is EventTileViewModel)
             {
-                if (((EventViewModel)vm).Thumbnail != null)
-                    mvm = ((EventViewModel)vm).Thumbnail;
+                if (((EventTileViewModel)vm).Thumbnail != null)
+                    mvm = ((EventTileViewModel)vm).Thumbnail;
                 else
                 {
                     return 1;

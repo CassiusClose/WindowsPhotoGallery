@@ -25,7 +25,7 @@
 
 
         <!-- How to display an event -->
-        <DataTemplate DataType="{x:Type vms:EventViewModel}">
+        <DataTemplate DataType="{x:Type vms:EventTileViewModel}">
             <Grid>
                 <Image Style="{StaticResource CollectionThumbnailImage}">
                     <Image.Source>

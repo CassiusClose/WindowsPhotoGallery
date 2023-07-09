@@ -19,12 +19,12 @@ namespace PhotoGalleryApp.Converters
     {
         public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
         {
-            ObservableCollection<EventViewModel> e = (ObservableCollection<EventViewModel>)value;
+            ObservableCollection<EventTileViewModel> e = (ObservableCollection<EventTileViewModel>)value;
             if(e == null)
                 throw new ArgumentNullException(nameof(value));
 
             ObservableCollection<string> names = new ObservableCollection<string>();
-            foreach(EventViewModel vm in e)
+            foreach(EventTileViewModel vm in e)
                 names.Add(vm.Name);
 
             return names;

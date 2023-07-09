@@ -1,0 +1,89 @@
+﻿using System;
+using System.Collections.Generic;
+using System.ComponentModel;
+using System.Diagnostics;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+using System.Windows.Xps.Packaging;
+using PhotoGalleryApp.Models;
+
+namespace PhotoGalleryApp.ViewModels
+{
+    /// <summary>
+    /// The viewmodel for a tile display of a specific Event object, such as when
+    /// displaying a MediaCollection.
+    /// </summary>
+    class EventTileViewModel : ICollectableViewModel
+    {
+        public EventTileViewModel(Event evnt, NavigatorViewModel nav, bool init=true)
+        {
+            _nav = nav;
+            _event = evnt;
+        }
+
+        /// <summary>
+        /// Returns the ICollectable model associated with this viewmodel
+        /// </summary>
+        /// <returns>The ICollectable model associated with this viewmodel</returns>
+        public override ICollectable GetModel()
+        {
+            return Event;
+        }
+
+        private NavigatorViewModel _nav;
+
+        private Event _event;
+        public Event Event { get { return _event; } }
+
+
+
+        /// <summary>
+        /// The event's display name
+        /// </summary>
+        public string Name
+        {
+            get { return _event.Name; }
+        }
+
+        /// <summary>
+        /// The event's timestamp used for sorting, the earliest timestamp of its media
+        /// </summary>
+        public DateTime Timestamp
+        {
+            get { return _event.StartTimestamp; }
+        }
+
+
+        private MediaViewModel? _thumbnail = null;
+        /// <summary>
+        /// The viewmodel for the event's Thumbnail. If null, there is either no thumbnail 
+        /// chosen for the event, or no class has required the thumbnail to be loaded yet.
+        /// </summary>
+        public MediaViewModel? Thumbnail
+        {
+            get { return _thumbnail; }
+            set
+            {
+                _thumbnail = value;
+                OnPropertyChanged();
+            }
+        }
+
+        /// <summary>
+        /// Create the event thumbnail's viewmodel (Thumbnail) if it doesn't exist, and load
+        /// the image into memory if it hasn't been.
+        /// </summary>
+        /// <param name="thumbnailHeight">The height at which to load the thumbnail</param>
+        public void LoadThumbnail(int thumbnailHeight)
+        {
+            if (_event.Thumbnail != null)
+            {
+                if(Thumbnail == null)
+                    Thumbnail = MediaViewModel.CreateMediaViewModel(_event.Thumbnail, true, 0, thumbnailHeight);
+
+                Thumbnail.LoadMedia();
+            }
+        }
+    }
+}
