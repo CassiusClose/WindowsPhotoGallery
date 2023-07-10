@@ -39,6 +39,7 @@ namespace PhotoGalleryApp.ViewModels
             _removeTagFromFilterCommand = new RelayCommand(RemoveTagFromFilter);
             _saveGalleryCommand = new RelayCommand(SaveGallery);
             _escapePressedCommand = new RelayCommand(EscapePressed);
+            _changeThumbnailHeightCommand = new RelayCommand(ChangeThumbnailHeight);
 
             // Init the media collection
             gallery.MediaList.MediaTagsChanged += MediaTagsChanged;
@@ -585,6 +586,18 @@ namespace PhotoGalleryApp.ViewModels
             MediaCollectionVM.DisableMediaViewRefresh = false;
         }
         #endregion RemoveSelected
+
+
+        private RelayCommand _changeThumbnailHeightCommand;
+        public ICommand ChangeThumbnailHeightCommand => _changeThumbnailHeightCommand;
+
+        public void ChangeThumbnailHeight()
+        {
+            if (MediaCollectionVM.ThumbnailHeight == 200)
+                MediaCollectionVM.ThumbnailHeight = 100;
+            else
+                MediaCollectionVM.ThumbnailHeight = 200;
+        }
 
         #region KeyCommands
 

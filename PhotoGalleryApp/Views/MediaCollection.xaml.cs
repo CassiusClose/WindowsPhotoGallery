@@ -32,24 +32,46 @@ namespace PhotoGalleryApp.Views
         /*
          * In order to size the images properly, the collection needs to know the max thumbnail height in the code behind. To do this, make it a DependencyProperty.
          */
-        public static readonly DependencyProperty ThumbnailHeightProperty = DependencyProperty.Register("ThumbnailHeight", typeof(int), typeof(MediaCollection));
+        public static readonly DependencyProperty ThumbnailHeightProperty = DependencyProperty.Register("ThumbnailHeight", typeof(int), typeof(MediaCollection),
+            new PropertyMetadata(ThumbnailHeightChangedCallback));
         public int ThumbnailHeight
         {
             get { return (int)GetValue(ThumbnailHeightProperty); }
-            set { SetValue(ThumbnailHeightProperty, value); }
+            set { 
+                SetValue(ThumbnailHeightProperty, value);
+                RecalcImageSizes();
+            }
+        }
+
+        private static void ThumbnailHeightChangedCallback(DependencyObject sender, DependencyPropertyChangedEventArgs e)
+        {
+            MediaCollection mediaCollection = (MediaCollection)sender;
+            mediaCollection.RecalcImageSizes();
         }
 
 
-        public static readonly DependencyProperty EnableScrollProperty = DependencyProperty.Register("EnableScroll", typeof(bool), typeof(MediaCollection),
-            new UIPropertyMetadata(true));
-        public bool EnableScroll
+        public static readonly DependencyProperty PreviewModeProperty = DependencyProperty.Register("PreviewMode", typeof(bool), typeof(MediaCollection),
+            new PropertyMetadata(false));
+        public bool PreviewMode
         {
-            get { return (bool)GetValue(EnableScrollProperty); }
-            set {
-                SetValue(EnableScrollProperty, value);
-                UpdateScrollBarVis();
-                RecalcImageSizes();
-            }
+            get { return (bool)GetValue(PreviewModeProperty); }
+            set { SetValue(PreviewModeProperty, value); }
+        }
+
+
+        public static readonly DependencyProperty NumRowsProperty = DependencyProperty.Register("PreviewNumRows", typeof(int), typeof(MediaCollection),
+            new PropertyMetadata(0, NumRowsChangedCallback));
+        public int NumRows
+        {
+            get { return (int)GetValue(NumRowsProperty); }
+            set { SetValue(NumRowsProperty, value); }
+        }
+
+        private static void NumRowsChangedCallback(DependencyObject sender, DependencyPropertyChangedEventArgs e)
+        {
+            MediaCollection mediaCollection = (MediaCollection)sender;
+            mediaCollection.UpdateScrollBarVis();
+            mediaCollection.RecalcImageSizes();
         }
 
 
@@ -60,7 +82,7 @@ namespace PhotoGalleryApp.Views
          */
         private void ScrollViewer_MouseWheel(object sender, MouseWheelEventArgs e)
         {
-            if (EnableScroll)
+            if (NumRows > 0)
             {
                 int offset = e.Delta;
                 MediaScrollViewer.ScrollToVerticalOffset(MediaScrollViewer.VerticalOffset - offset);
@@ -104,10 +126,10 @@ namespace PhotoGalleryApp.Views
 
         private void UpdateScrollBarVis()
         {
-            if (EnableScroll)
-                MediaScrollViewer.VerticalScrollBarVisibility = ScrollBarVisibility.Auto;
+            if (NumRows > 0)
+                MediaScrollViewer.VerticalScrollBarVisibility = ScrollBarVisibility.Disabled;
             else
-                MediaScrollViewer.VerticalScrollBarVisibility = ScrollBarVisibility.Hidden;
+                MediaScrollViewer.VerticalScrollBarVisibility = ScrollBarVisibility.Auto;
         }
 
 
@@ -128,12 +150,14 @@ namespace PhotoGalleryApp.Views
             // for padding between images and possibly the scroll bar as well. There's probably a better way to do this, but I'm not sure what the
             // padding on the images is right now.
             double containerWidth;
-            if(EnableScroll)
-                containerWidth = this.ActualWidth - COLLECTION_RIGHT_PADDING;
-            else
+            if(NumRows > 0)
                 containerWidth = this.ActualWidth - COLLECTION_RIGHT_PADDING_NOSCROLL;
+            else
+                containerWidth = this.ActualWidth - COLLECTION_RIGHT_PADDING;
 
 
+            int numRows = 0;
+            double totalHeight = 0;
             int itemsCount = CollectionListBox.Items.Count;
             for (int i = 0; i < itemsCount;)
             {
@@ -195,6 +219,16 @@ namespace PhotoGalleryApp.Views
                     // of the width.
                     lbi.MaxHeight = Math.Floor(ThumbnailHeight * scale);
                     lbi.Height = Math.Floor(ThumbnailHeight * scale);
+                }
+
+                totalHeight += ThumbnailHeight * scale;
+
+                numRows++;
+                if(PreviewNumRows > 0 && numRows == PreviewNumRows)
+                {
+                    MediaScrollViewer.Height = totalHeight;
+                    MediaScrollViewer.MaxHeight = totalHeight;
+                    break;
                 }
             }
         }

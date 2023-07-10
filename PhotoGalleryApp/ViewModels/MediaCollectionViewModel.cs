@@ -136,9 +136,21 @@ namespace PhotoGalleryApp.ViewModels
         /// Stores the size of the collection's thumbnails. Right now, this is a hard coded value. Later, it will
         /// be an adjustable slider.
         /// </summary>
+        private int _thumbnailHeight = 200;
         public int ThumbnailHeight
         {
-            get { return 200; }
+            get { return _thumbnailHeight; }
+            set
+            {
+                _thumbnailHeight = value;
+                OnPropertyChanged();
+
+                _imageLoadID++;
+
+                //TODO is this right?
+                // Start another load task
+                ScrollChangedStopped(null, null);
+            }
         }
 
 
@@ -506,6 +518,9 @@ namespace PhotoGalleryApp.ViewModels
          */
         private async void LoadAllMedia() 
         {
+            //TODO When you fix the scrollviewer only loading, disable loading all media when in
+            // preview mode
+
             // Save this task's ID to a local variable
             uint taskID = ++_imageLoadID;
 

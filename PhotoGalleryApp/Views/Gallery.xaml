@@ -112,6 +112,8 @@
                     </ei:EventTrigger>
                 </ei:Interaction.Triggers>
             </local:ChooserDropDown>
+
+            <Button Command="{Binding ChangeThumbnailHeightCommand}">Change Thumbnail Height</Button>
         </StackPanel>
 
         <!-- Tag Filtering panel -->

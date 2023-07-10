@@ -143,6 +143,8 @@
              x:Name="CollectionListBox" 
              Style="{StaticResource CollectionListBoxStyle}" 
              ItemsSource="{Binding Path=MediaView, Mode=OneWay}"
+             ScrollViewer.VerticalScrollBarVisibility="Disabled"
+             ScrollViewer.HorizontalScrollBarVisibility="Disabled"
             >
             <ListBox.ItemContainerStyle>
                 <Style TargetType="ListBoxItem">
