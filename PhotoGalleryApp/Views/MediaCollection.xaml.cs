@@ -224,7 +224,7 @@ namespace PhotoGalleryApp.Views
                 totalHeight += ThumbnailHeight * scale;
 
                 numRows++;
-                if(PreviewNumRows > 0 && numRows == PreviewNumRows)
+                if(NumRows > 0 && numRows == NumRows)
                 {
                     MediaScrollViewer.Height = totalHeight;
                     MediaScrollViewer.MaxHeight = totalHeight;
