@@ -17,7 +17,7 @@
             />
         <local:MediaCollection
             DataContext="{Binding MediaCollectionVM}"
-            PreviewNumRows="2"
+            NumRows="2"
             />
     </StackPanel>
 </UserControl>
