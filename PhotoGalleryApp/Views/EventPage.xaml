@@ -18,6 +18,8 @@
         <local:MediaCollection
             DataContext="{Binding MediaCollectionVM}"
             NumRows="2"
+            PreviewMode="True"
+            ThumbnailHeight="{Binding ThumbnailHeight}" 
             />
     </StackPanel>
 </UserControl>

@@ -58,6 +58,16 @@ namespace PhotoGalleryApp.Views
             set { SetValue(PreviewModeProperty, value); }
         }
 
+        public Visibility PreviewVisibility
+        {
+            get 
+            {
+                if (PreviewMode)
+                    return Visibility.Hidden;
+                return Visibility.Visible;
+            }
+        }
+
 
         public static readonly DependencyProperty NumRowsProperty = DependencyProperty.Register("PreviewNumRows", typeof(int), typeof(MediaCollection),
             new PropertyMetadata(0, NumRowsChangedCallback));
@@ -82,7 +92,7 @@ namespace PhotoGalleryApp.Views
          */
         private void ScrollViewer_MouseWheel(object sender, MouseWheelEventArgs e)
         {
-            if (NumRows > 0)
+            if (NumRows == 0)
             {
                 int offset = e.Delta;
                 MediaScrollViewer.ScrollToVerticalOffset(MediaScrollViewer.VerticalOffset - offset);

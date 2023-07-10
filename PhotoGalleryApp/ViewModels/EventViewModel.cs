@@ -23,6 +23,7 @@ namespace PhotoGalleryApp.ViewModels
 
             _mediaCollectionVM = new MediaCollectionViewModel(nav, _event.Collection, new SortDescription("Timestamp", ListSortDirection.Ascending));
             _mediaCollectionVM.MediaOpened += MediaOpened;
+            _mediaCollectionVM.ThumbnailHeight = 150;
         }
 
         /*
