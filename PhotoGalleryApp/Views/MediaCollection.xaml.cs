@@ -1,4 +1,5 @@
-﻿using PhotoGalleryApp.ViewModels;
+﻿using PhotoGalleryApp.Utils;
+using PhotoGalleryApp.ViewModels;
 using System;
 using System.Collections.Generic;
 using System.Collections.Specialized;
@@ -27,7 +28,36 @@ namespace PhotoGalleryApp.Views
         {
             InitializeComponent();
 
+            // This assumes this control will always be used with MediaCollectionVM, or some other
+            // DataContext that has a PreviewMode. If not, remove this and bind traditionally when
+            // using the control
+            SetBinding(PreviewModeProperty, new Binding("PreviewMode"));
         }
+
+        /*
+         * Called when the user control is loaded. Before this point, the ListBox that holds the images has not been initialized, but the ListBox
+         * ItemsChanged listener will be called anyway. 
+         */
+        public void UserControl_Loaded(object sender, RoutedEventArgs args)
+        {
+            UpdateVisibleItems();
+            // If in preview mode, the MediaCollectionVM will not load all items. It will only load visible
+            // items. Loading this control will trigger a scroll changed command, but before here, where we
+            // can mark items as visible. So trigger the command so the vm can load the visible items.
+            if(PreviewMode)
+            {
+                MediaCollectionViewModel vm = (MediaCollectionViewModel)DataContext;
+                if(vm.ScrollChangedCommand.CanExecute(MediaScrollViewer))
+                    vm.ScrollChangedCommand.Execute(MediaScrollViewer);
+            }
+
+
+            UpdateScrollBarVis();
+
+            RecalcImageSizes();
+            ((INotifyCollectionChanged)CollectionListBox.Items).CollectionChanged += CollectionListBox_ItemsChanged;
+        }
+
 
         /*
          * In order to size the images properly, the collection needs to know the max thumbnail height in the code behind. To do this, make it a DependencyProperty.
@@ -109,18 +139,6 @@ namespace PhotoGalleryApp.Views
         public void CollectionListBox_ItemsChanged(object sender, NotifyCollectionChangedEventArgs args)
         {
             RecalcImageSizes();
-        }
-
-        /*
-         * Called when the user control is loaded. Before this point, the ListBox that holds the images has not been initialized, but the ListBox
-         * ItemsChanged listener will be called anyway. 
-         */
-        public void UserControl_Loaded(object sender, RoutedEventArgs args)
-        {
-            UpdateScrollBarVis();
-
-            RecalcImageSizes();
-            ((INotifyCollectionChanged)CollectionListBox.Items).CollectionChanged += CollectionListBox_ItemsChanged;
         }
 
         /*
@@ -287,6 +305,29 @@ namespace PhotoGalleryApp.Views
             }
 
             return ar;
+        }
+
+
+        private void MediaScrollViewer_ScrollChanged(object sender, ScrollChangedEventArgs eArgs)
+        {
+            UpdateVisibleItems();
+        }
+
+        /*
+         * Mark the visible and not-visible items.
+         */
+        private void UpdateVisibleItems()
+        {
+            foreach(ICollectableViewModel item in CollectionListBox.Items)
+            {
+                item.IsInView = false;
+            }
+
+            List<ICollectableViewModel> list = DisplayUtils.GetVisibleItemsFromListBox(CollectionListBox, MediaScrollViewer).Cast<ICollectableViewModel>().ToList();
+            foreach(ICollectableViewModel item in list)
+            {
+                item.IsInView = true;
+            }
         }
     }
 }

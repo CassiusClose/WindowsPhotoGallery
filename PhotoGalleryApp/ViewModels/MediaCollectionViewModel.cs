@@ -40,9 +40,10 @@ namespace PhotoGalleryApp.ViewModels
         /// </summary>
         /// <param name="collection">The MediaCollection model to be associated with</param>
         /// <param name="sorting">A SortDescription object describing how to sort the collection of media. Can be null</param>
-        public MediaCollectionViewModel(NavigatorViewModel nav, MediaCollection collection, SortDescription? sorting)
+        public MediaCollectionViewModel(NavigatorViewModel nav, MediaCollection collection, SortDescription? sorting, bool previewMode = false)
         {
             _nav = nav;
+            _previewMode = previewMode;
 
             // Init commands
             _selectMediaCommand = new RelayCommand(SelectMedia);
@@ -145,14 +146,21 @@ namespace PhotoGalleryApp.ViewModels
                 _thumbnailHeight = value;
                 OnPropertyChanged();
 
-                _imageLoadID++;
-
-                //TODO is this right?
                 // Start another load task
-                ScrollChangedStopped(null, null);
+                LoadVisibleMediaThenAll();
             }
         }
 
+
+        private bool _previewMode = false;
+        /// <summary>
+        /// Whether the collection should be displayed in preview mode, where the media is not
+        /// selectable and there are no options.
+        /// </summary>
+        public bool PreviewMode
+        {
+            get { return _previewMode; }
+        }
 
 
 
@@ -195,12 +203,9 @@ namespace PhotoGalleryApp.ViewModels
         public void AddMediaItem(ICollectable media)
         {
             _addMediaItem(media);
-            // Cancel existing load tasks
-            _imageLoadID++;
 
-            //TODO is this right?
             // Start another load task
-            ScrollChangedStopped(null, null);
+            LoadVisibleMediaThenAll();
 
             // Removing items will cause the view to remove them, but need to call Refresh() here
             // to resort them as well.
@@ -224,15 +229,12 @@ namespace PhotoGalleryApp.ViewModels
 
             DisableMediaViewRefresh = false;
 
-            _imageLoadID++;
-
-            //TODO is this right?
             // Start another load task
-            LoadAllMedia();
+            LoadVisibleMediaThenAll();
 
             // Removing items will cause the view to remove them, but need to call Refresh() her/
             // to resort them as well.
-            //MediaView.Refresh();
+            MediaView.Refresh();
         }
         
 
@@ -255,12 +257,8 @@ namespace PhotoGalleryApp.ViewModels
         {
             _removeMediaItem(vm);
 
-            // Cancel existing load tasks
-            _imageLoadID++;
-
-            //TODO is this right?
             // Start another load task
-            ScrollChangedStopped(null, null);
+            LoadVisibleMediaThenAll();
 
             // Removing items will cause the view to remove them, but need to call Refresh() here
             // to resort them as well.
@@ -278,12 +276,8 @@ namespace PhotoGalleryApp.ViewModels
 
             DisableMediaViewRefresh = false;
 
-            // Cancel existing load tasks
-            _imageLoadID++;
-
-            //TODO is this right?
             // Start another load task
-            ScrollChangedStopped(null, null);
+            LoadVisibleMediaThenAll();
 
             // Removing items will cause the view to remove them, but need to call Refresh() here
             // to resort them as well.
@@ -518,8 +512,8 @@ namespace PhotoGalleryApp.ViewModels
          */
         private async void LoadAllMedia() 
         {
-            //TODO When you fix the scrollviewer only loading, disable loading all media when in
-            // preview mode
+            if (PreviewMode)
+                return;
 
             // Save this task's ID to a local variable
             uint taskID = ++_imageLoadID;
@@ -577,11 +571,6 @@ namespace PhotoGalleryApp.ViewModels
 
         #region Scroll Events
 
-        // TODO Avoid this?
-        // Use: https://stackoverflow.com/questions/27641606/loading-a-large-amount-of-images-to-be-displayed-in-a-wrappanel/27865101#27865101
-        // Stores a copy of the collection display's ScrollViewer, used to determine what images are currently in view
-        private System.Windows.Controls.ScrollViewer _scrollViewer;
-
         /*
          * This timer is used to decrease the number of ScrollChanged events that are triggered. The issue is that as
          * the user scrolls down, many ScrollChanged events are triggered, not just one when the user stops scrolling.
@@ -606,9 +595,6 @@ namespace PhotoGalleryApp.ViewModels
          */
         private void ScrollChanged(object parameter)
         {
-            // Save the ScrollViewer object locally so that ScrollChangedStopped can use it
-            _scrollViewer = parameter as System.Windows.Controls.ScrollViewer;
-
             // Start/restart the timer
             if (_scrollChangedTimer.IsEnabled)
                 _scrollChangedTimer.Stop();
@@ -625,20 +611,28 @@ namespace PhotoGalleryApp.ViewModels
             // Must stop the timer from repeating infinitely
             _scrollChangedTimer.Stop();
 
-            // Get a list of the current images in view
-            if (_scrollViewer == null)
-            {
-                Trace.WriteLine("FIX THIS");
-                LoadAllMedia();
-            }
-            else
-            {
-                System.Windows.Controls.ListBox lb = _scrollViewer.Content as System.Windows.Controls.ListBox;
-                List<ICollectableViewModel> list = DisplayUtils.GetVisibleItemsFromListBox(lb, Application.Current.MainWindow).Cast<ICollectableViewModel>().ToList();
+            LoadVisibleMediaThenAll();
+        }
 
-                // Load the images in view, and once this is done, continue loading the rest of the images in the collection.
-                LoadPriorityMediaThenAll(list);
+        private void LoadVisibleMediaThenAll()
+        {
+            // Get a list of the current images in view
+            List<ICollectableViewModel> items = _getVisibleItems();
+
+            // Load the images in view, and once this is done, continue loading the rest of the images in the collection.
+            LoadPriorityMediaThenAll(items);
+        }
+
+        private List<ICollectableViewModel> _getVisibleItems()
+        {
+            List<ICollectableViewModel> items = new List<ICollectableViewModel>();
+            foreach (ICollectableViewModel vm in _mediaView)
+            {
+                if (vm.IsInView)
+                    items.Add(vm);
             }
+
+            return items;
         }
         
         #endregion Scroll Events

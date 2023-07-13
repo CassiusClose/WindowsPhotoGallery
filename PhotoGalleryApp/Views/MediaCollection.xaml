@@ -105,7 +105,7 @@
                     </ItemsPanelTemplate>
                 </Setter.Value>
             </Setter>
-            
+
             <!-- Each item is a clickable image. Clicking on the image will open it as a new page in the Navigator. -->
             <Setter Property="ItemTemplate">
                 <Setter.Value>
@@ -124,15 +124,15 @@
             </Setter>
         </Style>
 
-        
     </UserControl.Resources>
 
 
-    <ScrollViewer 
+    <ScrollViewer
         Grid.Row="3" 
-        Name="MediaScrollViewer" 
+        x:Name="MediaScrollViewer" 
         HorizontalScrollBarVisibility="Disabled" 
         PreviewMouseWheel="ScrollViewer_MouseWheel"
+        ScrollChanged="MediaScrollViewer_ScrollChanged"
         >
         <!--
         Make the ScrollChanged event call a command in the view model.

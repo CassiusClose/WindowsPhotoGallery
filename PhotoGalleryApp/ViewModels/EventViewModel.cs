@@ -21,7 +21,7 @@ namespace PhotoGalleryApp.ViewModels
             _nav = nav;
             _event = evnt;
 
-            _mediaCollectionVM = new MediaCollectionViewModel(nav, _event.Collection, new SortDescription("Timestamp", ListSortDirection.Ascending));
+            _mediaCollectionVM = new MediaCollectionViewModel(nav, _event.Collection, new SortDescription("Timestamp", ListSortDirection.Ascending), true);
             _mediaCollectionVM.MediaOpened += MediaOpened;
             _mediaCollectionVM.ThumbnailHeight = 150;
         }

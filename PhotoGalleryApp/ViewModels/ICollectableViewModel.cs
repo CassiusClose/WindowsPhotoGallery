@@ -33,5 +33,19 @@ namespace PhotoGalleryApp.ViewModels
                 OnPropertyChanged();
             }
         }
+
+        private bool _isInView = false;
+        /// <summary>
+        /// Whether the element is currently in view of its containing MediaCollection.
+        /// </summary>
+        public bool IsInView
+        {
+            get { return _isInView; }
+            set
+            {
+                _isInView = value;
+                OnPropertyChanged();
+            }
+        }
     }
 }
