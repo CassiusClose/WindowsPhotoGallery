@@ -14,6 +14,7 @@
 
     <UserControl.Resources>
         <converters:HeightARToWidthConverter x:Key="HeightARToWidth"/>
+        <converters:EventToNameConverter x:Key="EventNameConverter"/>
 
         <Style x:Key="CollectionThumbnailImage" TargetType="Image">
             <Setter Property="MinHeight" Value="{Binding Path=DataContext.ThumbnailHeight, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType={x:Type local:MediaCollection}}}"/>
@@ -92,6 +93,32 @@
             </Grid>
         </DataTemplate>
 
+        <!-- Horizontal, wrapping collection of items -->
+        <Style x:Key="HorizontalWrapItemsControl" TargetType="ItemsControl">
+            <!-- Items stored in a wrap panel -->
+            <Setter Property="ItemsPanel">
+                <Setter.Value>
+                    <ItemsPanelTemplate>
+                        <WrapPanel Orientation="Horizontal" IsItemsHost="True"/>
+                    </ItemsPanelTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+        
+        <!-- Wrapping, horizontal collection of current tags, each of which is a clickable string. Clicking removes the tag from the image filter -->
+        <Style x:Key="FilterTagsList" BasedOn="{StaticResource HorizontalWrapItemsControl}" TargetType="ItemsControl">
+            <Setter Property="ItemTemplate">
+                <Setter.Value>
+                    <DataTemplate>
+                        <Button Content="{Binding}"
+                                Command="{Binding Path=DataContext.RemoveTagFromFilterCommand, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType={x:Type local:MediaCollection}}}"
+                                CommandParameter="{Binding}"/>
+                    </DataTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+
         <!-- Horizontal, wrapping list of images -->
         <Style x:Key="CollectionListBoxStyle" TargetType="ListBox">
             <Setter Property="ScrollViewer.HorizontalScrollBarVisibility" Value="Disabled"/>
@@ -127,42 +154,127 @@
     </UserControl.Resources>
 
 
-    <ScrollViewer
-        Grid.Row="3" 
-        x:Name="MediaScrollViewer" 
-        HorizontalScrollBarVisibility="Disabled" 
-        PreviewMouseWheel="ScrollViewer_MouseWheel"
-        ScrollChanged="MediaScrollViewer_ScrollChanged"
-        >
-        <!--
-        Make the ScrollChanged event call a command in the view model.
-        Gotten from https://stackoverflow.com/questions/25809655/wpf-mvvm-binding-command-to-event 
-        -->
-        <ei:Interaction.Triggers>
-            <ei:EventTrigger EventName="ScrollChanged">
-                <ei:InvokeCommandAction
-                    Command="{Binding ScrollChangedCommand}"
-                    CommandParameter="{Binding RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=ScrollViewer}}"
-                />
-            </ei:EventTrigger>
-        </ei:Interaction.Triggers>
-        <ListBox
-             x:Name="CollectionListBox" 
-             Style="{StaticResource CollectionListBoxStyle}" 
-             ItemsSource="{Binding Path=MediaView, Mode=OneWay}"
-             ScrollViewer.VerticalScrollBarVisibility="Disabled"
-             ScrollViewer.HorizontalScrollBarVisibility="Disabled"
+    <Grid Background="Transparent">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition/>
+        </Grid.RowDefinitions>
+
+        <StackPanel 
+            Grid.Row="0" 
+            x:Name="OptionsPanel"
+            Orientation="Horizontal"
             >
-            <ListBox.ItemContainerStyle>
-                <Style TargetType="ListBoxItem">
-                    <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
-                    <Setter Property="VerticalContentAlignment" Value="Stretch"/>
-                    <Setter Property="Padding" Value="0"/>
-                    <Setter Property="Margin" Value="0"/>
-                    <Setter Property="MinHeight" Value="{Binding Path=DataContext.ThumbnailHeight, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType={x:Type local:MediaCollection}}}"/>
-                    <Setter Property="IsSelected" Value="{Binding Mode=TwoWay, Path=IsSelected}"/>
-                </Style>
-            </ListBox.ItemContainerStyle>
-        </ListBox>
-    </ScrollViewer>
+
+            <Button
+                Content="Remove Selected"
+                IsEnabled="{Binding MediaSelected}"
+                >
+                <ei:Interaction.Triggers>
+                    <ei:EventTrigger EventName="Click">
+                        <ei:CallMethodAction TargetObject="{Binding}" MethodName="RemoveSelected"/>
+                    </ei:EventTrigger>
+                </ei:Interaction.Triggers>
+            </Button>
+
+            <local:ChooserDropDown 
+                ItemsSource="{Binding AllTags}" 
+                ShowCreateButton="True" ButtonText="Add Tag to Selected"
+                IsEnabled="{Binding MediaSelected}"
+                >
+                <ei:Interaction.Triggers>
+                    <ei:EventTrigger EventName="ItemSelected">
+                        <ei:CallMethodAction TargetObject="{Binding}" MethodName="AddTagToSelected"/>
+                    </ei:EventTrigger>
+                </ei:Interaction.Triggers>
+            </local:ChooserDropDown>
+
+            <local:ChooserDropDown
+                ItemsSource="{Binding AllTags}"
+                ButtonText="Remove Tag from Selected"
+                IsEnabled="{Binding MediaSelected}"
+                >
+                <ei:Interaction.Triggers>
+                    <ei:EventTrigger EventName="ItemSelected">
+                        <ei:CallMethodAction TargetObject="{Binding}" MethodName="RemoveTagFromSelected"/>
+                    </ei:EventTrigger>
+                </ei:Interaction.Triggers>
+            </local:ChooserDropDown>
+
+            <local:ChooserDropDown
+                x:Name="AddSelectedToEvent"
+                ItemsSource="{Binding Events, Converter={StaticResource EventNameConverter}}"
+                ButtonText="Add Selected to Event"
+                IsEnabled="{Binding MediaSelected}"
+                >
+                <ei:Interaction.Triggers>
+                    <ei:EventTrigger EventName="ItemSelected">
+                        <ei:CallMethodAction TargetObject="{Binding}" MethodName="AddSelectedToEvent"/>
+                    </ei:EventTrigger>
+                </ei:Interaction.Triggers>
+            </local:ChooserDropDown>
+
+            <Button Command="{Binding ChangeThumbnailHeightCommand}">Change Thumbnail Height</Button>
+        </StackPanel> 
+
+        <!-- Tag Filtering panel -->
+        <StackPanel 
+            Grid.Row="1" 
+            x:Name="TagFilteringPanel"
+            Orientation="Horizontal"
+            >
+            <!-- Drop down list that lets you add tags to the filter -->
+            <local:ChooserDropDown ItemsSource="{Binding AllTags}" ButtonText="Add Tag to Filter">
+                <ei:Interaction.Triggers>
+                    <ei:EventTrigger EventName="ItemSelected">
+                        <ei:CallMethodAction TargetObject="{Binding}" MethodName="AddTagToFilter"/>
+                    </ei:EventTrigger>
+                </ei:Interaction.Triggers>
+            </local:ChooserDropDown>
+
+
+            <!-- A list of all currently selected tags, clicking removes them -->
+            <ItemsControl ItemsSource="{Binding Path=FilterTags, Mode=OneWay}" Style="{StaticResource FilterTagsList}"/>
+        </StackPanel>
+
+        <ScrollViewer
+            Grid.Row="2" 
+            x:Name="MediaScrollViewer" 
+            HorizontalScrollBarVisibility="Disabled" 
+            PreviewMouseWheel="ScrollViewer_MouseWheel"
+            ScrollChanged="MediaScrollViewer_ScrollChanged"
+            >
+            <!--
+            Make the ScrollChanged event call a command in the view model.
+            Gotten from https://stackoverflow.com/questions/25809655/wpf-mvvm-binding-command-to-event 
+            -->
+            <ei:Interaction.Triggers>
+                <ei:EventTrigger EventName="ScrollChanged">
+                    <ei:InvokeCommandAction
+                        Command="{Binding ScrollChangedCommand}"
+                        CommandParameter="{Binding RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=ScrollViewer}}"
+                    />
+                </ei:EventTrigger>
+            </ei:Interaction.Triggers>
+            <ListBox
+                 x:Name="CollectionListBox" 
+                 Style="{StaticResource CollectionListBoxStyle}" 
+                 ItemsSource="{Binding Path=MediaView, Mode=OneWay}"
+                 ScrollViewer.VerticalScrollBarVisibility="Disabled"
+                 ScrollViewer.HorizontalScrollBarVisibility="Disabled"
+                >
+                <ListBox.ItemContainerStyle>
+                    <Style TargetType="ListBoxItem">
+                        <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
+                        <Setter Property="VerticalContentAlignment" Value="Stretch"/>
+                        <Setter Property="Padding" Value="0"/>
+                        <Setter Property="Margin" Value="0"/>
+                        <Setter Property="MinHeight" Value="{Binding Path=DataContext.ThumbnailHeight, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType={x:Type local:MediaCollection}}}"/>
+                        <Setter Property="IsSelected" Value="{Binding Mode=TwoWay, Path=IsSelected}"/>
+                    </Style>
+                </ListBox.ItemContainerStyle>
+            </ListBox>
+        </ScrollViewer>
+    </Grid>
 </UserControl>

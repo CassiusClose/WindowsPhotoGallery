@@ -93,10 +93,11 @@ namespace PhotoGalleryApp.Views
             get 
             {
                 if (PreviewMode)
-                    return Visibility.Hidden;
+                    return Visibility.Collapsed;
                 return Visibility.Visible;
             }
         }
+
 
 
         public static readonly DependencyProperty NumRowsProperty = DependencyProperty.Register("PreviewNumRows", typeof(int), typeof(MediaCollection),
@@ -158,6 +159,17 @@ namespace PhotoGalleryApp.Views
                 MediaScrollViewer.VerticalScrollBarVisibility = ScrollBarVisibility.Disabled;
             else
                 MediaScrollViewer.VerticalScrollBarVisibility = ScrollBarVisibility.Auto;
+
+            if(PreviewMode)
+            {
+                OptionsPanel.Visibility = Visibility.Collapsed;
+                TagFilteringPanel.Visibility = Visibility.Collapsed;
+            }
+            else
+            {
+                OptionsPanel.Visibility = Visibility.Visible;
+                TagFilteringPanel.Visibility = Visibility.Visible;
+            }
         }
 
 

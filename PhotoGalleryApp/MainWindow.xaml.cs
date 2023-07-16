@@ -18,6 +18,7 @@ using System.Windows.Shapes;
 using System.Collections.ObjectModel;
 using System.IO;
 using System.Diagnostics;
+using System.Xml.Serialization;
 
 namespace PhotoGalleryApp
 {
@@ -32,12 +33,20 @@ namespace PhotoGalleryApp
 
         private SidebarViewModel _sidebar;
 
+        private Gallery gallery;
+
         public MainWindow()
         {
             _nav = new NavigatorViewModel();
 
-            Gallery gallery = Gallery.LoadGallery("gallery.xml");
+            gallery = Gallery.LoadGallery("gallery.xml");
             //Gallery gallery = new Gallery("Gallery", new MediaCollection());
+            if(gallery == null)
+            {
+                Trace.WriteLine("ERROR IN SERIALIZATION");
+                System.Windows.Application.Current.Shutdown();
+                return;
+            }
 
             //TODO Check for missing media
             /*MediaCollection coll = gallery.MediaList;
@@ -53,15 +62,24 @@ namespace PhotoGalleryApp
                 }
             }*/
 
-            _sidebar = new SidebarViewModel(_nav, gallery);
+            _sidebar = new SidebarViewModel(_nav, gallery.Collection);
 
-            _nav.NewPage(new GalleryViewModel(_nav, gallery));
+            _nav.NewPage(new GalleryViewModel(_nav, gallery.Collection));
             //_nav.NewPage(new MapViewModel(_nav));
             DataContext = _nav;
 
             InitializeComponent();
 
             this.MainSidebar.DataContext = _sidebar;
+        }
+
+        public void SaveGallery()
+        {
+            XmlSerializer serializer = new XmlSerializer(typeof(Gallery));
+            TextWriter writer = new StreamWriter("gallery.xml");
+            serializer.Serialize(writer, gallery);
+            writer.Close();
+
         }
     }
 }

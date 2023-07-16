@@ -16,9 +16,10 @@
             Height="40"
             />
         <local:MediaCollection
-            DataContext="{Binding MediaCollectionVM}"
+            DataContext="{Binding MediaCollection}"
             NumRows="2"
             ThumbnailHeight="{Binding ThumbnailHeight}" 
             />
+        <Button Command="{Binding OpenCollectionCommand}">See All</Button>
     </StackPanel>
 </UserControl>

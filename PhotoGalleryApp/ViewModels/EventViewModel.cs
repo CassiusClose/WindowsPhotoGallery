@@ -21,61 +21,25 @@ namespace PhotoGalleryApp.ViewModels
             _nav = nav;
             _event = evnt;
 
-            _mediaCollectionVM = new MediaCollectionViewModel(nav, _event.Collection, new SortDescription("Timestamp", ListSortDirection.Ascending), true);
-            _mediaCollectionVM.MediaOpened += MediaOpened;
-            _mediaCollectionVM.ThumbnailHeight = 150;
+            _openCollectionCommand = new RelayCommand(OpenCollection);
+
+            _mediaCollection = new MediaCollectionViewModel(nav, _event.Collection, new SortDescription("Timestamp", ListSortDirection.Ascending), true);
+            _mediaCollection.ThumbnailHeight = 150;
         }
 
-        /*
-         * Open the media that was clicked in the MediaCollection - either a slideshow if clicked on
-         * media, or the event page if clicked on event.
-         */
-        private void MediaOpened(ICollectableViewModel item)
-        {
-            if (item is MediaViewModel)
-            {
-                // Get a list of all the currently visible images
-                //TODO Abstract here and galleryvm, and make efficient
-                List<ICollectableViewModel> list = MediaCollectionVM.MediaView.Cast<ICollectableViewModel>().ToList();
-                List<Media> media = new List<Media>(); //= MediaViewModel.GetMediaList(list);
-                foreach (ICollectableViewModel vm in list)
-                {
-                    if (vm is MediaViewModel)
-                        media.Add((Media)vm.GetModel());
-                }
-
-                // Get the clicked on photo's index in the list of Photos
-                int index = 0;
-                for (int i = 0; i < list.Count; i++)
-                {
-                    if (item.GetModel() == media[i])
-                    {
-                        index = i;
-                        break;
-                    }
-                }
-
-                // Create a new page to view the clicked image
-                SlideshowViewModel imagePage = new SlideshowViewModel(media, index, MediaCollectionVM.MediaCollectionModel);
-                _nav.NewPage(imagePage);
-            }
-            else
-            {
-                _nav.NewPage(new EventViewModel(((EventTileViewModel)item).Event, _nav));
-            }
-        }
 
         private NavigatorViewModel _nav;
+
 
         private Event _event;
         public Event Event { get { return _event; } }
 
 
-        private MediaCollectionViewModel _mediaCollectionVM;
+        private MediaCollectionViewModel _mediaCollection;
         /// <summary>
         /// The media belonging to the event
         /// </summary>
-        public MediaCollectionViewModel MediaCollectionVM { get { return _mediaCollectionVM; } }
+        public MediaCollectionViewModel MediaCollection { get { return _mediaCollection; } }
 
 
 
@@ -132,6 +96,14 @@ namespace PhotoGalleryApp.ViewModels
                 _thumbnail = value;
                 OnPropertyChanged();
             }
+        }
+
+        private RelayCommand _openCollectionCommand;
+        public ICommand OpenCollectionCommand => _openCollectionCommand;
+
+        public void OpenCollection()
+        {
+            _nav.NewPage(new GalleryViewModel(_nav, Event.Collection));
         }
     }
 }

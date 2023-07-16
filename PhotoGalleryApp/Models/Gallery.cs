@@ -45,7 +45,7 @@ namespace PhotoGalleryApp.Models
         /// <summary>
         /// A collection of all the media in the gallery
         /// </summary>
-        public MediaCollection MediaList { 
+        public MediaCollection Collection { 
             get { return _media; } 
             set { _media = value; }
         }

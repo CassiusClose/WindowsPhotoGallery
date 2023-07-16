@@ -17,10 +17,10 @@ namespace PhotoGalleryApp.ViewModels
     /// </summary>
     class EventsViewModel : ViewModelBase
     {
-        public EventsViewModel(NavigatorViewModel nav, Gallery gallery)
+        public EventsViewModel(NavigatorViewModel nav, MediaCollection coll)
         {
             _nav = nav; 
-            _gallery = gallery;
+            _collection = coll;
 
             _openEventCommand = new RelayCommand(OpenEvent);
 
@@ -35,7 +35,7 @@ namespace PhotoGalleryApp.ViewModels
 
         private NavigatorViewModel _nav;
 
-        private Gallery _gallery;
+        private MediaCollection _collection;
 
         private ObservableCollection<EventViewModel> _events;
 

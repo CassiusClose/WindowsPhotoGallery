@@ -10,10 +10,10 @@ namespace PhotoGalleryApp.ViewModels
 {
     public class SidebarViewModel : ViewModelBase
     {
-        public SidebarViewModel(NavigatorViewModel nav, Gallery gallery)
+        public SidebarViewModel(NavigatorViewModel nav, MediaCollection coll)
         {
             _nav = nav;
-            _gallery = gallery;
+            _collection = coll;
 
             _sidebarGalleryCommand = new RelayCommand(OpenGallery);
             _sidebarMapCommand = new RelayCommand(OpenMap);
@@ -21,7 +21,8 @@ namespace PhotoGalleryApp.ViewModels
         }
 
         private NavigatorViewModel _nav;
-        private Gallery _gallery;
+
+        private MediaCollection _collection;
 
 
 
@@ -39,7 +40,7 @@ namespace PhotoGalleryApp.ViewModels
             //TODO Figure out how to switch between pages
             if (_nav.CurrentPage.GetType() != typeof(GalleryViewModel))
             {
-                _nav.NewPage(new GalleryViewModel(_nav, _gallery));
+                _nav.NewPage(new GalleryViewModel(_nav, _collection));
             }
         }
         
@@ -72,7 +73,7 @@ namespace PhotoGalleryApp.ViewModels
         {
             if(_nav.CurrentPage.GetType() != typeof(EventsViewModel))
             {
-                _nav.NewPage(new EventsViewModel(_nav, _gallery));
+                _nav.NewPage(new EventsViewModel(_nav, _collection));
             }
         }
 
