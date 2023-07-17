@@ -207,6 +207,7 @@
                 ItemsSource="{Binding Events, Converter={StaticResource EventNameConverter}}"
                 ButtonText="Add Selected to Event"
                 IsEnabled="{Binding MediaSelected}"
+                ShowCreateButton="True"
                 >
                 <ei:Interaction.Triggers>
                     <ei:EventTrigger EventName="ItemSelected">

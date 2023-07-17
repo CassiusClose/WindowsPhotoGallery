@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -23,6 +24,28 @@ namespace PhotoGalleryApp.Views
         public EventPage()
         {
             InitializeComponent();
+        }
+
+        // When the user clicks anywhere on the control, keep focus on the top-level
+        // so key events are captured.
+        private void UserControl_MouseDown(object sender, MouseButtonEventArgs e)
+        {
+            this.Focus();
+            e.Handled = true;
+        }
+
+        // Seize focus when the control is loaded (when the navigator opens this page).
+        private void UserControl_Loaded(object sender, RoutedEventArgs e)
+        {
+            this.Focus();
+        }
+
+        private void UserControl_KeyDown(object sender, KeyEventArgs e)
+        {
+            if(e.Key == Key.Escape)
+            {
+                this.Focus();
+            }
         }
     }
 }

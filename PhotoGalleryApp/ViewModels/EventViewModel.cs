@@ -50,6 +50,10 @@ namespace PhotoGalleryApp.ViewModels
         public string Name
         {
             get { return _event.Name; }
+            set { 
+                _event.Name = value;
+                OnPropertyChanged();
+            }
         }
 
         /// <summary>

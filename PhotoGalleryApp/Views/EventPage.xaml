@@ -5,21 +5,29 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
              xmlns:local="clr-namespace:PhotoGalleryApp.Views"
              mc:Ignorable="d" 
-             d:DesignHeight="450" d:DesignWidth="800">
-    <StackPanel>
-        <Label 
-            Content="{Binding Name}"
-            Height="40"
-            />
-        <Label
-            Content="{Binding TimeRangeDisplay}"
-            Height="40"
-            />
-        <local:MediaCollection
-            DataContext="{Binding MediaCollection}"
-            NumRows="2"
-            ThumbnailHeight="{Binding ThumbnailHeight}" 
-            />
-        <Button Command="{Binding OpenCollectionCommand}">See All</Button>
-    </StackPanel>
+             d:DesignHeight="450" d:DesignWidth="800"
+             Focusable="True"             
+             MouseDown="UserControl_MouseDown"
+             Loaded="UserControl_Loaded"
+             Keyboard.KeyDown="UserControl_KeyDown"
+             >
+
+    <Border BorderBrush="Green" BorderThickness="2" Background="Transparent">
+        <StackPanel>
+            <local:EditableLabel
+                Text="{Binding Name, Mode=TwoWay}"  
+                Height="40"
+                />
+            <Label
+                Content="{Binding TimeRangeDisplay}"
+                Height="40"
+                />
+            <local:MediaCollection
+                DataContext="{Binding MediaCollection}"
+                NumRows="2"
+                ThumbnailHeight="{Binding ThumbnailHeight}" 
+                />
+            <Button Command="{Binding OpenCollectionCommand}">See All</Button>
+        </StackPanel>
+    </Border>
 </UserControl>

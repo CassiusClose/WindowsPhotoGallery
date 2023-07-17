@@ -171,7 +171,7 @@ namespace PhotoGalleryApp.ViewModels
         private void _addMediaItem(ICollectable media)
         {
             // Disable Refresh, because it'll be called when adding to the MediaView
-            _disableMediaViewRefresh = true;
+            DisableMediaViewRefresh();
 
             ICollectableViewModel vm;
             if (media is Media)
@@ -182,7 +182,7 @@ namespace PhotoGalleryApp.ViewModels
             // 1) Add to the MediaCollection first, so the tags are updated
             MediaCollectionModel.Add(media);
 
-            _disableMediaViewRefresh = false;
+            EnableMediaViewRefresh();
 
 
             // 2) Then update the View, which will cause a Refresh
@@ -212,14 +212,14 @@ namespace PhotoGalleryApp.ViewModels
         public void AddMediaItems(List<ICollectable> media)
         {
             // Stop Refresh() from getting called, because adding the item will cause that.
-            _disableMediaViewRefresh = true;
+            DisableMediaViewRefresh();
 
             foreach(Media m in media)
             {
                 _addMediaItem(m);
             }
 
-            _disableMediaViewRefresh = false;
+            EnableMediaViewRefresh();
 
             // Start another load task
             LoadVisibleMediaThenAll();
@@ -229,12 +229,12 @@ namespace PhotoGalleryApp.ViewModels
         private void _removeMediaItem(ICollectableViewModel vm)
         {
             // Disable Refresh, because it'll be called when adding to the MediaView
-            _disableMediaViewRefresh = true;
+            DisableMediaViewRefresh();
 
             // 1) Add to the MediaCollection first, so the tags are updated
             MediaCollectionModel.Remove(vm.GetModel());
 
-            _disableMediaViewRefresh = false;
+            EnableMediaViewRefresh();
 
             // 2) Then update the View, which will cause a Refresh
             _mediaList.Remove(vm);
@@ -247,24 +247,24 @@ namespace PhotoGalleryApp.ViewModels
             // Start another load task
             LoadVisibleMediaThenAll();
 
-            MediaView.Refresh();
+            RefreshView();
         }
 
         public void RemoveMediaItems(List<ICollectableViewModel> vms)
         {
-            _disableMediaViewRefresh = true;
+            DisableMediaViewRefresh();
 
             foreach(ICollectableViewModel vm in vms)
             {
                 _removeMediaItem(vm);
             }
 
-            _disableMediaViewRefresh = false;
+            EnableMediaViewRefresh();
 
             // Start another load task
             LoadVisibleMediaThenAll();
 
-            MediaView.Refresh();
+            RefreshView();
         }
 
         #endregion Add/Remove Media
@@ -323,16 +323,45 @@ namespace PhotoGalleryApp.ViewModels
             DeselectInvalidMedia();
 
             OnPropertyChanged("FilterTags");
-            MediaView.Refresh();
+            RefreshView();
         }
 
 
-        /// <summary>
-        /// Prevents the ICollectionView MediaView that provides the view with images from refreshing. There are some
-        /// functions, such as removing media from the collection, where a refresh is not needed and only causes
-        /// (harmless) binding errors.
-        /// </summary>
-        private bool _disableMediaViewRefresh = false;
+        /*
+         * Prevents the ICollectionView MediaView that provides the view with images from 
+         * refreshing. There are some functions, such as removing media from the collection,
+         * where a refresh is not needed and only causes (harmless) binding errors.
+         *
+         * Using a bool for this doesn't work because sometimes nested functions will set
+         * and unset the variable, and that will reset the status for higher up functions.
+         * So instead, use an int, and increment it every time a function wants to disable
+         * refreshing. Decrement when a function is ready to enable. Then only refresh when
+         * the int is 0.
+         */
+        private int _disableMediaViewRefresh = 0;
+
+        private void DisableMediaViewRefresh()
+        {
+            _disableMediaViewRefresh++;
+        }
+
+        private void EnableMediaViewRefresh()
+        {
+            _disableMediaViewRefresh--;
+            if (_disableMediaViewRefresh < 0)
+                Trace.WriteLine("ERROR: _disableMediaViewRefresh is less than 0");
+        }
+
+        /*
+         * If not disabled, refresh the MediaView.
+         */
+        private void RefreshView()
+        {
+            if (_disableMediaViewRefresh == 0)
+            {
+                MediaView.Refresh();
+            }
+        }
 
         /*
          * When any media changes its tags, refresh the view
@@ -341,8 +370,7 @@ namespace PhotoGalleryApp.ViewModels
         {
             DeselectInvalidMedia();
 
-            if (!_disableMediaViewRefresh)
-                MediaView.Refresh(); 
+            RefreshView();
         }
 
 
@@ -459,13 +487,14 @@ namespace PhotoGalleryApp.ViewModels
         /* When the media collection changes, rebuild the list of events */
         private void MediaCollectionChanged(object? sender, NotifyCollectionChangedEventArgs e)
         {
+            UpdateMediaList();
             UpdateEventList();
         }
 
         /* Rebuild the list of events in the gallery's MediaCollection */
         private void UpdateEventList()
         {
-            //TODO Make more efficient
+            //TODO Make more efficient, maybe call in UpdateMediaList
             _events.Clear();
 
             foreach(Event e in MediaCollectionModel.GetEvents())
@@ -496,28 +525,47 @@ namespace PhotoGalleryApp.ViewModels
                 if(e.Name == eventName)
                 {
                     eventvm = e;
+                    break;
                 }
             }
+            // If no event exists, create one and add it
             if(eventvm == null)
             {
-                //TODO Allow creating new events
+                DisableMediaViewRefresh();
+
+                Event evnt = new Event(eventName);
+
+                List<ICollectableViewModel> mvms = GetCurrentlySelectedItems();
+                foreach(ICollectableViewModel cvm in mvms)
+                {
+                    evnt.Collection.Add(cvm.GetModel());
+                }
+
+                MediaCollectionModel.Add(evnt);
+                RemoveMediaItems(mvms);
+
+                EnableMediaViewRefresh();
+
                 return;
-                /*evnt = new Event(eventName);
-                _gallery.Events.Add(evnt);*/
             }
-
-            // Build lists for batch operations
-            List<ICollectableViewModel> mediavms = GetCurrentlySelectedItems();
-            //List<ICollectable> media = new List<ICollectable>();
-            foreach(ICollectableViewModel cvm in mediavms)
+            // If event does exist, add items to it
+            else
             {
-                //media.Add(cvm.GetModel());
-                ((Event)eventvm.GetModel()).Collection.Add(cvm.GetModel());
+                // Build lists for batch operations
+                List<ICollectableViewModel> mediavms = GetCurrentlySelectedItems();
+                //List<ICollectable> media = new List<ICollectable>();
+                foreach(ICollectableViewModel cvm in mediavms)
+                {
+                    //media.Add(cvm.GetModel());
+                    ((Event)eventvm.GetModel()).Collection.Add(cvm.GetModel());
+                }
+
+
+                // Add to event and remove from here
+                //eventvm.MediaCollectionVM.AddMediaItems(media);
+                RemoveMediaItems(mediavms);
             }
 
-            // Add to event and remove from here
-            //eventvm.MediaCollectionVM.AddMediaItems(media);
-            RemoveMediaItems(mediavms);
         }
 
         #endregion Events
@@ -790,7 +838,7 @@ namespace PhotoGalleryApp.ViewModels
         /// <param name="parameter">The list of images to remove, of type System.Windows.Controls.SelectedItemCollection (from ListBox SelectedItems).</param>
         public void RemoveSelected(object sender, EventArgs eArgs)
         {
-            _disableMediaViewRefresh = true;
+            DisableMediaViewRefresh();
 
             List<ICollectableViewModel> vms = GetCurrentlySelectedItems();
             foreach(ICollectableViewModel vm in vms)
@@ -799,7 +847,7 @@ namespace PhotoGalleryApp.ViewModels
             }
 
             OnPropertyChanged("MediaSelected");
-            _disableMediaViewRefresh = false;
+            EnableMediaViewRefresh();
         }
         #endregion RemoveSelected
         
@@ -871,20 +919,35 @@ namespace PhotoGalleryApp.ViewModels
          */
         private void InitAndLoadAllMedia()
         {
-            _mediaList.Clear();
-
-            // Initialize all the image vms first without loading the images. This way,
-            // the whole collection will be available and navigable to in the slideshow
-            // view.
-            for (int i = 0; i < MediaCollectionModel.Count; i++)
-            {
-                if (MediaCollectionModel[i] is Media)
-                    _mediaList.Add(MediaViewModel.CreateMediaViewModel((Media)MediaCollectionModel[i], true, 0, ThumbnailHeight));
-                else
-                    _mediaList.Add(new EventTileViewModel((Event)MediaCollectionModel[i], _nav));
-            }
-
+            UpdateMediaList();
             LoadAllMedia();
+        }
+
+        /*
+         * Find new media in the collection and create viewmodels for them
+         */
+        private void UpdateMediaList()
+        {
+            //TODO Make more efficient
+            foreach(ICollectable model in MediaCollectionModel)
+            {
+                bool found = false;
+                foreach(ICollectableViewModel vm in _mediaList)
+                {
+                    if (vm.GetModel() == model)
+                    {
+                        found = true;
+                        break;
+                    }
+                }
+                if (!found)
+                {
+                    if (model is Media)
+                        _mediaList.Add(MediaViewModel.CreateMediaViewModel((Media)model, true, 0, ThumbnailHeight));
+                    else
+                        _mediaList.Add(new EventTileViewModel((Event)model, _nav));
+                }
+            }
         }
 
 

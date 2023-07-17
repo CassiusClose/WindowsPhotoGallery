@@ -16,7 +16,7 @@ namespace PhotoGalleryApp.ViewModels
     /// </summary>
     class EventTileViewModel : ICollectableViewModel
     {
-        public EventTileViewModel(Event evnt, NavigatorViewModel nav, bool init=true)
+        public EventTileViewModel(Event evnt, NavigatorViewModel nav)
         {
             _nav = nav;
             _event = evnt;
