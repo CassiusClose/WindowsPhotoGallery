@@ -51,6 +51,7 @@ namespace PhotoGalleryApp.ViewModels
             _openMediaCommand = new RelayCommand(OpenMedia);
             _removeTagFromFilterCommand = new RelayCommand(RemoveTagFromFilter);
             _changeThumbnailHeightCommand = new RelayCommand(ChangeThumbnailHeight);
+            _createEventCommand = new RelayCommand(CreateNewEvent);
 
 
             // Init media lists
@@ -177,7 +178,7 @@ namespace PhotoGalleryApp.ViewModels
             if (media is Media)
                 vm = MediaViewModel.CreateMediaViewModel((Media)media, true, 0, ThumbnailHeight);
             else
-                vm = new EventTileViewModel((Event)media, _nav);
+                vm = new EventTileViewModel((Event)media, _nav, ThumbnailHeight);
 
             // 1) Add to the MediaCollection first, so the tags are updated
             MediaCollectionModel.Add(media);
@@ -491,6 +492,26 @@ namespace PhotoGalleryApp.ViewModels
             UpdateEventList();
         }
 
+
+
+        private RelayCommand _createEventCommand;
+        /// <summary>
+        /// Creates an empty event in the media collection
+        /// </summary>
+        public ICommand CreateEventCommand => _createEventCommand;
+
+        private void CreateNewEvent()
+        {
+            DisableMediaViewRefresh();
+
+            Event e = new Event("New Event");
+            MediaCollectionModel.Add(e);
+
+            EnableMediaViewRefresh();
+        }
+
+
+
         /* Rebuild the list of events in the gallery's MediaCollection */
         private void UpdateEventList()
         {
@@ -499,7 +520,7 @@ namespace PhotoGalleryApp.ViewModels
 
             foreach(Event e in MediaCollectionModel.GetEvents())
             {
-                _events.Add(new EventTileViewModel(e, _nav));
+                _events.Add(new EventTileViewModel(e, _nav, ThumbnailHeight));
             }
             OnPropertyChanged("Events");
         }
@@ -535,22 +556,34 @@ namespace PhotoGalleryApp.ViewModels
 
                 Event evnt = new Event(eventName);
 
+                // Add selected items to event
                 List<ICollectableViewModel> mvms = GetCurrentlySelectedItems();
                 foreach(ICollectableViewModel cvm in mvms)
                 {
                     evnt.Collection.Add(cvm.GetModel());
                 }
 
+                // Set thumbnail as the first image in the collection
+                foreach(ICollectable model in evnt.Collection)
+                {
+                    if (model is Image)
+                    {
+                        evnt.Thumbnail = (Image)model;
+                        break;
+                    }
+                }
+
+                // Add the event to the media collection, and remove from this collection
                 MediaCollectionModel.Add(evnt);
                 RemoveMediaItems(mvms);
 
                 EnableMediaViewRefresh();
-
-                return;
             }
-            // If event does exist, add items to it
+            // If event does exist, add ijLtems to it
             else
             {
+                bool needsThumbnail = eventvm.Event.Collection.Count == 0;
+
                 // Build lists for batch operations
                 List<ICollectableViewModel> mediavms = GetCurrentlySelectedItems();
                 //List<ICollectable> media = new List<ICollectable>();
@@ -560,12 +593,22 @@ namespace PhotoGalleryApp.ViewModels
                     ((Event)eventvm.GetModel()).Collection.Add(cvm.GetModel());
                 }
 
+                if (needsThumbnail)
+                {
+                    // Set thumbnail as the first image in the collection
+                    foreach(ICollectable model in eventvm.Event.Collection)
+                    {
+                        if (model is Image)
+                        {
+                            eventvm.Event.Thumbnail = (Image)model;
+                            break;
+                        }
+                    }
+                }
 
                 // Add to event and remove from here
-                //eventvm.MediaCollectionVM.AddMediaItems(media);
                 RemoveMediaItems(mediavms);
             }
-
         }
 
         #endregion Events
@@ -945,7 +988,7 @@ namespace PhotoGalleryApp.ViewModels
                     if (model is Media)
                         _mediaList.Add(MediaViewModel.CreateMediaViewModel((Media)model, true, 0, ThumbnailHeight));
                     else
-                        _mediaList.Add(new EventTileViewModel((Event)model, _nav));
+                        _mediaList.Add(new EventTileViewModel((Event)model, _nav, ThumbnailHeight));
                 }
             }
         }
@@ -982,7 +1025,7 @@ namespace PhotoGalleryApp.ViewModels
                 if (item is MediaViewModel)
                     await Task.Run(() => { ((MediaViewModel)item).LoadMedia(); });
                 else
-                    await Task.Run(() => { ((EventTileViewModel)item).LoadThumbnail(ThumbnailHeight); });
+                    await Task.Run(() => { ((EventTileViewModel)item).LoadThumbnail(); });
 
                 if (taskID != _imageLoadID)
                     break;
@@ -1009,7 +1052,7 @@ namespace PhotoGalleryApp.ViewModels
                 if (vm is MediaViewModel)
                     await Task.Run(() => { ((MediaViewModel)vm).LoadMedia(); });
                 else
-                    await Task.Run(() => { ((EventTileViewModel)vm).LoadThumbnail(ThumbnailHeight); });
+                    await Task.Run(() => { ((EventTileViewModel)vm).LoadThumbnail(); });
 
                 if (taskID != _imageLoadID)
                     break;

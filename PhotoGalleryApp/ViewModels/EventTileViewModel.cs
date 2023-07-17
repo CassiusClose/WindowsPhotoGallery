@@ -16,10 +16,14 @@ namespace PhotoGalleryApp.ViewModels
     /// </summary>
     class EventTileViewModel : ICollectableViewModel
     {
-        public EventTileViewModel(Event evnt, NavigatorViewModel nav)
+        public EventTileViewModel(Event evnt, NavigatorViewModel nav, int thumbnailHeight)
         {
             _nav = nav;
             _event = evnt;
+            _thumbnailHeight = thumbnailHeight;
+
+            // If thumbnail already exists, create a VM for it
+            CreateThumbnailVM();
         }
 
         /// <summary>
@@ -55,6 +59,8 @@ namespace PhotoGalleryApp.ViewModels
         }
 
 
+        private int _thumbnailHeight;
+
         private MediaViewModel? _thumbnail = null;
         /// <summary>
         /// The viewmodel for the event's Thumbnail. If null, there is either no thumbnail 
@@ -71,16 +77,30 @@ namespace PhotoGalleryApp.ViewModels
         }
 
         /// <summary>
+        /// If the event's Thumbnail property is set, create a VM for it
+        /// </summary>
+        public void CreateThumbnailVM()
+        {
+            if(_event.Thumbnail != null)
+            {
+                if(_thumbnail == null || _thumbnail.Media != _event.Thumbnail) 
+                {
+                    Thumbnail = MediaViewModel.CreateMediaViewModel(_event.Thumbnail, true, 0, _thumbnailHeight);
+                }
+            }
+        }
+
+
+        /// <summary>
         /// Create the event thumbnail's viewmodel (Thumbnail) if it doesn't exist, and load
         /// the image into memory if it hasn't been.
         /// </summary>
         /// <param name="thumbnailHeight">The height at which to load the thumbnail</param>
-        public void LoadThumbnail(int thumbnailHeight)
+        public void LoadThumbnail()
         {
             if (_event.Thumbnail != null)
             {
-                if(Thumbnail == null)
-                    Thumbnail = MediaViewModel.CreateMediaViewModel(_event.Thumbnail, true, 0, thumbnailHeight);
+                CreateThumbnailVM();
 
                 Thumbnail.LoadMedia();
             }

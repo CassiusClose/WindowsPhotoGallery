@@ -217,6 +217,11 @@
             </local:ChooserDropDown>
 
             <Button Command="{Binding ChangeThumbnailHeightCommand}">Change Thumbnail Height</Button>
+
+            <Button
+                Content="Create New Event"
+                Command="{Binding CreateEventCommand}"/>
+
         </StackPanel> 
 
         <!-- Tag Filtering panel -->
@@ -233,7 +238,6 @@
                     </ei:EventTrigger>
                 </ei:Interaction.Triggers>
             </local:ChooserDropDown>
-
 
             <!-- A list of all currently selected tags, clicking removes them -->
             <ItemsControl ItemsSource="{Binding Path=FilterTags, Mode=OneWay}" Style="{StaticResource FilterTagsList}"/>
