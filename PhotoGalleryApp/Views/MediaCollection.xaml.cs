@@ -158,7 +158,7 @@ namespace PhotoGalleryApp.Views
             if (NumRows > 0)
                 MediaScrollViewer.VerticalScrollBarVisibility = ScrollBarVisibility.Disabled;
             else
-                MediaScrollViewer.VerticalScrollBarVisibility = ScrollBarVisibility.Auto;
+                MediaScrollViewer.VerticalScrollBarVisibility = ScrollBarVisibility.Visible;
 
             if(PreviewMode)
             {
@@ -214,6 +214,13 @@ namespace PhotoGalleryApp.Views
                     ListBoxItem lbi = (ListBoxItem)CollectionListBox.ItemContainerGenerator.ContainerFromIndex(j);
                     ICollectableViewModel vm = (ICollectableViewModel)lbi.Content;
 
+                    if (vm is TimeLabelViewModel)
+                    {
+                        if (j == i)
+                            rowItemCount++;
+
+                        break;
+                    }
 
                     double ar = GetAR(vm);
 
@@ -234,10 +241,10 @@ namespace PhotoGalleryApp.Views
                 // Setting the max amount the scale can be makes a max height to the images in the collection.
                 // Practically, this means the last row of images may not extend to fit the entire row. This
                 // is an aesthetic choice.
-                /*if (scale > 1.5)
+                if (scale > 1.5)
                 {
                     scale = 1.5;
-                }*/
+                }
 
                 // Now go through and resize each image in the row as determined in the previous loop. Note that
                 // this increments the outer loop index (i) as well.
@@ -246,30 +253,40 @@ namespace PhotoGalleryApp.Views
                     ListBoxItem lbi = (ListBoxItem)CollectionListBox.ItemContainerGenerator.ContainerFromIndex(i);
 
                     ICollectableViewModel vm = (ICollectableViewModel)lbi.Content;
-                    double ar = GetAR(vm);
 
-                    // Scale each image
-                    // If ceiling, the rounding might push the actual width over the boundaries of the rows,
-                    // and the last images will be put in the next row. So instead, floor.
-                    lbi.MaxWidth = Math.Floor(ThumbnailHeight * ar * scale);
-                    lbi.Width = Math.Floor(ThumbnailHeight * ar * scale);
+                    if(vm is TimeLabelViewModel)
+                    {
+                        lbi.MaxWidth = containerWidth; 
+                        lbi.Width = containerWidth;
+                    }
+                    else
+                    {
+                        double ar = GetAR(vm);
 
-                    // Setting width isn't enough, it will still try to display the image at ThumbnailHeight,
-                    // I guess? It will result in the full height being displayed, but only a small fraction
-                    // of the width.
-                    lbi.MaxHeight = Math.Floor(ThumbnailHeight * scale);
-                    lbi.Height = Math.Floor(ThumbnailHeight * scale);
+                        // Scale each image
+                        // If ceiling, the rounding might push the actual width over the boundaries of the rows,
+                        // and the last images will be put in the next row. So instead, floor.
+                        lbi.MaxWidth = Math.Floor(ThumbnailHeight * ar * scale);
+                        lbi.Width = Math.Floor(ThumbnailHeight * ar * scale);
+
+                        // Setting width isn't enough, it will still try to display the image at ThumbnailHeight,
+                        // I guess? It will result in the full height being displayed, but only a small fraction
+                        // of the width.
+                        lbi.MaxHeight = Math.Floor(ThumbnailHeight * scale);
+                        lbi.Height = Math.Floor(ThumbnailHeight * scale);
+                    }
                 }
 
                 totalHeight += ThumbnailHeight * scale;
 
                 numRows++;
-                if(NumRows > 0 && numRows == NumRows)
+                //TODO Reimplement
+                /*if(NumRows > 0 && numRows == NumRows)
                 {
                     MediaScrollViewer.Height = totalHeight;
                     MediaScrollViewer.MaxHeight = totalHeight;
                     break;
-                }
+                }*/
             }
         }
 
@@ -295,6 +312,10 @@ namespace PhotoGalleryApp.Views
                 {
                     return 1;
                 }
+            }
+            else if (vm is TimeLabelViewModel)
+            {
+                return 1;
             }
             else
                 mvm = (MediaViewModel)vm; 

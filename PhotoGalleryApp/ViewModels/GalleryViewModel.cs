@@ -109,11 +109,9 @@ namespace PhotoGalleryApp.ViewModels
                     else
                         m = new Video(filename);
 
-                    media.Add(m);
+                    MediaCollection.MediaCollectionModel.Add(m);
                 }
             }
-
-            MediaCollection.AddMediaItems(media);
         }
 
         #endregion AddFiles

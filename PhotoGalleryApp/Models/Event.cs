@@ -1,9 +1,13 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Collections.Specialized;
+using System.ComponentModel;
 using System.Diagnostics;
 using System.Linq;
+using System.Printing;
+using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading.Tasks;
 using System.Xml.Serialization;
@@ -26,6 +30,7 @@ namespace PhotoGalleryApp.Models
         public Event(string name)
         {
             _name = name;
+
             _collection = new MediaCollection();
             _collection.CollectionChanged += _mediaChanged;
         }
@@ -54,6 +59,8 @@ namespace PhotoGalleryApp.Models
         }
 
         private Media? _thumbnail = null;
+
+
         /// <summary>
         /// The thumbnail to represent the event when viewed as a small tile. If null, there is
         /// no selected thumbnail.
@@ -61,25 +68,34 @@ namespace PhotoGalleryApp.Models
         public Media? Thumbnail
         {
             get { return _thumbnail; }
-            set { _thumbnail = value; }
+            set { 
+                _thumbnail = value;
+                OnPropertyChanged();
+            }
         }
 
 
-        private DateTime _startTimestamp;
         /// <summary>
         /// The timestamp of the earliest media in the event.
         /// </summary>
         //TODO What if nothing in the event? Right now, default is year 1.
-        public DateTime StartTimestamp
+        private DateTime? _startTimestamp = null;
+        public DateTime? StartTimestamp
         {
             get { return _startTimestamp; }
+            set
+            {
+                _startTimestamp = value;
+                OnPropertyChanged();
+            }
         }
 
 
-        private DateTime _endTimestamp;
-        public DateTime EndTimestamp
+        //TODO Implement ISerializable and make internal set
+        private DateTime? _endTimestamp = null;
+        public DateTime? EndTimestamp
         {
-            get { return _endTimestamp; }
+            get; set;
         }
 
 
@@ -91,35 +107,133 @@ namespace PhotoGalleryApp.Models
          */
         private void _mediaChanged(object? sender, NotifyCollectionChangedEventArgs e)
         {
-            //TODO For efficiency, detect what has changed and only use that to update timestamp
+            switch(e.Action)
+            {
+                case NotifyCollectionChangedAction.Add:
+                    if (e.NewItems == null)
+                        throw new ArgumentException("Adding items to Event MediaCollection, but NewItems is null");
+
+                    _mediaChanged_Add(e.NewItems);
+                    break;
+
+                case NotifyCollectionChangedAction.Remove:
+                    if (e.OldItems == null)
+                        throw new ArgumentException("Removing items from Event MediaCollection, but OldItems is null");
+
+                    _mediaChanged_Remove(e.OldItems);
+                    break;
+
+                case NotifyCollectionChangedAction.Replace:
+                    if (e.NewItems == null || e.OldItems == null)
+                        throw new ArgumentException("Replacing items to Event MediaCollection, but NewItems or OldItems is null");
+
+                    _mediaChanged_Add(e.NewItems);
+                    _mediaChanged_Remove(e.OldItems);
+                    break;
+
+                case NotifyCollectionChangedAction.Reset:
+                    _mediaChanged_Reset();
+                    break;
+            }
+        }
+
+        private void _mediaChanged_Add(IList newItems)
+        {
+            foreach(ICollectable c in newItems)
+            {
+                c.PropertyChanged += Media_PropertyChanged;
+
+                if(c is Media)
+                {
+                    Media m = (Media)c;
+                    if (StartTimestamp == null || m.Timestamp < StartTimestamp)
+                        StartTimestamp = m.Timestamp;
+                    if (EndTimestamp == null || m.Timestamp > EndTimestamp)
+                        EndTimestamp = m.Timestamp;
+                }
+                if(c is Event)
+                {
+                    Event e = (Event)c;
+                    if(StartTimestamp == null || e.StartTimestamp < StartTimestamp)
+                        StartTimestamp = e.StartTimestamp;
+                    if(EndTimestamp == null || e.EndTimestamp > EndTimestamp)
+                        EndTimestamp = e.EndTimestamp;
+                }
+            }
+        }
+
+        private void _mediaChanged_Remove(IList oldItems)
+        {
+            bool needsReset = false;
+
+            foreach(ICollectable c in oldItems)
+            {
+                if(c is Media)
+                {
+                    Media m = (Media)c;
+                    if (m.Timestamp.Equals(StartTimestamp) || m.Timestamp.Equals(EndTimestamp))
+                        needsReset = true;
+                }
+                else
+                {
+                    Event e = (Event)c;
+                    if (e.StartTimestamp.Equals(StartTimestamp) || e.EndTimestamp.Equals(EndTimestamp))
+                        needsReset = true;
+                }
+            }
+
+            if (needsReset)
+                _mediaChanged_Reset();
+        }
+
+        private void _mediaChanged_Reset()
+        {
             DateTime? earliest = null;
             DateTime? latest = null;
             foreach(ICollectable c in _collection)
             {
+                c.PropertyChanged -= Media_PropertyChanged;
+                c.PropertyChanged += Media_PropertyChanged;
                 if(c is Media)
                 {
-                    DateTime t = ((Media)c).Timestamp;
-                    if (t < earliest || earliest == null)
+                    DateTime? t = ((Media)c).Timestamp;
+                    if (t != null && (t < earliest || earliest == null))
                         earliest = t;
-                    if (t > latest || latest == null)
+                    if (t != null && (t > latest || latest == null))
                         latest = t;
                 }
                 else
                 {
-                    DateTime t = ((Event)c).StartTimestamp;
-                    if (t < earliest || earliest == null)
+                    DateTime? t = ((Event)c).StartTimestamp;
+                    if (t != null && (t < earliest || earliest == null))
                         earliest = t;
-                    if (t > latest || latest == null)
+                    if (t != null && (t > latest || latest == null))
                         latest = t;
                 }
             }
 
-            //TODO In a case like this, does anything update the viewmodels? Presumably the change action
-            // will come from a viewmodel, but what if there's another viewmodel that needs an update?
             if(earliest != null)
-                _startTimestamp = (DateTime)earliest;
+                StartTimestamp = (DateTime)earliest;
             if (latest != null)
-                _endTimestamp = (DateTime)latest;
+                EndTimestamp = (DateTime)latest;
+        }
+
+
+        /* When a child changes its timestamp or timerange, update the timerange here */
+        private void Media_PropertyChanged(object? sender, PropertyChangedEventArgs e)
+        {
+            if(sender is Media)
+            {
+                Media m = (Media)sender;
+                if (e.PropertyName == nameof(m.Timestamp))
+                    _mediaChanged_Reset();
+            }
+            else
+            {
+                Event ev = (Event)sender;
+                if(e.PropertyName == nameof(ev.StartTimestamp))
+                    _mediaChanged_Reset();
+            }
         }
 
 

@@ -69,6 +69,11 @@ namespace PhotoGalleryApp.ViewModels
         /// <returns>The ICollectable model associated with this viewmodel</returns>
         public override abstract ICollectable GetModel();
 
+        protected override DateTime _getTimestamp()
+        {
+            return Media.Timestamp;
+        }
+
 
         #region Methods
 

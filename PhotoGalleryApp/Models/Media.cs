@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Collections.Specialized;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
@@ -39,6 +40,7 @@ namespace PhotoGalleryApp.Models
                 Tags = new ObservableCollection<string>();
             else
                 Tags = tags;
+            Tags.CollectionChanged += Tags_CollectionChanged;
         }
 
 
@@ -169,6 +171,20 @@ namespace PhotoGalleryApp.Models
         /// A collection of tags associated with the image, used for easier sorting & filtering of images.
         /// </summary>
         public ObservableCollection<string> Tags { get; set; }
+
+        /**
+         * Attaching directly to Tags.CollectionChanged from the outside gives no sense of what
+         * Media object's tags have changed. So for the sake of efficient updates, create this
+         * update event which uses this Media object as the sender.
+         */
+        [XmlIgnore]
+        public NotifyCollectionChangedEventHandler TagsChanged;
+
+        private void Tags_CollectionChanged(object sender, NotifyCollectionChangedEventArgs e)
+        {
+            if (TagsChanged != null)
+                TagsChanged(this, e);
+        }
 
 
         /// <summary>

@@ -18,6 +18,15 @@ namespace PhotoGalleryApp.ViewModels
         /// <returns>The ICollectable model associated with this viewmodel</returns>
         public abstract ICollectable GetModel();
 
+
+
+        protected abstract DateTime _getTimestamp();
+        public DateTime Timestamp
+        {
+            get { return _getTimestamp(); }
+        }
+
+
         
         private bool _isSelected;
         /// <summary>

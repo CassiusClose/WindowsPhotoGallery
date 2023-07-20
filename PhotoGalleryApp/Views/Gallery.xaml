@@ -30,7 +30,6 @@
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto"/>
-            <RowDefinition Height="Auto"/>
             <RowDefinition/>
         </Grid.RowDefinitions>
 
@@ -44,7 +43,7 @@
         </StackPanel>
 
         <local:MediaCollection
-            Grid.Row="3"
+            Grid.Row="2"
             DataContext="{Binding MediaCollection}"
             />
 

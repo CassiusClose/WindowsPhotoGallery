@@ -22,8 +22,10 @@ namespace PhotoGalleryApp.ViewModels
             _event = evnt;
             _thumbnailHeight = thumbnailHeight;
 
+            evnt.PropertyChanged += Event_PropertyChanged;
+
             // If thumbnail already exists, create a VM for it
-            CreateThumbnailVM();
+            InitThumbnail();
         }
 
         /// <summary>
@@ -35,11 +37,19 @@ namespace PhotoGalleryApp.ViewModels
             return Event;
         }
 
+        protected override DateTime _getTimestamp()
+        {
+            if (_event.StartTimestamp == null)
+                return new DateTime();
+            return (DateTime)_event.StartTimestamp;
+        }
+
+
         private NavigatorViewModel _nav;
+
 
         private Event _event;
         public Event Event { get { return _event; } }
-
 
 
         /// <summary>
@@ -55,7 +65,11 @@ namespace PhotoGalleryApp.ViewModels
         /// </summary>
         public DateTime Timestamp
         {
-            get { return _event.StartTimestamp; }
+            get {
+                if (_event.StartTimestamp == null)
+                    return new DateTime();
+                return (DateTime)_event.StartTimestamp; 
+            }
         }
 
 
@@ -79,31 +93,33 @@ namespace PhotoGalleryApp.ViewModels
         /// <summary>
         /// If the event's Thumbnail property is set, create a VM for it
         /// </summary>
-        public void CreateThumbnailVM()
+        public void InitThumbnail()
         {
             if(_event.Thumbnail != null)
             {
                 if(_thumbnail == null || _thumbnail.Media != _event.Thumbnail) 
-                {
                     Thumbnail = MediaViewModel.CreateMediaViewModel(_event.Thumbnail, true, 0, _thumbnailHeight);
-                }
             }
         }
 
 
         /// <summary>
-        /// Create the event thumbnail's viewmodel (Thumbnail) if it doesn't exist, and load
-        /// the image into memory if it hasn't been.
+        /// Load the image into memory if it hasn't been.
         /// </summary>
         /// <param name="thumbnailHeight">The height at which to load the thumbnail</param>
         public void LoadThumbnail()
         {
-            if (_event.Thumbnail != null)
-            {
-                CreateThumbnailVM();
-
+            if (Thumbnail != null)
                 Thumbnail.LoadMedia();
-            }
+        }
+
+        private void Event_PropertyChanged(object? sender, PropertyChangedEventArgs e)
+        {
+            if(e.PropertyName == nameof(_event.StartTimestamp))
+                OnPropertyChanged(nameof(Timestamp));
+
+            if (e.PropertyName == nameof(_event.Thumbnail))
+                InitThumbnail();
         }
     }
 }

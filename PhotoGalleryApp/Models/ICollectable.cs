@@ -1,4 +1,5 @@
-﻿using System;
+﻿using PhotoGalleryApp.Utils;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -11,7 +12,7 @@ namespace PhotoGalleryApp.Models
     /// A MediaCollection can contain an event, which has its own MediaCollection. So you can have nested
     /// MediaCollections.
     /// </summary>
-    public abstract class ICollectable
+    public abstract class ICollectable : NotifyPropertyChanged
     {
         /// <summary>
         /// Returns whether the class holds an media item or a collection of items

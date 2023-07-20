@@ -61,12 +61,20 @@ namespace PhotoGalleryApp.ViewModels
         /// </summary>
         public DateTime Timestamp
         {
-            get { return _event.StartTimestamp; }
+            get {
+                if (_event.StartTimestamp == null)
+                    return new DateTime();
+                return (DateTime)_event.StartTimestamp; 
+            }
         }
 
         public DateTime EndTimestamp
         {
-            get { return _event.EndTimestamp; }
+            get { 
+                if(_event.EndTimestamp == null)
+                    return new DateTime();
+                return (DateTime)_event.EndTimestamp; 
+            }
         }
 
         public string TimeRangeDisplay

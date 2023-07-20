@@ -22,6 +22,19 @@ namespace PhotoGalleryApp.Utils
          */
         private bool notificationsEnabled = true;
 
+        public void ReplaceItems(IEnumerable<T> items)
+        {
+            notificationsEnabled = false;
+
+            Clear();
+            foreach (T item in items)
+                Add(item);
+
+            notificationsEnabled = true;
+
+            OnCollectionChanged(new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Reset));
+        }
+
         /// <summary>
         /// Adds a list of items to this collection. The same as calling Add on each
         /// item in the collection, but only one notification is sent out to observers.

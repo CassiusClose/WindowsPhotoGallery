@@ -16,6 +16,7 @@
         <converters:HeightARToWidthConverter x:Key="HeightARToWidth"/>
         <converters:EventToNameConverter x:Key="EventNameConverter"/>
 
+
         <Style x:Key="CollectionThumbnailImage" TargetType="Image">
             <Setter Property="MinHeight" Value="{Binding Path=DataContext.ThumbnailHeight, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType={x:Type local:MediaCollection}}}"/>
         </Style>
@@ -27,70 +28,97 @@
 
         <!-- How to display an event -->
         <DataTemplate DataType="{x:Type vms:EventTileViewModel}">
-            <Grid>
-                <Image Style="{StaticResource CollectionThumbnailImage}">
-                    <Image.Source>
-                        <Binding Path="Thumbnail.ImageData" Mode="OneWay"/>
-                    </Image.Source>
-                </Image>
+            <Border Margin="0,0,0,0" Padding="0,0,0,0" Background="LightGray" BorderThickness="0">
+                <Border.InputBindings>
+                    <MouseBinding MouseAction="LeftClick"
+                                  Command="{Binding Path=DataContext.OpenMediaCommand, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType={x:Type local:MediaCollection}}}"
+                                  CommandParameter="{Binding}"/>
+                </Border.InputBindings>
+                <!-- Display the image -->
+                <Grid>
+                    <Image Style="{StaticResource CollectionThumbnailImage}">
+                        <Image.Source>
+                            <Binding Path="Thumbnail.ImageData" Mode="OneWay"/>
+                        </Image.Source>
+                    </Image>
 
-                <Border
-                    Grid.ZIndex="1"
-                    Background="White"
-                    HorizontalAlignment="Left"
-                    VerticalAlignment="Bottom"
-                    Margin="10"
-                    BorderBrush="Black"
-                    BorderThickness="2"
-                    Padding="5"
-                    >
-                    <Label Content="{Binding Name}"/>
-                </Border>
-            </Grid>
+                    <Border
+                        Grid.ZIndex="1"
+                        Background="White"
+                        HorizontalAlignment="Left"
+                        VerticalAlignment="Bottom"
+                        Margin="10"
+                        BorderBrush="Black"
+                        BorderThickness="2"
+                        Padding="5"
+                        >
+                        <Label Content="{Binding Name}"/>
+                    </Border>
+                </Grid>
+            </Border>
+        </DataTemplate>
+
+
+        <DataTemplate DataType="{x:Type vms:TimeLabelViewModel}">
+            <Label Content="{Binding Label}"/>
         </DataTemplate>
 
         <!-- How to display an image -->
         <DataTemplate DataType="{x:Type vms:ImageViewModel}">
-            <Grid>
+            <Border Margin="0,0,0,0" Padding="0,0,0,0" Background="LightGray" BorderThickness="0">
+                <Border.InputBindings>
+                    <MouseBinding MouseAction="LeftClick"
+                                  Command="{Binding Path=DataContext.OpenMediaCommand, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType={x:Type local:MediaCollection}}}"
+                                  CommandParameter="{Binding}"/>
+                </Border.InputBindings>
                 <!-- Display the image -->
-                <Image Style="{StaticResource CollectionThumbnailImage}" Stretch="Uniform">
-                    <Image.Source>
-                        <Binding Path="ImageData" Mode="OneWay"/>
-                    </Image.Source>
-                </Image>
+                <Grid>
+                    <!-- Display the image -->
+                    <Image Style="{StaticResource CollectionThumbnailImage}" Stretch="Uniform">
+                        <Image.Source>
+                            <Binding Path="ImageData" Mode="OneWay"/>
+                        </Image.Source>
+                    </Image>
 
-                <!-- Display a selection button on top of the image -->
-                <ToggleButton 
-                    Grid.ZIndex="1" 
-                    Width="50" Height="50" 
-                    HorizontalAlignment="Left" VerticalAlignment="Top" 
-                    Command="{Binding Path=DataContext.SelectMediaCommand, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType={x:Type local:MediaCollection}}}" 
-                    CommandParameter="{Binding}"
-                    IsChecked="{Binding Path=IsSelected, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType={x:Type ListBoxItem}}}"
-                    Visibility="{Binding PreviewVisibility, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType={x:Type local:MediaCollection}}}"
-                    >Sel
-                </ToggleButton>
-                    
-
-            </Grid>
+                    <!-- Display a selection button on top of the image -->
+                    <ToggleButton 
+                        Grid.ZIndex="1" 
+                        Width="50" Height="50" 
+                        HorizontalAlignment="Left" VerticalAlignment="Top" 
+                        Command="{Binding Path=DataContext.SelectMediaCommand, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType={x:Type local:MediaCollection}}}" 
+                        CommandParameter="{Binding}"
+                        IsChecked="{Binding Path=IsSelected, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType={x:Type ListBoxItem}}}"
+                        Visibility="{Binding PreviewVisibility, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType={x:Type local:MediaCollection}}}"
+                        >Sel
+                    </ToggleButton>
+                </Grid>
+            </Border>
         </DataTemplate>
 
         <!-- How to display an video -->
         <DataTemplate DataType="{x:Type vms:VideoViewModel}">
-            <Grid>
-                <Image Style="{StaticResource CollectionThumbnailImage}">
-                    <Image.Source>
-                        <Binding Path="ThumbnailViewModel.ImageData" Mode="OneWay"/>
-                    </Image.Source>
-                </Image>
+            <Border Margin="0,0,0,0" Padding="0,0,0,0" Background="LightGray" BorderThickness="0">
+                <Border.InputBindings>
+                    <MouseBinding MouseAction="LeftClick"
+                                  Command="{Binding Path=DataContext.OpenMediaCommand, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType={x:Type local:MediaCollection}}}"
+                                  CommandParameter="{Binding}"/>
+                </Border.InputBindings>
+                <!-- Display the image -->
+                <Grid>
+                    <Image Style="{StaticResource CollectionThumbnailImage}">
+                        <Image.Source>
+                            <Binding Path="ThumbnailViewModel.ImageData" Mode="OneWay"/>
+                        </Image.Source>
+                    </Image>
 
-                <!-- Display a selection button on top of the image -->
-                <ToggleButton Grid.ZIndex="1" Width="50" Height="50" HorizontalAlignment="Left" VerticalAlignment="Top" 
-                              Command="{Binding Path=DataContext.SelectMediaCommand, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType={x:Type local:MediaCollection}}}" 
-                              CommandParameter="{Binding}"
-                              IsChecked="{Binding Path=IsSelected, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType={x:Type ListBoxItem}}}">Sel</ToggleButton>
+                    <!-- Display a selection button on top of the image -->
+                    <ToggleButton Grid.ZIndex="1" Width="50" Height="50" HorizontalAlignment="Left" VerticalAlignment="Top" 
+                                  Command="{Binding Path=DataContext.SelectMediaCommand, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType={x:Type local:MediaCollection}}}" 
+                                  CommandParameter="{Binding}"
+                                  IsChecked="{Binding Path=IsSelected, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType={x:Type ListBoxItem}}}">Sel</ToggleButton>
 
-            </Grid>
+                </Grid>
+            </Border>
         </DataTemplate>
 
         <!-- Horizontal, wrapping collection of items -->
@@ -105,18 +133,6 @@
             </Setter>
         </Style>
         
-        <!-- Wrapping, horizontal collection of current tags, each of which is a clickable string. Clicking removes the tag from the image filter -->
-        <Style x:Key="FilterTagsList" BasedOn="{StaticResource HorizontalWrapItemsControl}" TargetType="ItemsControl">
-            <Setter Property="ItemTemplate">
-                <Setter.Value>
-                    <DataTemplate>
-                        <Button Content="{Binding}"
-                                Command="{Binding Path=DataContext.RemoveTagFromFilterCommand, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType={x:Type local:MediaCollection}}}"
-                                CommandParameter="{Binding}"/>
-                    </DataTemplate>
-                </Setter.Value>
-            </Setter>
-        </Style>
 
 
         <!-- Horizontal, wrapping list of images -->
@@ -132,20 +148,16 @@
                     </ItemsPanelTemplate>
                 </Setter.Value>
             </Setter>
+        </Style>
 
-            <!-- Each item is a clickable image. Clicking on the image will open it as a new page in the Navigator. -->
+        <!-- Wrapping, horizontal collection of current tags, each of which is a clickable string. Clicking removes the tag from the image filter -->
+        <Style x:Key="FilterTagsList" BasedOn="{StaticResource HorizontalWrapItemsControl}" TargetType="ItemsControl">
             <Setter Property="ItemTemplate">
                 <Setter.Value>
                     <DataTemplate>
-                        <Border Margin="0,0,0,0" Padding="0,0,0,0" Background="LightGray" BorderThickness="0">
-                            <Border.InputBindings>
-                                <MouseBinding MouseAction="LeftClick"
-                                              Command="{Binding Path=DataContext.OpenMediaCommand, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType={x:Type local:MediaCollection}}}"
-                                              CommandParameter="{Binding}"/>
-                            </Border.InputBindings>
-                            <!-- Display the image -->
-                            <ContentControl Content="{Binding}" Padding="0" Margin="0"/>
-                        </Border>
+                        <Button Content="{Binding}"
+                                Command="{Binding Path=DataContext.RemoveTagFromFilterCommand, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType={x:Type local:MediaCollection}}}"
+                                CommandParameter="{Binding}"/>
                     </DataTemplate>
                 </Setter.Value>
             </Setter>
@@ -226,7 +238,7 @@
 
         <!-- Tag Filtering panel -->
         <StackPanel 
-            Grid.Row="1" 
+            Grid.Row="1"
             x:Name="TagFilteringPanel"
             Orientation="Horizontal"
             >
@@ -275,7 +287,6 @@
                         <Setter Property="VerticalContentAlignment" Value="Stretch"/>
                         <Setter Property="Padding" Value="0"/>
                         <Setter Property="Margin" Value="0"/>
-                        <Setter Property="MinHeight" Value="{Binding Path=DataContext.ThumbnailHeight, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType={x:Type local:MediaCollection}}}"/>
                         <Setter Property="IsSelected" Value="{Binding Mode=TwoWay, Path=IsSelected}"/>
                     </Style>
                 </ListBox.ItemContainerStyle>
