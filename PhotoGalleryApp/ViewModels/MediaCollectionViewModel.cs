@@ -63,7 +63,7 @@ namespace PhotoGalleryApp.ViewModels
 
 
             // Init the view, which does filtering & sorting
-            _view = new MediaView(_nav, MediaCollectionModel, ThumbnailHeight);
+            _view = new MediaView(_nav, MediaCollectionModel, ThumbnailHeight, !_previewMode);
             _view.Filter += MediaFilter;
             _view.View.CollectionChanged += View_CollectionChanged;
 
@@ -855,7 +855,7 @@ namespace PhotoGalleryApp.ViewModels
             {
                 // Get a list of all the currently filtered images
                 List<ICollectableViewModel> list = MediaView.Cast<ICollectableViewModel>().ToList();
-                List<Media> media = new List<Media>(); //= MediaViewModel.GetMediaList(list);
+                List<Media> media = new List<Media>();
                 foreach (ICollectableViewModel vm in list)
                 {
                     if (vm is MediaViewModel)

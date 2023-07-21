@@ -281,12 +281,12 @@ namespace PhotoGalleryApp.Views
 
                 numRows++;
                 //TODO Reimplement
-                /*if(NumRows > 0 && numRows == NumRows)
+                if(NumRows > 0 && numRows == NumRows)
                 {
                     MediaScrollViewer.Height = totalHeight;
                     MediaScrollViewer.MaxHeight = totalHeight;
                     break;
-                }*/
+                }
             }
         }
 
