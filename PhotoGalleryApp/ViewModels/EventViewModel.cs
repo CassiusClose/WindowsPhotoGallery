@@ -25,6 +25,7 @@ namespace PhotoGalleryApp.ViewModels
 
             _mediaCollection = new MediaCollectionViewModel(nav, _event.Collection, new SortDescription("Timestamp", ListSortDirection.Ascending), true);
             _mediaCollection.ThumbnailHeight = 150;
+            ((INotifyPropertyChanged)_event).PropertyChanged += Collection_PropertyChanged;
         }
 
 
@@ -59,30 +60,30 @@ namespace PhotoGalleryApp.ViewModels
         /// <summary>
         /// The event's timestamp used for sorting, the earliest timestamp of its media
         /// </summary>
-        public DateTime Timestamp
+        public DateTime StartTimestamp
         {
             get {
-                if (_event.StartTimestamp == null)
+                if (_event.Collection.StartTimestamp == null)
                     return new DateTime();
-                return (DateTime)_event.StartTimestamp; 
+                return (DateTime)_event.Collection.StartTimestamp; 
             }
         }
 
         public DateTime EndTimestamp
         {
             get { 
-                if(_event.EndTimestamp == null)
+                if(_event.Collection.EndTimestamp == null)
                     return new DateTime();
-                return (DateTime)_event.EndTimestamp; 
+                return (DateTime)_event.Collection.EndTimestamp; 
             }
         }
 
         public string TimeRangeDisplay
         {
             get {
-                string start = Timestamp.Month.ToString() + "/" + Timestamp.Day.ToString() + "/" + Timestamp.Year.ToString();
+                string start = StartTimestamp.Month.ToString() + "/" + StartTimestamp.Day.ToString() + "/" + StartTimestamp.Year.ToString();
 
-                if(Timestamp.Year == EndTimestamp.Year && Timestamp.Month == EndTimestamp.Month && Timestamp.Day == EndTimestamp.Day)
+                if(StartTimestamp.Year == EndTimestamp.Year && StartTimestamp.Month == EndTimestamp.Month && StartTimestamp.Day == EndTimestamp.Day)
                 {
                     return start;
                 }
@@ -116,6 +117,17 @@ namespace PhotoGalleryApp.ViewModels
         public void OpenCollection()
         {
             _nav.NewPage(new GalleryViewModel(_nav, Event.Collection));
+        }
+
+        private void Collection_PropertyChanged(object? sender, PropertyChangedEventArgs e)
+        {
+            MediaCollection coll = (MediaCollection)sender;
+
+            if(e.PropertyName == nameof(coll.StartTimestamp))
+                OnPropertyChanged(nameof(StartTimestamp));
+
+            if(e.PropertyName == nameof(coll.EndTimestamp))
+                OnPropertyChanged(nameof(EndTimestamp));
         }
     }
 }

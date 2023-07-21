@@ -4,9 +4,11 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Collections.Specialized;
+using System.ComponentModel;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading.Tasks;
 using System.Xml.Serialization;
@@ -39,6 +41,39 @@ namespace PhotoGalleryApp.Models
         /// </summary>
         public RangeObservableCollection<string> Tags { get; private set; }
 
+
+
+        /// <summary>
+        /// The timestamp of the earliest media in the event.
+        /// </summary>
+        //TODO What if nothing in the event? Right now, default is year 1.
+        private DateTime? _startTimestamp = null;
+        public DateTime? StartTimestamp
+        {
+            get { return _startTimestamp; }
+            set
+            {
+                _startTimestamp = value;
+                OnPropertyChanged(new PropertyChangedEventArgs(nameof(StartTimestamp)));
+            }
+        }
+
+
+        //TODO Implement ISerializable and make internal set
+        private DateTime? _endTimestamp = null;
+        public DateTime? EndTimestamp
+        {
+            get { return _endTimestamp; }
+            set
+            {
+                _endTimestamp = value;
+                OnPropertyChanged(new PropertyChangedEventArgs(nameof(EndTimestamp)));
+            }
+        }
+
+
+
+
         /**
          * Pass on any children's tags CollectionChanged events.
          */
@@ -51,6 +86,59 @@ namespace PhotoGalleryApp.Models
         #region Methods
 
 
+        /**
+         * Reset the start and end timestamps
+         */
+        private void ResetTimeRange()
+        {
+            DateTime? earliest = null;
+            DateTime? latest = null;
+            foreach(ICollectable c in this)
+            {
+                if(c is Media)
+                {
+                    DateTime? t = ((Media)c).Timestamp;
+                    if (t != null && (t < earliest || earliest == null))
+                        earliest = t;
+                    if (t != null && (t > latest || latest == null))
+                        latest = t;
+                }
+                else
+                {
+                    DateTime? t = ((Event)c).Collection.StartTimestamp;
+                    if (t != null && (t < earliest || earliest == null))
+                        earliest = t;
+                    if (t != null && (t > latest || latest == null))
+                        latest = t;
+                }
+            }
+
+            if(earliest != null)
+                StartTimestamp = (DateTime)earliest;
+            if (latest != null)
+                EndTimestamp = (DateTime)latest;
+        }
+
+
+
+        /**
+         * When an item in the collection changes its timestamps, reset the timerange here
+         */
+        private void Item_PropertyChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs e)
+        {
+            if(sender is Media)
+            {
+                Media m = (Media)sender;
+                if (e.PropertyName == nameof(m.Timestamp))
+                    ResetTimeRange();
+            }
+            else
+            {
+                Event ev = (Event)sender;
+                if(e.PropertyName == nameof(ev.Collection.StartTimestamp))
+                    ResetTimeRange();
+            }
+        }
 
 
         /**
@@ -62,20 +150,32 @@ namespace PhotoGalleryApp.Models
             base.InsertItem(index, item);
 
             if (item is Media)
-                ((Media)item).TagsChanged += MediaTags_CollectionChanged;
-            // Uncomment if a MediaCollection's tag list should contain tags from nested events
-            /*else
-                ((Event)i).Collection.AddTagsChangedListener(handler);
-            */
+            {
+                Media m = (Media)item;
+                m.TagsChanged += MediaTags_CollectionChanged;
 
+                MediaTagsChanged_Add(m.Tags);
 
-            // When a photo is added, need to refresh the list of tags
-            if (item is Media)
-                MediaTagsChanged_Add(((Media)item).Tags);
-            // Uncomment if a MediaCollection's tag list should contain tags from nested events
-            /*else
-                MediaTagsChanged_Add(((Event)item).Collection.Tags);
-            */
+                if (StartTimestamp == null || m.Timestamp < StartTimestamp)
+                    StartTimestamp = m.Timestamp;
+                if (EndTimestamp == null || m.Timestamp > EndTimestamp)
+                    EndTimestamp = m.Timestamp;
+            }
+            else
+            {
+                Event ev = (Event)item;
+
+                // Uncomment if a MediaCollection's tag list should contain tags from nested events
+                //((Event)i).Collection.AddTagsChangedListener(handler);
+                //MediaTagsChanged_Add(((Event)item).Collection.Tags);
+
+                if(StartTimestamp == null || ev.Collection.StartTimestamp < StartTimestamp)
+                    StartTimestamp = ev.Collection.StartTimestamp;
+                if(EndTimestamp == null || ev.Collection.EndTimestamp > EndTimestamp)
+                    EndTimestamp = ev.Collection.EndTimestamp;
+            }
+
+            item.PropertyChanged += Item_PropertyChanged;
         }
 
 
@@ -91,15 +191,27 @@ namespace PhotoGalleryApp.Models
             
             // When a photo is removed, need to refresh the list of tags 
             if (item is Media)
-                MediaTagsChanged_Remove(((Media)item).Tags);
-            // Uncomment if a MediaCollection's tag list should contain tags from nested events
-            /*else
+            {
+                Media m = (Media)item;
+
+                MediaTagsChanged_Remove(((Media)m).Tags);
+
+                if (m.Timestamp.Equals(StartTimestamp) || m.Timestamp.Equals(EndTimestamp))
+                    ResetTimeRange();
+            }
+            else
+            {
+                Event ev = (Event)item;
+
+                // Uncomment if a MediaCollection's tag list should contain tags from nested events
                 MediaTagsChanged_Remove(((Event)item).Collection.Tags);
-            */
+
+                if (ev.Collection.StartTimestamp.Equals(StartTimestamp) || ev.Collection.EndTimestamp.Equals(EndTimestamp))
+                    ResetTimeRange();
+            }
         }
 
-
-
+        
         /**
          * Recursively add a CollectionChanged listener to all items in this collection, and all
          * items in any collections (Events) that may be nested in this collection.

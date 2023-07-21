@@ -22,7 +22,8 @@ namespace PhotoGalleryApp.ViewModels
             _event = evnt;
             _thumbnailHeight = thumbnailHeight;
 
-            evnt.PropertyChanged += Event_PropertyChanged;
+            _event.PropertyChanged += Event_PropertyChanged;
+            ((INotifyPropertyChanged)evnt.Collection).PropertyChanged += Collection_PropertyChanged;
 
             // If thumbnail already exists, create a VM for it
             InitThumbnail();
@@ -35,13 +36,6 @@ namespace PhotoGalleryApp.ViewModels
         public override ICollectable GetModel()
         {
             return Event;
-        }
-
-        protected override DateTime _getTimestamp()
-        {
-            if (_event.StartTimestamp == null)
-                return new DateTime();
-            return (DateTime)_event.StartTimestamp;
         }
 
 
@@ -63,13 +57,12 @@ namespace PhotoGalleryApp.ViewModels
         /// <summary>
         /// The event's timestamp used for sorting, the earliest timestamp of its media
         /// </summary>
-        public DateTime Timestamp
+        protected override DateTime _getTimestamp()
         {
-            get {
-                if (_event.StartTimestamp == null)
-                    return new DateTime();
-                return (DateTime)_event.StartTimestamp; 
-            }
+            if (_event.Collection.StartTimestamp == null)
+                return new DateTime();
+            return (DateTime)_event.Collection.StartTimestamp; 
+
         }
 
 
@@ -115,11 +108,14 @@ namespace PhotoGalleryApp.ViewModels
 
         private void Event_PropertyChanged(object? sender, PropertyChangedEventArgs e)
         {
-            if(e.PropertyName == nameof(_event.StartTimestamp))
-                OnPropertyChanged(nameof(Timestamp));
-
             if (e.PropertyName == nameof(_event.Thumbnail))
                 InitThumbnail();
+        }
+
+        private void Collection_PropertyChanged(object? sender, PropertyChangedEventArgs e)
+        {
+            if(e.PropertyName == nameof(_event.Collection.StartTimestamp))
+                OnPropertyChanged(nameof(Timestamp));
         }
     }
 }
