@@ -19,7 +19,7 @@ namespace PhotoGalleryApp.ViewModels
         /// </summary>
         /// <param name="timestamp"></param>
         /// <param name="category"></param>
-        public TimeLabelViewModel(DateTime timestamp, TimeRange category) : this(timestamp.Year, timestamp.Month, category) { }
+        public TimeLabelViewModel(DateTime timestamp, TimeRange category) : this(timestamp.Year, timestamp.Month, timestamp.Day, category) { }
 
         /// <summary>
         /// Creates a new TimeLabelViewModel. The time period category is specified by category, either year or month.
@@ -28,20 +28,25 @@ namespace PhotoGalleryApp.ViewModels
         /// <param name="year"></param>
         /// <param name="month"></param>
         /// <param name="category"></param>
-        public TimeLabelViewModel(int year, int month, TimeRange category)
+        public TimeLabelViewModel(int year, int month, int day, TimeRange category)
         {
             _category = category;
 
-            if (category == TimeRange.Year)
+            switch(category)
             {
-                _timestamp = new DateTime(year, 1, 1, 0, 0, 0);
-                Label = year.ToString();
-            }
-            else
-            {
-                // Make the month timestamp 1 second ahead of the year, so it comes later if ever sorted
-                _timestamp = new DateTime(year, month, 1, 0, 0, 1);
-                Label = _timestamp.ToString("MMMM " + year);
+                case TimeRange.Year:
+                    _timestamp = new DateTime(year, 1, 1, 0, 0, 0);
+                    Label = year.ToString();
+                    break;
+                case TimeRange.Month:
+                    // Make the month timestamp 1 second ahead of the year, so it comes later if ever sorted
+                    _timestamp = new DateTime(year, month, 1, 0, 0, 1);
+                    Label = _timestamp.ToString("MMMM yyyy");
+                    break;
+                case TimeRange.Day:
+                    _timestamp = new DateTime(year, month, day, 0, 0, 2);
+                    Label = _timestamp.ToString("D");
+                    break;
             }
         }
 
@@ -70,12 +75,14 @@ namespace PhotoGalleryApp.ViewModels
 
         /**
          * Category is what period of time this refers to (year, month, day)
-         * _timestamp should be the very begining of the time range
          */
         private TimeRange _category;
+        public TimeRange Category { get { return _category; } }
+
+        /**
+         * _timestamp should be the very begining of the time range
+         */
         private DateTime _timestamp;
-
-
         protected override DateTime _getTimestamp()
         {
             return _timestamp;

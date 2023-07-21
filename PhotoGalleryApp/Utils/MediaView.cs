@@ -167,15 +167,25 @@ namespace PhotoGalleryApp.Utils
             }
 
             // If the month and year labels are empty, remove them
+            // Day
             else if (_viewList[i - 1] is TimeLabelViewModel && _viewList[i] is TimeLabelViewModel)
             {
                 _viewList.RemoveAt(i - 1);
                 i--;
 
-                if (_viewList[i - 1] is TimeLabelViewModel && _viewList[i] is TimeLabelViewModel)
+                // Month
+                if (_viewList[i - 1] is TimeLabelViewModel && _viewList[i] is TimeLabelViewModel &&
+                    ((TimeLabelViewModel)_viewList[i]).Category != TimeRange.Day )
                 {
-                    if (_viewList[i - 1].Timestamp.Year != _viewList[i].Timestamp.Year)
-                        _viewList.RemoveAt(i - 1);
+                    _viewList.RemoveAt(i - 1);
+                    i--;
+
+                    //Year
+                    if (_viewList[i - 1] is TimeLabelViewModel && _viewList[i] is TimeLabelViewModel &&
+                        ((TimeLabelViewModel)_viewList[i]).Category == TimeRange.Year)
+                    {
+                        _viewList.RemoveAt(i - 1); 
+                    }
                 }
             }
         }
@@ -232,6 +242,7 @@ namespace PhotoGalleryApp.Utils
                 {
                     _viewList.Add(new TimeLabelViewModel(vm.Timestamp, TimeRange.Year));
                     _viewList.Add(new TimeLabelViewModel(vm.Timestamp, TimeRange.Month));
+                    _viewList.Add(new TimeLabelViewModel(vm.Timestamp, TimeRange.Day));
                     _viewList.Add(vm);
                     continue;
                 }
@@ -248,6 +259,9 @@ namespace PhotoGalleryApp.Utils
 
                         if (lastLabel == null || ((DateTime)lastLabel).Month != vm.Timestamp.Month)
                             _viewList.Insert(i++, new TimeLabelViewModel(vm.Timestamp, TimeRange.Month));
+
+                        if (lastLabel == null || ((DateTime)lastLabel).Day != vm.Timestamp.Day)
+                            _viewList.Insert(i++, new TimeLabelViewModel(vm.Timestamp, TimeRange.Day));
 
                         _viewList.Insert(i, vm);
                         break;
@@ -302,23 +316,28 @@ namespace PhotoGalleryApp.Utils
             // Insert the initial labels
             int year = _viewList[0].Timestamp.Year;
             int month = _viewList[0].Timestamp.Month;
+            int day = _viewList[0].Timestamp.Day;
             _viewList.Insert(0, new TimeLabelViewModel(year));
-            _viewList.Insert(1, new TimeLabelViewModel(year));
-            for (int i = 3; i < _viewList.Count; i++)
+            _viewList.Insert(1, new TimeLabelViewModel(year, month, day, TimeRange.Month));
+            _viewList.Insert(2, new TimeLabelViewModel(day, month, day, TimeRange.Day));
+            for (int i = 4; i < _viewList.Count; i++)
             {
                 // If the current item is a new year or month, add a label for it
                 DateTime ts = _viewList[i].Timestamp;
                 if (ts.Year != year)
                 {
                     year = ts.Year;
-                    _viewList.Insert(i, new TimeLabelViewModel(year));
-                    i++;
+                    _viewList.Insert(i++, new TimeLabelViewModel(year));
                 }
                 if(ts.Month != month)
                 {
                     month = ts.Month;
-                    _viewList.Insert(i, new TimeLabelViewModel(year, month, TimeRange.Month));
-                    i++;
+                    _viewList.Insert(i++, new TimeLabelViewModel(year, month, day, TimeRange.Month));
+                }
+                if(ts.Day != day)
+                {
+                    day = ts.Day;
+                    _viewList.Insert(i++, new TimeLabelViewModel(year, month, day, TimeRange.Month));
                 }
             }
         }

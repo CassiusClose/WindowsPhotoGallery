@@ -11,6 +11,6 @@ namespace PhotoGalleryApp.Utils
     /// </summary>
     public enum TimeRange
     {
-        Year, Month
+        Year, Month, Day
     }
 }
