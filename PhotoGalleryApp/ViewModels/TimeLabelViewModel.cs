@@ -41,7 +41,7 @@ namespace PhotoGalleryApp.ViewModels
                 case TimeRange.Month:
                     // Make the month timestamp 1 second ahead of the year, so it comes later if ever sorted
                     _timestamp = new DateTime(year, month, 1, 0, 0, 1);
-                    Label = _timestamp.ToString("MMMM yyyy");
+                    Label = _timestamp.ToString("MMMM");
                     break;
                 case TimeRange.Day:
                     _timestamp = new DateTime(year, month, day, 0, 0, 2);

@@ -7,6 +7,7 @@
              xmlns:ei="http://schemas.microsoft.com/xaml/behaviors"
              xmlns:converters="clr-namespace:PhotoGalleryApp.Converters"
              xmlns:vms="clr-namespace:PhotoGalleryApp.ViewModels"
+             xmlns:utils="clr-namespace:PhotoGalleryApp.Utils"
              mc:Ignorable="d" 
              d:DesignHeight="450" d:DesignWidth="800"
              Loaded="UserControl_Loaded"
@@ -28,7 +29,7 @@
 
         <!-- How to display an event -->
         <DataTemplate DataType="{x:Type vms:EventTileViewModel}">
-            <Border Margin="0,0,0,0" Padding="0,0,0,0" Background="LightGray" BorderThickness="0">
+            <Border Margin="0" Padding="0" Background="Transparent" BorderThickness="0">
                 <Border.InputBindings>
                     <MouseBinding MouseAction="LeftClick"
                                   Command="{Binding Path=DataContext.OpenMediaCommand, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType={x:Type local:MediaCollection}}}"
@@ -60,12 +61,25 @@
 
 
         <DataTemplate DataType="{x:Type vms:TimeLabelViewModel}">
-            <Label Content="{Binding Label}"/>
+            <Label Content="{Binding Label}">
+                <Label.Resources>
+                    <Style TargetType="{x:Type Label}">
+                        <Style.Triggers>
+                            <DataTrigger Binding="{Binding Category}" Value="{x:Static utils:TimeRange.Year}">
+                                <Setter Property="FontSize" Value="30"/>
+                            </DataTrigger>
+                            <DataTrigger Binding="{Binding Category}" Value="{x:Static utils:TimeRange.Month}">
+                                <Setter Property="FontSize" Value="20"/>
+                            </DataTrigger>
+                        </Style.Triggers>
+                    </Style>
+                </Label.Resources> 
+            </Label>
         </DataTemplate>
 
         <!-- How to display an image -->
         <DataTemplate DataType="{x:Type vms:ImageViewModel}">
-            <Border Margin="0,0,0,0" Padding="0,0,0,0" Background="LightGray" BorderThickness="0">
+            <Border Margin="0,0,0,0" Padding="0,0,0,0" Background="Transparent" BorderThickness="0">
                 <Border.InputBindings>
                     <MouseBinding MouseAction="LeftClick"
                                   Command="{Binding Path=DataContext.OpenMediaCommand, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType={x:Type local:MediaCollection}}}"
@@ -97,7 +111,7 @@
 
         <!-- How to display an video -->
         <DataTemplate DataType="{x:Type vms:VideoViewModel}">
-            <Border Margin="0,0,0,0" Padding="0,0,0,0" Background="LightGray" BorderThickness="0">
+            <Border Margin="0,0,0,0" Padding="0,0,0,0" Background="Transparent" BorderThickness="0">
                 <Border.InputBindings>
                     <MouseBinding MouseAction="LeftClick"
                                   Command="{Binding Path=DataContext.OpenMediaCommand, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType={x:Type local:MediaCollection}}}"
@@ -290,6 +304,15 @@
                         <Setter Property="Padding" Value="0"/>
                         <Setter Property="Margin" Value="0"/>
                         <Setter Property="IsSelected" Value="{Binding Mode=TwoWay, Path=IsSelected}"/>
+                        <Setter Property="Template">
+                            <Setter.Value>
+                                <ControlTemplate TargetType="ListBoxItem">
+                                    <Border Padding="2">
+                                        <ContentPresenter/>
+                                    </Border>
+                                </ControlTemplate>
+                            </Setter.Value>
+                        </Setter>
                     </Style>
                 </ListBox.ItemContainerStyle>
             </ListBox>
