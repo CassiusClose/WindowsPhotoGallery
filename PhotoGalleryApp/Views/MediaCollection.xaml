@@ -29,7 +29,7 @@
 
         <!-- How to display an event -->
         <DataTemplate DataType="{x:Type vms:EventTileViewModel}">
-            <Border Margin="0" Padding="0" Background="Transparent" BorderThickness="0">
+            <Border Margin="0" Padding="0" Background="Transparent" BorderBrush="LightGray" BorderThickness="1">
                 <Border.InputBindings>
                     <MouseBinding MouseAction="LeftClick"
                                   Command="{Binding Path=DataContext.OpenMediaCommand, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType={x:Type local:MediaCollection}}}"
@@ -79,7 +79,7 @@
 
         <!-- How to display an image -->
         <DataTemplate DataType="{x:Type vms:ImageViewModel}">
-            <Border Margin="0,0,0,0" Padding="0,0,0,0" Background="Transparent" BorderThickness="0">
+            <Border Margin="0,0,0,0" Padding="0,0,0,0" Background="Transparent" BorderThickness="1" BorderBrush="LightGray">
                 <Border.InputBindings>
                     <MouseBinding MouseAction="LeftClick"
                                   Command="{Binding Path=DataContext.OpenMediaCommand, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType={x:Type local:MediaCollection}}}"
@@ -111,7 +111,7 @@
 
         <!-- How to display an video -->
         <DataTemplate DataType="{x:Type vms:VideoViewModel}">
-            <Border Margin="0,0,0,0" Padding="0,0,0,0" Background="Transparent" BorderThickness="0">
+            <Border Margin="0,0,0,0" Padding="0,0,0,0" Background="Transparent" BorderThickness="1" BorderBrush="LightGray">
                 <Border.InputBindings>
                     <MouseBinding MouseAction="LeftClick"
                                   Command="{Binding Path=DataContext.OpenMediaCommand, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType={x:Type local:MediaCollection}}}"
