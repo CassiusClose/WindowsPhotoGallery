@@ -246,10 +246,6 @@
 
             <Button Command="{Binding ChangeThumbnailHeightCommand}">Change Thumbnail Height</Button>
 
-            <Button
-                Content="Create New Event"
-                Command="{Binding CreateEventCommand}"/>
-
         </StackPanel> 
 
         <!-- Tag Filtering panel -->

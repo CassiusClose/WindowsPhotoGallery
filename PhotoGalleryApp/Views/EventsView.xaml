@@ -11,7 +11,11 @@
 
     </UserControl.Resources>
 
-    <Grid>
+    <StackPanel>
+        <Button
+            Content="View Entire Gallery"
+            Command="{Binding OpenGalleryCommand}"
+            ></Button>
         <local:FolderList ItemsSource="{Binding Labels}"/>
-    </Grid>
+    </StackPanel>
 </UserControl>

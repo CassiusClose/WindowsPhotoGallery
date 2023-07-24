@@ -387,10 +387,11 @@ namespace PhotoGalleryApp.Utils
         }
         private bool ShouldShowDays()
         {
-            if (_maxLabel == null)
+            return true;
+            /*if (_maxLabel == null)
                 return HasMultipleDays();
             else
-                return _maxLabel <= TimeRange.Day;
+                return _maxLabel <= TimeRange.Day;*/
         }
 
 

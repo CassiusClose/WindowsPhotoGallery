@@ -113,7 +113,7 @@ namespace PhotoGalleryApp.ViewModels
 
         public void OpenCollection()
         {
-            _nav.NewPage(new GalleryViewModel(Event.Name, _nav, Event.Collection));
+            _nav.NewPage(new GalleryViewModel(Event.Name, _nav, Event.Collection, null));
         }
 
         private void Collection_PropertyChanged(object? sender, PropertyChangedEventArgs e)

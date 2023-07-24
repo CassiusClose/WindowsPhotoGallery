@@ -25,6 +25,8 @@ namespace PhotoGalleryApp.ViewModels
     {
         public EventsViewModel(NavigatorViewModel nav, MediaCollection coll)
         {
+            _openGalleryCommand = new RelayCommand(OpenGallery);
+
             _nav = nav; 
             _collection = coll;
             _collection.CollectionChanged += MediaCollectionChanged;
@@ -334,6 +336,16 @@ namespace PhotoGalleryApp.ViewModels
 
                 _nav.NewPage(new GalleryViewModel(folder.Timestamp.ToString(),  _nav, new MediaCollection(list), folder.Timestamp.Precision+1));
             }
+        }
+
+        private RelayCommand _openGalleryCommand;
+        public ICommand OpenGalleryCommand => _openGalleryCommand;
+
+        public void OpenGallery()
+        {
+            GalleryViewModel vm = new GalleryViewModel("All Items", _nav, ((MainWindow)System.Windows.Application.Current.MainWindow).Gallery.Collection);
+            //GalleryViewModel vm = new GalleryViewModel("All Items", _nav, new MediaCollection());
+            _nav.NewPage(vm);
         }
     }
 }

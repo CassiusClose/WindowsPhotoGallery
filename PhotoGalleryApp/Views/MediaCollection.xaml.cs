@@ -224,7 +224,7 @@ namespace PhotoGalleryApp.Views
 
                     double ar = GetAR(vm);
 
-                    if (widthInRow + ThumbnailHeight * ar > containerWidth)
+                    if (widthInRow + ThumbnailHeight * ar > containerWidth && rowItemCount > 1)
                     {
                         break;
                     }
