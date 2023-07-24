@@ -174,9 +174,6 @@ namespace PhotoGalleryApp.Models
          */
         protected override void InsertItem(int index, ICollectable item)
         {
-            // InsertItem is used internally by functions such as Add, so overriding here is enough
-            base.InsertItem(index, item);
-
             if (item is Media)
             {
                 Media m = (Media)item;
@@ -204,6 +201,10 @@ namespace PhotoGalleryApp.Models
             }
 
             item.PropertyChanged += Item_PropertyChanged;
+
+            // Do this after above, so the time range is reset by the time CollectionChanged notifications go out
+            // InsertItem is used internally by functions such as Add, so overriding here is enough
+            base.InsertItem(index, item);
         }
 
 
@@ -214,9 +215,6 @@ namespace PhotoGalleryApp.Models
         {
             ICollectable item = this[index];
 
-            //RemoveItem is used internally by functions such as Remove, so overriding here is enough
-            base.RemoveItem(index);
-            
             // When a photo is removed, need to refresh the list of tags 
             if (item is Media)
             {
@@ -237,6 +235,10 @@ namespace PhotoGalleryApp.Models
                 if (ev.Collection.StartTimestamp.Equals(StartTimestamp) || ev.Collection.EndTimestamp.Equals(EndTimestamp))
                     ResetTimeRange();
             }
+
+            // Do this after above, so the time range is reset by the time CollectionChanged notifications go out
+            // RemoveItem is used internally by functions such as Remove, so overriding here is enough
+            base.RemoveItem(index);
         }
 
         

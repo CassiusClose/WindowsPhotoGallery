@@ -11,6 +11,7 @@ using System.Linq;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Windows.Documents;
 using System.Windows.Ink;
 
 namespace PhotoGalleryApp.Utils
@@ -20,12 +21,17 @@ namespace PhotoGalleryApp.Utils
     /// </summary>
     public class MediaView
     {
-        public MediaView(NavigatorViewModel nav, MediaCollection collection, int thumbnailHeight, bool useLabels=true)
+        /// <summary>
+        /// </summary>
+        /// <param name="maxLabel">The highest level of time to show labels for. If this is null, will determine this based on whether there are multiple
+        /// of that time range in the collection. So if all the media is from the same year, it will not show the year label.</param>
+        public MediaView(NavigatorViewModel nav, MediaCollection collection, int thumbnailHeight, bool useLabels=true, TimeRange? maxLabel=TimeRange.Year)
         {
             _nav = nav;
             _collection = collection;
             _thumbnailHeight = thumbnailHeight;
             _useLabels = useLabels;
+            _maxLabel = maxLabel;
             _collection.CollectionChanged += MediaCollectionChanged;
 
             _fullList = new ObservableCollection<ICollectableViewModel>();
@@ -58,6 +64,12 @@ namespace PhotoGalleryApp.Utils
 
         private int _thumbnailHeight;
         private bool _useLabels;
+
+        /**
+         * The max level of time label to display. If this is null, then go into a dynamic mode, where it will only display labels for which 
+         * there are multiple for a given time range. For example, if all of the media is from the same year, it will not display a year label.
+         */
+        private TimeRange? _maxLabel;
 
 
         // The method used to filter the items
@@ -247,9 +259,12 @@ namespace PhotoGalleryApp.Utils
                 {
                     if(_useLabels)
                     {
-                        _viewList.Add(new TimeLabelViewModel(new PrecisionDateTime(vm.Timestamp, TimeRange.Year)));
-                        _viewList.Add(new TimeLabelViewModel(new PrecisionDateTime(vm.Timestamp, TimeRange.Month)));
-                        _viewList.Add(new TimeLabelViewModel(new PrecisionDateTime(vm.Timestamp, TimeRange.Day)));
+                        if(ShouldShowYears())
+                            _viewList.Add(new TimeLabelViewModel(new PrecisionDateTime(vm.Timestamp, TimeRange.Year)));
+                        if(ShouldShowMonths())
+                            _viewList.Add(new TimeLabelViewModel(new PrecisionDateTime(vm.Timestamp, TimeRange.Month)));
+                        if(ShouldShowDays())
+                            _viewList.Add(new TimeLabelViewModel(new PrecisionDateTime(vm.Timestamp, TimeRange.Day)));
                     }
                     _viewList.Add(vm);
                     continue;
@@ -264,13 +279,13 @@ namespace PhotoGalleryApp.Utils
                         if(_useLabels)
                         {
                             // Add labels if they don't already exist
-                            if (lastLabel == null || lastLabel.Year != vm.Timestamp.Year)
+                            if ((lastLabel == null || lastLabel.Year != vm.Timestamp.Year) && ShouldShowYears())
                                 _viewList.Insert(i++, new TimeLabelViewModel(new PrecisionDateTime(vm.Timestamp, TimeRange.Year)));
 
-                            if (lastLabel == null || lastLabel.Month != vm.Timestamp.Month)
+                            if ((lastLabel == null || lastLabel.Month != vm.Timestamp.Month) && ShouldShowMonths())
                                 _viewList.Insert(i++, new TimeLabelViewModel(new PrecisionDateTime(vm.Timestamp, TimeRange.Month)));
 
-                            if (lastLabel == null || lastLabel.Day != vm.Timestamp.Day)
+                            if ((lastLabel == null || lastLabel.Day != vm.Timestamp.Day) && ShouldShowDays())
                                 _viewList.Insert(i++, new TimeLabelViewModel(new PrecisionDateTime(vm.Timestamp, TimeRange.Day)));
                         }
 
@@ -329,28 +344,72 @@ namespace PhotoGalleryApp.Utils
 
             // Insert the initial labels
             PrecisionDateTime currTime = _viewList[0].Timestamp;
-            _viewList.Insert(0, new TimeLabelViewModel(new PrecisionDateTime(currTime, TimeRange.Year)));
-            _viewList.Insert(0, new TimeLabelViewModel(new PrecisionDateTime(currTime, TimeRange.Month)));
-            _viewList.Insert(0, new TimeLabelViewModel(new PrecisionDateTime(currTime, TimeRange.Day)));
+            if(ShouldShowYears())
+                _viewList.Insert(0, new TimeLabelViewModel(new PrecisionDateTime(currTime, TimeRange.Year)));
+            if(ShouldShowMonths())
+                _viewList.Insert(0, new TimeLabelViewModel(new PrecisionDateTime(currTime, TimeRange.Month)));
+            if(ShouldShowDays())
+                _viewList.Insert(0, new TimeLabelViewModel(new PrecisionDateTime(currTime, TimeRange.Day)));
             for (int i = 4; i < _viewList.Count; i++)
             {
                 // If the current item is a new year or month, add a label for it
                 PrecisionDateTime ts = _viewList[i].Timestamp;
-                if (ts.Year != currTime.Year)
+                if (ts.Year != currTime.Year && ShouldShowYears())
                 {
                     _viewList.Insert(i++, new TimeLabelViewModel(new PrecisionDateTime(currTime, TimeRange.Year)));
                 }
-                if(ts.Month != currTime.Month)
+                if(ts.Month != currTime.Month && ShouldShowMonths())
                 {
                     _viewList.Insert(i++, new TimeLabelViewModel(new PrecisionDateTime(currTime, TimeRange.Month)));
                 }
-                if(ts.Day != currTime.Day)
+                if(ts.Day != currTime.Day && ShouldShowDays())
                 {
                     _viewList.Insert(i++, new TimeLabelViewModel(new PrecisionDateTime(currTime, TimeRange.Day)));
                 }
                 currTime = ts;
             }
         }
+
+
+        private bool ShouldShowYears()
+        {
+            if (_maxLabel == null)
+                return HasMultipleYears();
+            else
+                return _maxLabel <= TimeRange.Year;
+        }
+        private bool ShouldShowMonths()
+        {
+            if (_maxLabel == null)
+                return HasMultipleMonths();
+            else
+                return _maxLabel <= TimeRange.Month;
+        }
+        private bool ShouldShowDays()
+        {
+            if (_maxLabel == null)
+                return HasMultipleDays();
+            else
+                return _maxLabel <= TimeRange.Day;
+        }
+
+
+
+
+        private bool HasMultipleYears()
+        {
+            return _collection.StartTimestamp.Year != _collection.EndTimestamp.Year;
+        }
+        private bool HasMultipleMonths()
+        {
+            return HasMultipleYears() || _collection.StartTimestamp.Month != _collection.EndTimestamp.Month;
+        }
+
+        private bool HasMultipleDays()
+        {
+            return HasMultipleMonths() || _collection.StartTimestamp.Day != _collection.EndTimestamp.Day;
+        }
+
 
 
 

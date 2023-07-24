@@ -297,8 +297,6 @@ namespace PhotoGalleryApp.ViewModels
          */
         private void FolderOpened(FolderLabelViewModel folder)
         {
-            MediaCollection? coll = null;
-
             // If it's an event, open the event's collection
             if (folder.Timestamp.Precision == TimeRange.Second)
             {
@@ -308,10 +306,14 @@ namespace PhotoGalleryApp.ViewModels
                     {
                         Event e = (Event)c;
                         if (folder.Timestamp == e.Collection.StartTimestamp)
-                            coll = e.Collection;
+                        {
+                            _nav.NewPage(new GalleryViewModel(_nav, e.Collection, null));
+                            return;
+                        }
                     }
                 }
             }
+
             // If it's a time range (year or month), collect all the media for that time range and open it
             else 
             {
@@ -330,13 +332,8 @@ namespace PhotoGalleryApp.ViewModels
                     }
                 }
 
-                coll = new MediaCollection(list);
+                _nav.NewPage(new GalleryViewModel(_nav, new MediaCollection(list), folder.Timestamp.Precision+1));
             }
-
-            if (coll == null)
-                return;
-
-            _nav.NewPage(new GalleryViewModel(_nav, coll));
         }
     }
 }

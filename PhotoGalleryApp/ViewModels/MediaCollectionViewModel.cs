@@ -41,7 +41,7 @@ namespace PhotoGalleryApp.ViewModels
         /// </summary>
         /// <param name="collection">The MediaCollection model to be associated with</param>
         /// <param name="sorting">A SortDescription object describing how to sort the collection of media. Can be null</param>
-        public MediaCollectionViewModel(NavigatorViewModel nav, MediaCollection collection, SortDescription? sorting, bool previewMode = false)
+        public MediaCollectionViewModel(NavigatorViewModel nav, MediaCollection collection, SortDescription? sorting, bool previewMode = false, TimeRange? maxViewLabel=TimeRange.Year)
         {
             _nav = nav;
             _previewMode = previewMode;
@@ -63,7 +63,7 @@ namespace PhotoGalleryApp.ViewModels
 
 
             // Init the view, which does filtering & sorting
-            _view = new MediaView(_nav, MediaCollectionModel, ThumbnailHeight, !_previewMode);
+            _view = new MediaView(_nav, MediaCollectionModel, ThumbnailHeight, !_previewMode, maxViewLabel);
             _view.Filter += MediaFilter;
             _view.View.CollectionChanged += View_CollectionChanged;
 
