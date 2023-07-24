@@ -30,6 +30,11 @@ namespace PhotoGalleryApp.Models
             Tags = new RangeObservableCollection<string>();
         }
 
+        public MediaCollection(List<ICollectable> list) : base(list)
+        {
+            Tags = new RangeObservableCollection<string>();
+        }
+
         #endregion Constructors
 
 
@@ -47,10 +52,15 @@ namespace PhotoGalleryApp.Models
         /// The timestamp of the earliest media in the event.
         /// </summary>
         //TODO What if nothing in the event? Right now, default is year 1.
-        private DateTime? _startTimestamp = null;
-        public DateTime? StartTimestamp
+        private PrecisionDateTime? _startTimestamp = null;
+        public PrecisionDateTime StartTimestamp
         {
-            get { return _startTimestamp; }
+            get 
+            {
+                if (_startTimestamp == null)
+                    return new PrecisionDateTime();
+                return (PrecisionDateTime)_startTimestamp; 
+            }
             set
             {
                 _startTimestamp = value;
@@ -60,10 +70,15 @@ namespace PhotoGalleryApp.Models
 
 
         //TODO Implement ISerializable and make internal set
-        private DateTime? _endTimestamp = null;
-        public DateTime? EndTimestamp
+        private PrecisionDateTime? _endTimestamp = null;
+        public PrecisionDateTime EndTimestamp
         {
-            get { return _endTimestamp; }
+            get 
+            {
+                if (_endTimestamp == null)
+                    return new PrecisionDateTime();
+                return (PrecisionDateTime)_endTimestamp; 
+            }
             set
             {
                 _endTimestamp = value;
@@ -71,6 +86,19 @@ namespace PhotoGalleryApp.Models
             }
         }
 
+        /// <summary>
+        /// Returns whether the given timestamp is in the time range defined by the contents of
+        /// this collection.
+        /// </summary>
+        /// <param name="ts"></param>
+        /// <returns></returns>
+        public bool TimestampInRange(PrecisionDateTime ts)
+        {
+            if (StartTimestamp.Matches(ts) || EndTimestamp.Matches(ts) || (ts > StartTimestamp && ts < EndTimestamp))
+                return true;
+
+            return false;
+        }
 
 
 
@@ -78,7 +106,7 @@ namespace PhotoGalleryApp.Models
          * Pass on any children's tags CollectionChanged events.
          */
         [XmlIgnore]
-        public NotifyCollectionChangedEventHandler MediaTagsChanged; 
+        public NotifyCollectionChangedEventHandler? MediaTagsChanged; 
 
         #endregion Fields and Properties
 
@@ -91,32 +119,32 @@ namespace PhotoGalleryApp.Models
          */
         private void ResetTimeRange()
         {
-            DateTime? earliest = null;
-            DateTime? latest = null;
+            PrecisionDateTime? earliest = null;
+            PrecisionDateTime? latest = null;
             foreach(ICollectable c in this)
             {
                 if(c is Media)
                 {
-                    DateTime? t = ((Media)c).Timestamp;
-                    if (t != null && (t < earliest || earliest == null))
+                    PrecisionDateTime t = ((Media)c).Timestamp;
+                    if (earliest == null || t < earliest)
                         earliest = t;
-                    if (t != null && (t > latest || latest == null))
+                    if (latest == null || t > latest)
                         latest = t;
                 }
                 else
                 {
-                    DateTime? t = ((Event)c).Collection.StartTimestamp;
-                    if (t != null && (t < earliest || earliest == null))
+                    PrecisionDateTime? t = ((Event)c).Collection.StartTimestamp;
+                    if (t != null && (earliest == null || t < earliest))
                         earliest = t;
-                    if (t != null && (t > latest || latest == null))
+                    if (t != null && (latest == null || t > latest))
                         latest = t;
                 }
             }
 
             if(earliest != null)
-                StartTimestamp = (DateTime)earliest;
+                StartTimestamp = earliest;
             if (latest != null)
-                EndTimestamp = (DateTime)latest;
+                EndTimestamp = latest;
         }
 
 
@@ -156,9 +184,9 @@ namespace PhotoGalleryApp.Models
 
                 MediaTagsChanged_Add(m.Tags);
 
-                if (StartTimestamp == null || m.Timestamp < StartTimestamp)
+                if (_startTimestamp == null || m.Timestamp < StartTimestamp)
                     StartTimestamp = m.Timestamp;
-                if (EndTimestamp == null || m.Timestamp > EndTimestamp)
+                if (_endTimestamp == null || m.Timestamp > EndTimestamp)
                     EndTimestamp = m.Timestamp;
             }
             else

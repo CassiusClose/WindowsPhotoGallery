@@ -9,6 +9,7 @@ using System.Threading.Tasks;
 using System.Windows.Data;
 using System.Windows.Input;
 using PhotoGalleryApp.Models;
+using PhotoGalleryApp.Utils;
 using PhotoGalleryApp.Views;
 
 namespace PhotoGalleryApp.ViewModels
@@ -57,7 +58,7 @@ namespace PhotoGalleryApp.ViewModels
         /// <summary>
         /// The DateTime that the media was created at.
         /// </summary>
-        public DateTime Timestamp
+        public PrecisionDateTime Timestamp
         {
             get { return _media.Timestamp; }
         }

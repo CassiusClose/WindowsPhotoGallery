@@ -1,4 +1,5 @@
 ﻿using PhotoGalleryApp.Models;
+using PhotoGalleryApp.Utils;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -20,8 +21,8 @@ namespace PhotoGalleryApp.ViewModels
 
 
 
-        protected abstract DateTime _getTimestamp();
-        public DateTime Timestamp
+        protected abstract PrecisionDateTime _getTimestamp();
+        public PrecisionDateTime Timestamp
         {
             get { return _getTimestamp(); }
         }

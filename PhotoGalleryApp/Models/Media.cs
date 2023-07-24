@@ -156,11 +156,11 @@ namespace PhotoGalleryApp.Models
         }
 
 
-        protected DateTime _timestamp;
+        protected PrecisionDateTime _timestamp;
         /// <summary>
         /// The DateTime that this media was created.
         /// </summary>
-        public DateTime Timestamp
+        public PrecisionDateTime Timestamp
         {
             get { return _timestamp; }
         }

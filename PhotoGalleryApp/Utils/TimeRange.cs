@@ -7,10 +7,10 @@ using System.Threading.Tasks;
 namespace PhotoGalleryApp.Utils
 {
     /// <summary>
-    /// Categories of time ranges, used by TimeLabelViewModel.
+    /// Categories of time ranges. They describe to what detail a timestamp
     /// </summary>
     public enum TimeRange
     {
-        Year, Month, Day
+        Year, Month, Day, Hour, Minute, Second
     }
 }

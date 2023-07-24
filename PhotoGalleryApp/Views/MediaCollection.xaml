@@ -65,10 +65,10 @@
                 <Label.Resources>
                     <Style TargetType="{x:Type Label}">
                         <Style.Triggers>
-                            <DataTrigger Binding="{Binding Category}" Value="{x:Static utils:TimeRange.Year}">
+                            <DataTrigger Binding="{Binding Timestamp.Precision}" Value="{x:Static utils:TimeRange.Year}">
                                 <Setter Property="FontSize" Value="30"/>
                             </DataTrigger>
-                            <DataTrigger Binding="{Binding Category}" Value="{x:Static utils:TimeRange.Month}">
+                            <DataTrigger Binding="{Binding Timestamp.Precision}" Value="{x:Static utils:TimeRange.Month}">
                                 <Setter Property="FontSize" Value="20"/>
                             </DataTrigger>
                         </Style.Triggers>

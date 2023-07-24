@@ -7,6 +7,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Xps.Packaging;
 using PhotoGalleryApp.Models;
+using PhotoGalleryApp.Utils;
 
 namespace PhotoGalleryApp.ViewModels
 {
@@ -57,11 +58,9 @@ namespace PhotoGalleryApp.ViewModels
         /// <summary>
         /// The event's timestamp used for sorting, the earliest timestamp of its media
         /// </summary>
-        protected override DateTime _getTimestamp()
+        protected override PrecisionDateTime _getTimestamp()
         {
-            if (_event.Collection.StartTimestamp == null)
-                return new DateTime();
-            return (DateTime)_event.Collection.StartTimestamp; 
+            return _event.Collection.StartTimestamp; 
 
         }
 

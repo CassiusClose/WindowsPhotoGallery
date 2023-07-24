@@ -180,14 +180,14 @@ namespace PhotoGalleryApp.Utils
 
                 // Month
                 if (_viewList[i - 1] is TimeLabelViewModel && _viewList[i] is TimeLabelViewModel &&
-                    ((TimeLabelViewModel)_viewList[i]).Category != TimeRange.Day )
+                    ((TimeLabelViewModel)_viewList[i]).Timestamp.Precision != TimeRange.Day )
                 {
                     _viewList.RemoveAt(i - 1);
                     i--;
 
                     //Year
                     if (_viewList[i - 1] is TimeLabelViewModel && _viewList[i] is TimeLabelViewModel &&
-                        ((TimeLabelViewModel)_viewList[i]).Category == TimeRange.Year)
+                        ((TimeLabelViewModel)_viewList[i]).Timestamp.Precision == TimeRange.Year)
                     {
                         _viewList.RemoveAt(i - 1); 
                     }
@@ -247,15 +247,15 @@ namespace PhotoGalleryApp.Utils
                 {
                     if(_useLabels)
                     {
-                        _viewList.Add(new TimeLabelViewModel(vm.Timestamp, TimeRange.Year));
-                        _viewList.Add(new TimeLabelViewModel(vm.Timestamp, TimeRange.Month));
-                        _viewList.Add(new TimeLabelViewModel(vm.Timestamp, TimeRange.Day));
+                        _viewList.Add(new TimeLabelViewModel(new PrecisionDateTime(vm.Timestamp, TimeRange.Year)));
+                        _viewList.Add(new TimeLabelViewModel(new PrecisionDateTime(vm.Timestamp, TimeRange.Month)));
+                        _viewList.Add(new TimeLabelViewModel(new PrecisionDateTime(vm.Timestamp, TimeRange.Day)));
                     }
                     _viewList.Add(vm);
                     continue;
                 }
 
-                DateTime? lastLabel = null;
+                PrecisionDateTime? lastLabel = null;
                 // Find the point where the item belongs, sorting-wise
                 for(int i = 0; i < _viewList.Count+1; i++)
                 {
@@ -264,14 +264,14 @@ namespace PhotoGalleryApp.Utils
                         if(_useLabels)
                         {
                             // Add labels if they don't already exist
-                            if (lastLabel == null || ((DateTime)lastLabel).Year != vm.Timestamp.Year)
-                                _viewList.Insert(i++, new TimeLabelViewModel(vm.Timestamp, TimeRange.Year));
+                            if (lastLabel == null || lastLabel.Year != vm.Timestamp.Year)
+                                _viewList.Insert(i++, new TimeLabelViewModel(new PrecisionDateTime(vm.Timestamp, TimeRange.Year)));
 
-                            if (lastLabel == null || ((DateTime)lastLabel).Month != vm.Timestamp.Month)
-                                _viewList.Insert(i++, new TimeLabelViewModel(vm.Timestamp, TimeRange.Month));
+                            if (lastLabel == null || lastLabel.Month != vm.Timestamp.Month)
+                                _viewList.Insert(i++, new TimeLabelViewModel(new PrecisionDateTime(vm.Timestamp, TimeRange.Month)));
 
-                            if (lastLabel == null || ((DateTime)lastLabel).Day != vm.Timestamp.Day)
-                                _viewList.Insert(i++, new TimeLabelViewModel(vm.Timestamp, TimeRange.Day));
+                            if (lastLabel == null || lastLabel.Day != vm.Timestamp.Day)
+                                _viewList.Insert(i++, new TimeLabelViewModel(new PrecisionDateTime(vm.Timestamp, TimeRange.Day)));
                         }
 
                         _viewList.Insert(i, vm);
@@ -328,31 +328,27 @@ namespace PhotoGalleryApp.Utils
                 return;
 
             // Insert the initial labels
-            int year = _viewList[0].Timestamp.Year;
-            int month = _viewList[0].Timestamp.Month;
-            int day = _viewList[0].Timestamp.Day;
-            _viewList.Insert(0, new TimeLabelViewModel(year));
-            _viewList.Insert(1, new TimeLabelViewModel(year, month, day, TimeRange.Month));
-            _viewList.Insert(2, new TimeLabelViewModel(day, month, day, TimeRange.Day));
+            PrecisionDateTime currTime = _viewList[0].Timestamp;
+            _viewList.Insert(0, new TimeLabelViewModel(new PrecisionDateTime(currTime, TimeRange.Year)));
+            _viewList.Insert(0, new TimeLabelViewModel(new PrecisionDateTime(currTime, TimeRange.Month)));
+            _viewList.Insert(0, new TimeLabelViewModel(new PrecisionDateTime(currTime, TimeRange.Day)));
             for (int i = 4; i < _viewList.Count; i++)
             {
                 // If the current item is a new year or month, add a label for it
-                DateTime ts = _viewList[i].Timestamp;
-                if (ts.Year != year)
+                PrecisionDateTime ts = _viewList[i].Timestamp;
+                if (ts.Year != currTime.Year)
                 {
-                    year = ts.Year;
-                    _viewList.Insert(i++, new TimeLabelViewModel(year));
+                    _viewList.Insert(i++, new TimeLabelViewModel(new PrecisionDateTime(currTime, TimeRange.Year)));
                 }
-                if(ts.Month != month)
+                if(ts.Month != currTime.Month)
                 {
-                    month = ts.Month;
-                    _viewList.Insert(i++, new TimeLabelViewModel(year, month, day, TimeRange.Month));
+                    _viewList.Insert(i++, new TimeLabelViewModel(new PrecisionDateTime(currTime, TimeRange.Month)));
                 }
-                if(ts.Day != day)
+                if(ts.Day != currTime.Day)
                 {
-                    day = ts.Day;
-                    _viewList.Insert(i++, new TimeLabelViewModel(year, month, day, TimeRange.Month));
+                    _viewList.Insert(i++, new TimeLabelViewModel(new PrecisionDateTime(currTime, TimeRange.Day)));
                 }
+                currTime = ts;
             }
         }
 

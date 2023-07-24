@@ -73,16 +73,19 @@ namespace PhotoGalleryApp.Models
             dates.Add(File.GetCreationTime(Filepath));
             dates.Add(File.GetLastWriteTime(Filepath));
 
-            _timestamp = dates.Min<DateTime>();
+            DateTime ts = dates.Min<DateTime>();
             if (filenameDt != null)
             {
-                if(_timestamp < filenameDt)
+                if(ts < filenameDt)
                 {
                     Trace.WriteLine("Info: File has date metadata earlier than the date in its filename. Are you sure this file is named correctly? (" + Filepath + ")");
                 }
 
-                _timestamp = (DateTime)filenameDt;
+                ts = (DateTime)filenameDt;
             }
+            // If this is ever changed to be a higher precision, some other methods are going to
+            // need additional checks
+            _timestamp = new PrecisionDateTime(ts, TimeRange.Second);
         }
 
 

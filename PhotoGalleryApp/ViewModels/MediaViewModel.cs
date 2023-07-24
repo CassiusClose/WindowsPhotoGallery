@@ -36,9 +36,9 @@ namespace PhotoGalleryApp.ViewModels
         /// <summary>
         /// The DateTime that the media was created at
         /// </summary>
-        public DateTime Timestamp
+        protected override PrecisionDateTime _getTimestamp()
         {
-            get { return Media.Timestamp; }
+            return Media.Timestamp;
         }
 
         /// <summary>
@@ -69,10 +69,6 @@ namespace PhotoGalleryApp.ViewModels
         /// <returns>The ICollectable model associated with this viewmodel</returns>
         public override abstract ICollectable GetModel();
 
-        protected override DateTime _getTimestamp()
-        {
-            return Media.Timestamp;
-        }
 
 
         #region Methods
