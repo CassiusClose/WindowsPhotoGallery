@@ -40,7 +40,7 @@ namespace PhotoGalleryApp.ViewModels
             //TODO Figure out how to switch between pages
             if (_nav.CurrentPage.GetType() != typeof(GalleryViewModel))
             {
-                _nav.NewPage(new GalleryViewModel(_nav, _collection));
+                _nav.NewPage(new GalleryViewModel("All Items", _nav, _collection));
             }
         }
         

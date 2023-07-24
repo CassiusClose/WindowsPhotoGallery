@@ -307,7 +307,7 @@ namespace PhotoGalleryApp.ViewModels
                         Event e = (Event)c;
                         if (folder.Timestamp == e.Collection.StartTimestamp)
                         {
-                            _nav.NewPage(new GalleryViewModel(_nav, e.Collection, null));
+                            _nav.NewPage(new GalleryViewModel(e.Name, _nav, e.Collection, null));
                             return;
                         }
                     }
@@ -332,7 +332,7 @@ namespace PhotoGalleryApp.ViewModels
                     }
                 }
 
-                _nav.NewPage(new GalleryViewModel(_nav, new MediaCollection(list), folder.Timestamp.Precision+1));
+                _nav.NewPage(new GalleryViewModel(folder.Timestamp.ToString(),  _nav, new MediaCollection(list), folder.Timestamp.Precision+1));
             }
         }
     }

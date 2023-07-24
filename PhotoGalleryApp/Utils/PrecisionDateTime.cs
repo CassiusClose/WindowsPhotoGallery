@@ -148,7 +148,26 @@ namespace PhotoGalleryApp.Utils
 
         public override string ToString()
         {
-            return _dt.ToString();
+            switch(Precision)
+            {
+                case TimeRange.Year:
+                    return _dt.ToString("yyyy");
+                   
+                case TimeRange.Month:
+                    return _dt.ToString("MMMM yyyy");
+
+                case TimeRange.Day:
+                    return _dt.ToString("MMMM dd, yyyy");
+
+                case TimeRange.Hour:
+                    return _dt.ToString("hhtt, MMMM dd, yyyy");
+
+                case TimeRange.Minute:
+                    return _dt.ToString("hh:mmtt, MMMM dd, yyyy");
+
+                default:
+                    return _dt.ToString("hh:mm:sstt, MMMM dd, yyyy");
+            }
         }
 
         public string ToString(string format)

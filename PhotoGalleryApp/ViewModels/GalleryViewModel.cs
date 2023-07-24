@@ -29,9 +29,10 @@ namespace PhotoGalleryApp.ViewModels
     class GalleryViewModel : ViewModelBase
     {
         #region Constructors
-        public GalleryViewModel(NavigatorViewModel navigator, MediaCollection coll, TimeRange? maxViewLabel=TimeRange.Year)
+        public GalleryViewModel(string name, NavigatorViewModel navigator, MediaCollection coll, TimeRange? maxViewLabel=TimeRange.Year)
         {
             _navigator = navigator;
+            _name = name;
 
             // Init commands
             _addFilesCommand = new RelayCommand(AddFiles);
