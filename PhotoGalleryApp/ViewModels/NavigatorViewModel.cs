@@ -6,6 +6,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Input;
 using PhotoGalleryApp.Utils;
+using PhotoGalleryApp.Views;
 
 namespace PhotoGalleryApp.ViewModels
 {
@@ -85,6 +86,20 @@ namespace PhotoGalleryApp.ViewModels
                 CurrentPage = _history.Pop();
                 _goBackPageCommand.InvokeCanExecuteChanged();
             }
+        }
+
+        /// <summary>
+        /// Opens the given popup, blocks until it is closed, and returns it results
+        /// </summary>
+        /// <param name="vm"></param>
+        /// <returns></returns>
+        public object OpenPopup(PopupViewModel vm)
+        {
+            PopupWindow popup = new PopupWindow();
+            popup.DataContext = vm;
+            popup.ShowDialog();
+
+            return vm.GetPopupResults();
         }
 
         #endregion Methods
