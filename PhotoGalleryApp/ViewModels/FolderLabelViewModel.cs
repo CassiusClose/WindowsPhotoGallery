@@ -28,6 +28,13 @@ namespace PhotoGalleryApp.ViewModels
             Children_CollectionChanged(null, null);
         }
 
+        public override void Cleanup()
+        {
+            Children.CollectionChanged -= Children_CollectionChanged;
+            foreach (FolderLabelViewModel vm in Children)
+                vm.Cleanup();
+        }
+
 
 
         /// <summary>

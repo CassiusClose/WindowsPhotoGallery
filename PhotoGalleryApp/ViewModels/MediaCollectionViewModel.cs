@@ -89,6 +89,19 @@ namespace PhotoGalleryApp.ViewModels
             LoadAllMedia();
         }
 
+        public override void Cleanup()
+        {
+            MediaCollectionModel.Tags.CollectionChanged -= CollectionTagsChanged;
+            MediaCollectionModel.MediaTagsChanged -= MediaTagsChanged;
+            MediaCollectionModel.CollectionChanged -= MediaCollectionChanged;
+            FilterTags.CollectionChanged -= FilterTagsChanged;
+            _scrollChangedTimer.Stop();
+            _scrollChangedTimer = null;
+
+            _view.View.CollectionChanged -= View_CollectionChanged;
+            _view.Cleanup();
+        }
+
 
 
 
@@ -496,11 +509,11 @@ namespace PhotoGalleryApp.ViewModels
         public void AddSelectedToEvent()
         {
             // Open popup, retrieve results
-            EventSelectionPopupViewModel vm = new EventSelectionPopupViewModel(((MainWindow)System.Windows.Application.Current.MainWindow).Gallery.Collection);
+            EventSelectionPopupViewModel vm = new EventSelectionPopupViewModel(_nav, ((MainWindow)System.Windows.Application.Current.MainWindow).Gallery.Collection);
             EventSelectionPopupReturnArgs args = (EventSelectionPopupReturnArgs)_nav.OpenPopup(vm);
 
             // If user cancelled, do nothing
-            if (args.Action == EventSelectionPopupReturnArgs.ReturnType.None)
+            if (args.Action == EventSelectionPopupReturnArgs.ReturnType.Cancelled)
                 return;
 
             // If user chose an event, add media to it
@@ -548,6 +561,7 @@ namespace PhotoGalleryApp.ViewModels
                 foreach(ICollectableViewModel cvm in mvms)
                 {
                     evnt.Collection.Add(cvm.GetModel());
+                    MediaCollectionModel.Remove(cvm.GetModel());
                 }
 
                 // Set thumbnail as the first image in the collection
@@ -562,8 +576,6 @@ namespace PhotoGalleryApp.ViewModels
 
                 // Add the event to the media collection, and remove from this collection
                 MediaCollectionModel.Add(evnt);
-                foreach (ICollectableViewModel cvm in mvms)
-                    MediaCollectionModel.Remove(cvm.GetModel());
             }
         }
 
@@ -925,12 +937,13 @@ namespace PhotoGalleryApp.ViewModels
             uint taskID = ++_imageLoadID;
 
             // Load the images one at a time
-            foreach (ICollectableViewModel item in _view.AllItems)
+            foreach (ICollectableViewModel item in _view.View)
             {
                 // If this task is outdated (there's a newer task ID out there), then cancel
                 if (taskID != _imageLoadID)
                     break;
 
+                //ICollectableViewModel item = _view.AllItems[i];
                 if (item is MediaViewModel)
                     await Task.Run(() => { ((MediaViewModel)item).LoadMedia(); });
                 else if (item is EventTileViewModel)

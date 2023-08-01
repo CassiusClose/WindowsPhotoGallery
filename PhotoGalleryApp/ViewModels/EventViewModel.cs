@@ -29,6 +29,12 @@ namespace PhotoGalleryApp.ViewModels
             ((INotifyPropertyChanged)_event).PropertyChanged += Collection_PropertyChanged;
         }
 
+        public override void Cleanup()
+        {
+            _event.PropertyChanged -= Collection_PropertyChanged;
+            _mediaCollection.Cleanup();
+        }
+
 
         private NavigatorViewModel _nav;
 

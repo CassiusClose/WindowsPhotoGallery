@@ -81,6 +81,7 @@ namespace PhotoGalleryApp.ViewModels
             if(_history.Count != 0)
             {
                 // Trigger cleanup on the page being removed
+                CurrentPage.Cleanup();
                 CurrentPage.NavigatorLostFocus();
 
                 CurrentPage = _history.Pop();

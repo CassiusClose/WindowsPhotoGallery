@@ -6,11 +6,15 @@
         xmlns:local="clr-namespace:PhotoGalleryApp.Views"
         xmlns:vms="clr-namespace:PhotoGalleryApp.ViewModels"
         mc:Ignorable="d"
-        Title="PopupWindow" Height="450" Width="800">
+        Title="PopupWindow" Height="450" Width="800"
+        Keyboard.KeyDown="Window_KeyDown">
 
     <Window.Resources>
         <DataTemplate DataType="{x:Type vms:EventSelectionPopupViewModel}">
             <local:EventSelectionPopup DataContext="{Binding}"/>
+        </DataTemplate>
+        <DataTemplate DataType="{x:Type vms:TextEntryPopupViewModel}">
+            <local:TextEntryPopup DataContext="{Binding}"/>
         </DataTemplate>
     </Window.Resources>
     

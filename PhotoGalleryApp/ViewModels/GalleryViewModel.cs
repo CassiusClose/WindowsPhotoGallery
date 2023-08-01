@@ -41,8 +41,13 @@ namespace PhotoGalleryApp.ViewModels
 
             // Init the media collection
             _mediaCollection = new MediaCollectionViewModel(navigator, coll, new SortDescription("Timestamp", ListSortDirection.Ascending), false, maxViewLabel, filter);
-
         }
+        
+        public override void Cleanup()
+        {
+            _mediaCollection.Cleanup();
+        }
+
 
         #endregion Constructors
 

@@ -33,6 +33,7 @@ namespace PhotoGalleryApp.ViewModels
         /// <param name="galleryItems">The Photos available to view in this vm.</param>
         /// <param name="index">The index of the currently selected Photo in the given list.</param>
         /// <param name="gallery">The PhotoGallery that these photos belong to.</param>
+        //TODO A simple list isn't good enough here. What if stuff changes?
         public SlideshowViewModel(List<Media> galleryItems, int index, MediaCollection gallery)
         {
             // Initialize commands

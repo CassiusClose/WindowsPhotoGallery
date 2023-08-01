@@ -7,6 +7,7 @@ using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Windows.Input;
 
 namespace PhotoGalleryApp.ViewModels
 {
@@ -15,13 +16,18 @@ namespace PhotoGalleryApp.ViewModels
     /// </summary>
     public class EventSelectionPopupViewModel : PopupViewModel
     {
-        public EventSelectionPopupViewModel(MediaCollection coll)
+        public EventSelectionPopupViewModel(NavigatorViewModel nav, MediaCollection coll)
         {
+            _nav = nav;
             _collection = coll;
+
+            _createEventCommand = new RelayCommand(CreateEvent);
+
             _folders = new FolderView(coll, false);
             _folders.FolderOpened += FolderChosen;
         }
 
+        private NavigatorViewModel _nav;
         private MediaCollection _collection;
         private FolderView _folders;
 
@@ -31,7 +37,7 @@ namespace PhotoGalleryApp.ViewModels
         }
 
 
-        private Event? chosenEvent = null;
+        private EventSelectionPopupReturnArgs returnData = new EventSelectionPopupReturnArgs(EventSelectionPopupReturnArgs.ReturnType.Cancelled);
 
 
         /**
@@ -39,16 +45,14 @@ namespace PhotoGalleryApp.ViewModels
          */
         public override object? GetPopupResults()
         {
-            if (chosenEvent == null)
-                return new EventSelectionPopupReturnArgs(EventSelectionPopupReturnArgs.ReturnType.None);
-            else
-                return new EventSelectionPopupReturnArgs(EventSelectionPopupReturnArgs.ReturnType.EventChosen, chosenEvent);
+            return returnData;
         }
 
 
         public override void Cleanup()
         {
             _folders.Cleanup();
+            _folders.FolderOpened -= FolderChosen;
         }
 
         /**
@@ -63,8 +67,22 @@ namespace PhotoGalleryApp.ViewModels
                 if (e == null)
                     return;
 
-                chosenEvent = e;
+                returnData = new EventSelectionPopupReturnArgs(EventSelectionPopupReturnArgs.ReturnType.EventChosen, e);
                 ClosePopup();
+            }
+        }
+
+        private RelayCommand _createEventCommand;
+        public ICommand CreateEventCommand => _createEventCommand;
+
+        public void CreateEvent()
+        {
+            TextEntryPopupViewModel vm = new TextEntryPopupViewModel();
+            TextEntryPopupReturnArgs args = (TextEntryPopupReturnArgs)_nav.OpenPopup(vm);
+            if (args.Action == TextEntryPopupReturnArgs.ReturnType.TextEntered && args.Text != null)
+            {
+                returnData = new EventSelectionPopupReturnArgs(EventSelectionPopupReturnArgs.ReturnType.EventCreated, args.Text);
+                ClosePopup(); 
             }
         }
     }
@@ -96,7 +114,7 @@ namespace PhotoGalleryApp.ViewModels
 
         public enum ReturnType
         {
-            EventChosen, EventCreated, None
+            EventChosen, EventCreated, Cancelled
         }
 
         public ReturnType Action;

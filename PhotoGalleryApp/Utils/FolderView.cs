@@ -38,6 +38,8 @@ namespace PhotoGalleryApp.Utils
         public void Cleanup()
         {
             _collection.CollectionChanged -= MediaCollectionChanged;
+            foreach(FolderLabelViewModel vm in Folders)
+                vm.Cleanup();
         }
 
 

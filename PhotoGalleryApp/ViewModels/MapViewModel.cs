@@ -32,6 +32,12 @@ namespace PhotoGalleryApp.ViewModels
             OnPropertyChanged("Locations");
         }
 
+        public override void Cleanup()
+        {
+            _locations.CollectionChanged -= _locations_CollectionChanged;
+        }
+
+
         private void _locations_CollectionChanged(object? sender, System.Collections.Specialized.NotifyCollectionChangedEventArgs e)
         {
             Trace.WriteLine("Collection Changed");

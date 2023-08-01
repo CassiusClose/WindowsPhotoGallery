@@ -30,6 +30,12 @@ namespace PhotoGalleryApp.ViewModels
             InitThumbnail();
         }
 
+        public override void Cleanup()
+        {
+            _event.PropertyChanged -= Event_PropertyChanged;
+            ((INotifyPropertyChanged)_event.Collection).PropertyChanged -= Collection_PropertyChanged;
+        }
+
         /// <summary>
         /// Returns the ICollectable model associated with this viewmodel
         /// </summary>

@@ -26,5 +26,7 @@ namespace PhotoGalleryApp.ViewModels
         /// up anything that should end when a page is destroyed, such as cancelling asynchronous tasks.
         /// </summary>
         public virtual void NavigatorLostFocus() { }
+
+        public virtual void Cleanup() { }
     }
 }

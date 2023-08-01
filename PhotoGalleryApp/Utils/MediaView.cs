@@ -14,6 +14,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Documents;
 using System.Windows.Ink;
+using System.Windows.Media.Media3D;
 
 namespace PhotoGalleryApp.Utils
 {
@@ -41,6 +42,16 @@ namespace PhotoGalleryApp.Utils
 
             // Build the initial list
             MediaCollectionChanged(null, new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Reset));
+        }
+
+        public void Cleanup()
+        {
+            _collection.CollectionChanged -= MediaCollectionChanged;
+            _fullList.CollectionChanged -= RefreshView;
+            foreach(ICollectableViewModel item in _fullList)
+            {
+                item.Cleanup();
+            }
         }
 
 
@@ -334,7 +345,10 @@ namespace PhotoGalleryApp.Utils
                         break;
                 }
 
-                RemoveAt(i);
+                if (i == _viewList.Count)
+                    Trace.WriteLine("Error: Can't find item when removing from MediaView");
+                else
+                    RemoveAt(i);
             }
         } 
 

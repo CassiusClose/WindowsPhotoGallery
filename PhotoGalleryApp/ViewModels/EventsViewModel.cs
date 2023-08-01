@@ -34,6 +34,12 @@ namespace PhotoGalleryApp.ViewModels
             _folders.FolderOpened += FolderOpened;
         }
 
+        public override void Cleanup()
+        {
+            _folders.FolderOpened -= FolderOpened;
+            _folders.Cleanup();
+        }
+
 
         private NavigatorViewModel _nav;
 
