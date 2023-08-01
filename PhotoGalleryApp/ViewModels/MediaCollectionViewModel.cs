@@ -41,7 +41,7 @@ namespace PhotoGalleryApp.ViewModels
         /// </summary>
         /// <param name="collection">The MediaCollection model to be associated with</param>
         /// <param name="sorting">A SortDescription object describing how to sort the collection of media. Can be null</param>
-        public MediaCollectionViewModel(NavigatorViewModel nav, MediaCollection collection, SortDescription? sorting, bool previewMode = false, TimeRange? maxViewLabel=TimeRange.Year)
+        public MediaCollectionViewModel(NavigatorViewModel nav, MediaCollection collection, SortDescription? sorting, bool previewMode = false, TimeRange? maxViewLabel=TimeRange.Year, MediaView.FilterDelegate filter=null)
         {
             _nav = nav;
             _previewMode = previewMode;
@@ -53,6 +53,7 @@ namespace PhotoGalleryApp.ViewModels
             _removeTagFromFilterCommand = new RelayCommand(RemoveTagFromFilter);
             _changeThumbnailHeightCommand = new RelayCommand(ChangeThumbnailHeight);
             _createEventCommand = new RelayCommand(CreateNewEvent);
+            _addSelectedToEventCommand = new RelayCommand(AddSelectedToEvent);
 
 
             // Init media lists
@@ -64,8 +65,15 @@ namespace PhotoGalleryApp.ViewModels
 
             // Init the view, which does filtering & sorting
             _view = new MediaView(_nav, MediaCollectionModel, ThumbnailHeight, !_previewMode, maxViewLabel);
-            _view.Filter += MediaFilter;
             _view.View.CollectionChanged += View_CollectionChanged;
+            _view.Filter += MediaFilter;
+            //TODO Add this into constructor instead
+            if (filter != null)
+            {
+                _view.Filter += filter;
+                // If filter has changed, rebuild the list
+                _view.FilterMoreRestrictive();
+            }
 
 
             EventList_Reset();
@@ -475,33 +483,65 @@ namespace PhotoGalleryApp.ViewModels
 
 
 
+        private RelayCommand _addSelectedToEventCommand;
         /// <summary>
-        /// An event handler that adds the currently selected media to the given event.
+        /// Prompts the user to choose the event to add the selected media to
         /// </summary>
-        /// <param name="sender">The element that this event was triggered on.</param>
-        /// <param name="eArgs">The event's arguments, of type PhotoGalleryApp.Views.ItemChosenEventArgs.</param>
-        public void AddSelectedToEvent(object sender, EventArgs eArgs)
+        public ICommand AddSelectedToEventCommand => _addSelectedToEventCommand;
+
+        /// <summary>
+        ///  Prompt the user to choose an event, or create a new one, and add the selected media 
+        ///  to it.
+        /// </summary>
+        public void AddSelectedToEvent()
         {
-            // Want only one change event to fire, even though we're changing several items in the MediaCollection.
-            // So disable updates and then trigger one at the end. See MediaCollection.UpdateTags() for more info.
+            // Open popup, retrieve results
+            EventSelectionPopupViewModel vm = new EventSelectionPopupViewModel(((MainWindow)System.Windows.Application.Current.MainWindow).Gallery.Collection);
+            EventSelectionPopupReturnArgs args = (EventSelectionPopupReturnArgs)_nav.OpenPopup(vm);
 
-            PhotoGalleryApp.Views.ItemChosenEventArgs args = (PhotoGalleryApp.Views.ItemChosenEventArgs)eArgs;
-            string eventName = args.Item;
+            // If user cancelled, do nothing
+            if (args.Action == EventSelectionPopupReturnArgs.ReturnType.None)
+                return;
 
-            EventTileViewModel? eventvm = null;
-            foreach(EventTileViewModel e in Events)
+            // If user chose an event, add media to it
+            if(args.Action == EventSelectionPopupReturnArgs.ReturnType.EventChosen)
             {
-                //TODO Either don't allow events with same name or do the id some other way
-                if(e.Name == eventName)
+                if (args.Event == null) 
+                    return;
+                Event e = args.Event;
+
+                bool needsThumbnail = e.Collection.Count == 0;
+
+                // Build lists for batch operations
+                List<ICollectableViewModel> mediavms = GetCurrentlySelectedItems();
+                //List<ICollectable> media = new List<ICollectable>();
+                foreach(ICollectableViewModel cvm in mediavms)
                 {
-                    eventvm = e;
-                    break;
+                    MediaCollectionModel.Remove(cvm.GetModel());
+                    e.Collection.Add(cvm.GetModel());
+                }
+
+                if (needsThumbnail)
+                {
+                    // Set thumbnail as the first image in the collection
+                    foreach(ICollectable model in e.Collection)
+                    {
+                        if (model is Image)
+                        {
+                            e.Thumbnail = (Image)model;
+                            break;
+                        }
+                    }
                 }
             }
-            // If no event exists, create one and add it
-            if(eventvm == null)
+
+            // If user created a new event, create the event, add media to it
+            else
             {
-                Event evnt = new Event(eventName);
+                if (args.NewEventName == null)
+                    return;
+
+                Event evnt = new Event(args.NewEventName);
 
                 // Add selected items to event
                 List<ICollectableViewModel> mvms = GetCurrentlySelectedItems();
@@ -522,42 +562,8 @@ namespace PhotoGalleryApp.ViewModels
 
                 // Add the event to the media collection, and remove from this collection
                 MediaCollectionModel.Add(evnt);
-                foreach (ICollectableViewModel vm in mvms)
-                    MediaCollectionModel.Remove(vm.GetModel());
-            }
-
-            // If event does exist, add items to it
-            else
-            {
-                bool needsThumbnail = eventvm.Event.Collection.Count == 0;
-
-                // Build lists for batch operations
-                List<ICollectableViewModel> mediavms = GetCurrentlySelectedItems();
-                //List<ICollectable> media = new List<ICollectable>();
-                foreach(ICollectableViewModel cvm in mediavms)
-                {
-                    //media.Add(cvm.GetModel());
-                    ((Event)eventvm.GetModel()).Collection.Add(cvm.GetModel());
-                }
-
-                if (needsThumbnail)
-                {
-                    // Set thumbnail as the first image in the collection
-                    foreach(ICollectable model in eventvm.Event.Collection)
-                    {
-                        if (model is Image)
-                        {
-                            eventvm.Event.Thumbnail = (Image)model;
-                            break;
-                        }
-                    }
-                }
-
-                // Add to event and remove from here
-                foreach(ICollectableViewModel vm in mediavms)
-                {
-                    MediaCollectionModel.Remove(vm.GetModel());
-                }
+                foreach (ICollectableViewModel cvm in mvms)
+                    MediaCollectionModel.Remove(cvm.GetModel());
             }
         }
 

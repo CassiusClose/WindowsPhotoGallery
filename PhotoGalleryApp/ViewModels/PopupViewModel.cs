@@ -12,6 +12,23 @@ namespace PhotoGalleryApp.ViewModels
     /// </summary>
     public abstract class PopupViewModel : ViewModelBase
     {
-        public abstract object GetPopupResults();
+        public abstract object? GetPopupResults();
+        public abstract void Cleanup();
+
+        private bool _open = true;
+        public bool Open
+        {
+            get { return _open; }
+            set
+            {
+                _open = value;
+                OnPropertyChanged();
+            }
+        }
+
+        public void ClosePopup()
+        {
+            Open = false;
+        }
     }
 }

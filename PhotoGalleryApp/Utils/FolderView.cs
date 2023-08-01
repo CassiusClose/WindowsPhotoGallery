@@ -5,6 +5,8 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Collections.Specialized;
+using System.Diagnostics;
+using System.Diagnostics.Eventing.Reader;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -16,14 +18,28 @@ namespace PhotoGalleryApp.Utils
     /// </summary>
     public class FolderView
     {
-        public FolderView(MediaCollection coll)
+        public FolderView(MediaCollection coll, bool showFoldersWithoutEvents=true)
         {
+            _showFoldersWithoutEvents = showFoldersWithoutEvents;
+
             _collection = coll;
             _collection.CollectionChanged += MediaCollectionChanged;
 
             Folders = new ObservableCollection<FolderLabelViewModel>();
             ResetList();
         }
+
+
+        /// <summary>
+        /// Cleans up instance when it's no longer used. Will not function properly
+        /// after this is called. Use this if you want to clean things up at a determined
+        /// time, rather than waiting for garbage collection.
+        /// </summary>
+        public void Cleanup()
+        {
+            _collection.CollectionChanged -= MediaCollectionChanged;
+        }
+
 
         private MediaCollection _collection;
 
@@ -33,8 +49,14 @@ namespace PhotoGalleryApp.Utils
         }
 
 
+        /**
+         * Whether date folders that contain no events should be displayed
+         */
+        private bool _showFoldersWithoutEvents;
 
-        public FolderLabelViewModel.FolderOpenedDelegate FolderOpened;
+
+
+        public FolderLabelViewModel.FolderOpenedDelegate? FolderOpened;
 
         /** Pass child folder opened events along to listeners */
         private void ChildFolderOpened(FolderLabelViewModel vm)
@@ -82,8 +104,12 @@ namespace PhotoGalleryApp.Utils
         {
             foreach(ICollectable c in newItems)
             {
-                if (c is Media)
+                c.PropertyChanged += Item_PropertyChanged;
+                if (c is Media && _showFoldersWithoutEvents)
+                {
+                    GetMonthFolder(((Media)c).Timestamp);
                     continue;
+                }
 
                 // For each new event, add an entry into its proper folder
                 Event e = (Event)c;
@@ -98,6 +124,11 @@ namespace PhotoGalleryApp.Utils
         {
             foreach(ICollectable c in oldItems)
             {
+                c.PropertyChanged -= Item_PropertyChanged;
+
+                if (!_showFoldersWithoutEvents && c is Media)
+                    continue;
+
                 PrecisionDateTime ts;
                 if (c is Media)
                     ts = ((Media)c).Timestamp;
@@ -133,33 +164,44 @@ namespace PhotoGalleryApp.Utils
                     }
                 }
 
-                // Find if media exists for the year and month
-                bool monthFound = false;
-                bool yearFound = false;
-                PrecisionDateTime pdt;
-                foreach(ICollectable co in _collection)
+                if(_showFoldersWithoutEvents)
                 {
-                    if (co is Media)
-                        pdt = ((Media)co).Timestamp;
-                    else
-                        pdt = ((Event)co).Collection.StartTimestamp;
-
-                    if (pdt.Year == ts.Year)
-                        yearFound = true;
-
-                    if(pdt.Month == ts.Month)
+                    // Find if media exists for the year and month
+                    bool monthFound = false;
+                    bool yearFound = false;
+                    PrecisionDateTime pdt;
+                    foreach(ICollectable co in _collection)
                     {
-                        monthFound = true;
-                        break;
+                        if (co is Media)
+                            pdt = ((Media)co).Timestamp;
+                        else
+                            pdt = ((Event)co).Collection.StartTimestamp;
+
+                        if (pdt.Year == ts.Year)
+                            yearFound = true;
+
+                        if(pdt.Month == ts.Month)
+                        {
+                            monthFound = true;
+                            break;
+                        }
                     }
+
+                    // If the month or year folders are now empty, remove them
+                    if (!monthFound)
+                        year.Children.RemoveAt(monthInd);
+
+                    if (!yearFound)
+                        Folders.RemoveAt(yearInd);
                 }
+                else if(c is Event)
+                {
+                    if (month.Children.Count == 0)
+                        year.Children.RemoveAt(monthInd);
 
-                // If the month or year folders are now empty, remove them
-                if (!monthFound)
-                    year.Children.RemoveAt(monthInd);
-
-                if (!yearFound)
-                    Folders.RemoveAt(yearInd);
+                    if (year.Children.Count == 0)
+                        Folders.RemoveAt(yearInd);
+                }
             }
         }
 
@@ -171,17 +213,22 @@ namespace PhotoGalleryApp.Utils
 
         {
             Folders.Clear();
-            foreach(ICollectable vm in _collection)
+            foreach(ICollectable model in _collection)
             {
-                if(vm is Media)
+                model.PropertyChanged -= Item_PropertyChanged;
+                model.PropertyChanged += Item_PropertyChanged;
+                if(model is Media)
                 {
-                    Media m = (Media)vm;
-                    // Create folder if doesn't exist
-                    FolderLabelViewModel month = GetMonthFolder(m.Timestamp);
+                    if(_showFoldersWithoutEvents)
+                    {
+                        Media m = (Media)model;
+                        // Create folder if doesn't exist
+                        FolderLabelViewModel month = GetMonthFolder(m.Timestamp);
+                    }
                 }
                 else
                 {
-                    Event e = (Event)vm;
+                    Event e = (Event)model;
                     // Create folder if doesn't exist
                     FolderLabelViewModel month = GetMonthFolder(e.Collection.StartTimestamp);
                     month.Children.Add(CreateEventFolder(e));
@@ -292,6 +339,55 @@ namespace PhotoGalleryApp.Utils
 
 
 
+        /**
+         * When a item's timestamp has changed, resort it in the list
+         */
+        private void Item_PropertyChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs e)
+        {
+            if (sender == null || sender is not ICollectableViewModel)
+                return;
 
+            // If Media type
+            if(e.PropertyName == "Timestamp")
+            {
+                // There is no folder for a Media item, so no way to know where the media used to be.
+                // Instead of searching the collection for folders that have no items, just rebuild the list
+                ResetList();
+            }
+            // If Event type
+            else if(e.PropertyName == "StartTimestamp")
+            {
+                Event model = (Event)sender;
+
+                // Remove the old folder
+                RemoveEventWithNewTime(Folders, model);
+
+                // Create a new one
+                CreateEventFolder(model);
+            }
+        }
+
+
+        /**
+         * When an event's timestamp changes, must remove its old entry from the folder structure. But its
+         * timestamp is new, so have to search through the whole folder structure to find its old entry
+         * to remove.
+         */
+        private bool RemoveEventWithNewTime(ObservableCollection<FolderLabelViewModel> list, Event e)
+        {
+            for(int i = 0; i < list.Count; i++)
+            {
+                if (list[i].Label == e.Name)
+                {
+                    list.RemoveAt(i);
+                    return true;
+                }
+
+                if (RemoveEventWithNewTime(list[i].Children, e))
+                    return true;
+            }
+
+            return false;
+        }
     }
 }

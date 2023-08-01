@@ -57,41 +57,44 @@ namespace PhotoGalleryApp.ViewModels
             // If it's an event, open the event's collection
             if (folder.Timestamp.Precision == TimeRange.Second)
             {
-                foreach (ICollectable c in _collection)
-                {
-                    if (c is Event)
-                    {
-                        Event e = (Event)c;
-                        if (folder.Timestamp == e.Collection.StartTimestamp)
-                        {
-                            _nav.NewPage(new GalleryViewModel(e.Name, _nav, e.Collection, null));
-                            return;
-                        }
-                    }
-                }
+                Event? e = GetEventFromFolder(folder, _collection);
+                if (e == null)
+                    return;
+                _nav.NewPage(new GalleryViewModel(e.Name, _nav, e.Collection, null));
             }
 
-            // If it's a time range (year or month), collect all the media for that time range and open it
+            // If it's a time range (year or month), open a new gallery with the collection filtered accordingly
             else 
             {
-                List<ICollectable> list = new List<ICollectable>();
-                foreach (ICollectable c in _collection)
+                _nav.NewPage(new GalleryViewModel(folder.Timestamp.ToString(), _nav, _collection, folder.Timestamp.Precision + 1, (ICollectableViewModel vm) =>
                 {
-                    if (c is Event)
-                    {
-                        if(((Event)c).Collection.TimestampInRange(folder.Timestamp))
-                            list.Add(c);
-                    }
-                    else
-                    {
-                        if (((Media)c).Timestamp.Matches(folder.Timestamp))
-                            list.Add(c);
-                    }
-                }
-
-                _nav.NewPage(new GalleryViewModel(folder.Timestamp.ToString(),  _nav, new MediaCollection(list), folder.Timestamp.Precision+1));
+                    if (vm.Timestamp.Matches(folder.Timestamp))
+                        return true;
+                    return false;
+                }));
             }
         }
+
+        //TODO Where does this belong?
+        public static Event? GetEventFromFolder(FolderLabelViewModel folder, MediaCollection coll)
+        {
+            foreach(ICollectable c in coll)
+            {
+                if (c is Event) { 
+                    Event e = (Event)c;
+                    if (folder.Timestamp == e.Collection.StartTimestamp && folder.Label == e.Name)
+                        return e;
+
+                    Event? result = GetEventFromFolder(folder, e.Collection);
+                    if (result != null)
+                        return result;
+                }
+            }
+
+            return null;
+        }
+
+
 
 
         private RelayCommand _openGalleryCommand;

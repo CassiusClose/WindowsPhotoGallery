@@ -9,7 +9,9 @@
         Title="PopupWindow" Height="450" Width="800">
 
     <Window.Resources>
-
+        <DataTemplate DataType="{x:Type vms:EventSelectionPopupViewModel}">
+            <local:EventSelectionPopup DataContext="{Binding}"/>
+        </DataTemplate>
     </Window.Resources>
     
     <Grid>

@@ -1,6 +1,7 @@
 ﻿using PhotoGalleryApp.Models;
 using PhotoGalleryApp.ViewModels;
 using System;
+using System.CodeDom.Compiler;
 using System.Collections;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -78,8 +79,24 @@ namespace PhotoGalleryApp.Utils
 
 
 
+        /**
+         * Apply all filters to the given item and return the results
+         */
+        private bool FilterResults(ICollectableViewModel vm)
+        {
+            if (Filter == null)
+                return true;
 
+            // Trick to get a list of return values from multiple event handlers
+            IEnumerable<bool> results = Filter.GetInvocationList().Select(x => (bool)x.DynamicInvoke(vm));
+            foreach(bool r in results)
+            {
+                if (!r)
+                    return false;
+            }
 
+            return true;
+        }
 
 
 
@@ -103,11 +120,12 @@ namespace PhotoGalleryApp.Utils
                 return;
 
             int ind = _viewList.IndexOf(vm);
-            if (Filter(vm) && ind == -1)
+            bool result = FilterResults(vm);
+            if (result && ind == -1)
             {
                 RefreshView_Add(new List<ICollectableViewModel> { vm });
             }
-            else if (!Filter(vm) && ind != -1) 
+            else if (!result && ind != -1) 
             { 
                 RemoveAt(ind);
             }
@@ -126,6 +144,8 @@ namespace PhotoGalleryApp.Utils
                 RemoveAt(ind);
                 RefreshView_Add(new List<ICollectableViewModel> { vm });
             }
+            else
+                RefreshView_Add(new List<ICollectableViewModel> { vm });
         }
 
         /// <summary>
@@ -139,7 +159,7 @@ namespace PhotoGalleryApp.Utils
 
             for(int i = 0; i < _viewList.Count; i++)
             {
-                if (_viewList[i] is not TimeLabelViewModel && Filter != null && !Filter(_viewList[i]))
+                if (_viewList[i] is not TimeLabelViewModel && !FilterResults(_viewList[i]))
                     RemoveAt(i--);
             }
         }
@@ -148,11 +168,14 @@ namespace PhotoGalleryApp.Utils
         /// that now fit the filter
         public void FilterLessRestrictive()
         {
+            if (Filter == null)
+                return;
+
             for (int i = 0; i < _fullList.Count; i++)
             {
                 List<ICollectableViewModel> newItems = new List<ICollectableViewModel>();
-                if( (Filter == null && !_viewList.Contains(_fullList[i])) ||
-                    (Filter != null && Filter(_fullList[i]) && !_viewList.Contains(_fullList[i]))
+                if( (!_viewList.Contains(_fullList[i])) ||
+                    (FilterResults(_fullList[i]) && !_viewList.Contains(_fullList[i]))
                   )
                     newItems.Add(_fullList[i]);
 
@@ -185,20 +208,20 @@ namespace PhotoGalleryApp.Utils
 
             // If the month and year labels are empty, remove them
             // Day
-            else if (_viewList[i - 1] is TimeLabelViewModel && _viewList[i] is TimeLabelViewModel)
+            else if (ShouldShowDays() && _viewList[i - 1] is TimeLabelViewModel && _viewList[i] is TimeLabelViewModel)
             {
                 _viewList.RemoveAt(i - 1);
                 i--;
 
                 // Month
-                if (_viewList[i - 1] is TimeLabelViewModel && _viewList[i] is TimeLabelViewModel &&
+                if (ShouldShowMonths() && _viewList[i - 1] is TimeLabelViewModel && _viewList[i] is TimeLabelViewModel &&
                     ((TimeLabelViewModel)_viewList[i]).Timestamp.Precision != TimeRange.Day )
                 {
                     _viewList.RemoveAt(i - 1);
                     i--;
 
                     //Year
-                    if (_viewList[i - 1] is TimeLabelViewModel && _viewList[i] is TimeLabelViewModel &&
+                    if (ShouldShowYears() && _viewList[i - 1] is TimeLabelViewModel && _viewList[i] is TimeLabelViewModel &&
                         ((TimeLabelViewModel)_viewList[i]).Timestamp.Precision == TimeRange.Year)
                     {
                         _viewList.RemoveAt(i - 1); 
@@ -251,7 +274,7 @@ namespace PhotoGalleryApp.Utils
             foreach(ICollectableViewModel vm in newItems)
             {
                 // Don't add if doesn't meet filter
-                if (Filter != null && !Filter(vm))
+                if (Filter != null && !FilterResults(vm))
                     continue;
 
                 // If the view is empty, insert the item and its labels
@@ -329,7 +352,7 @@ namespace PhotoGalleryApp.Utils
             // Remove any items that don't meet the filter criteria
             for (int i = 0; i < _viewList.Count; i++)
             {
-                if (Filter != null && !Filter(_viewList[i]))
+                if (Filter != null && !FilterResults(_viewList[i]))
                 {
                     _viewList.RemoveAt(i);
                     i--;
@@ -463,6 +486,7 @@ namespace PhotoGalleryApp.Utils
 
             if(oldItems.Count > 0)
             {
+                //TODO Not sure this is actually more efficient
                 // For each item in the list, iterate through the removed items to find a match.
                 // Do this because likely the removed items list will be much shorter than the
                 // full list

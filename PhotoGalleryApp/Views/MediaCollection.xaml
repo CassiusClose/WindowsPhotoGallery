@@ -230,19 +230,9 @@
                 </ei:Interaction.Triggers>
             </local:ChooserDropDown>
 
-            <local:ChooserDropDown
-                x:Name="AddSelectedToEvent"
-                ItemsSource="{Binding Events, Converter={StaticResource EventNameConverter}}"
-                ButtonText="Add Selected to Event"
-                IsEnabled="{Binding MediaSelected}"
-                ShowCreateButton="True"
-                >
-                <ei:Interaction.Triggers>
-                    <ei:EventTrigger EventName="ItemSelected">
-                        <ei:CallMethodAction TargetObject="{Binding}" MethodName="AddSelectedToEvent"/>
-                    </ei:EventTrigger>
-                </ei:Interaction.Triggers>
-            </local:ChooserDropDown>
+            <Button Content="Add Selected to Event"
+                    Command="{Binding AddSelectedToEventCommand}" IsEnabled="{Binding MediaSelected}"
+                    />
 
             <Button Command="{Binding ChangeThumbnailHeightCommand}">Change Thumbnail Height</Button>
 

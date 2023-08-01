@@ -29,7 +29,7 @@ namespace PhotoGalleryApp.ViewModels
     class GalleryViewModel : ViewModelBase
     {
         #region Constructors
-        public GalleryViewModel(string name, NavigatorViewModel navigator, MediaCollection coll, TimeRange? maxViewLabel=TimeRange.Year)
+        public GalleryViewModel(string name, NavigatorViewModel navigator, MediaCollection coll, TimeRange? maxViewLabel=TimeRange.Year, MediaView.FilterDelegate filter=null)
         {
             _navigator = navigator;
             _name = name;
@@ -40,7 +40,8 @@ namespace PhotoGalleryApp.ViewModels
             _escapePressedCommand = new RelayCommand(EscapePressed);
 
             // Init the media collection
-            _mediaCollection = new MediaCollectionViewModel(navigator, coll, new SortDescription("Timestamp", ListSortDirection.Ascending), false, maxViewLabel);
+            _mediaCollection = new MediaCollectionViewModel(navigator, coll, new SortDescription("Timestamp", ListSortDirection.Ascending), false, maxViewLabel, filter);
+
         }
 
         #endregion Constructors

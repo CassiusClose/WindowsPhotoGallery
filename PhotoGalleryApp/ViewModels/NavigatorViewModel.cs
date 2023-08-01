@@ -93,13 +93,16 @@ namespace PhotoGalleryApp.ViewModels
         /// </summary>
         /// <param name="vm"></param>
         /// <returns></returns>
-        public object OpenPopup(PopupViewModel vm)
+        public object? OpenPopup(PopupViewModel vm)
         {
             PopupWindow popup = new PopupWindow();
             popup.DataContext = vm;
             popup.ShowDialog();
 
-            return vm.GetPopupResults();
+            object? results = vm.GetPopupResults();
+            vm.Cleanup();
+
+            return results;
         }
 
         #endregion Methods
