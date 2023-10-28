@@ -50,9 +50,9 @@ namespace PhotoGalleryApp.Utils
                 Add(item);
 
             notificationsEnabled = true;
-
+            
             // Send one change notification - Reset means collection has "dramatically changed".
-            OnCollectionChanged(new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Reset));
+            OnCollectionChanged(new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Add, items));
         }
 
 
@@ -71,7 +71,7 @@ namespace PhotoGalleryApp.Utils
                 Remove(item);
             notificationsEnabled = true;
 
-            OnCollectionChanged(new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Reset));
+            OnCollectionChanged(new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Remove, items));
         }
 
 

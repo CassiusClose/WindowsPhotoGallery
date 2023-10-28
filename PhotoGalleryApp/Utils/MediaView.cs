@@ -27,17 +27,17 @@ namespace PhotoGalleryApp.Utils
         /// </summary>
         /// <param name="maxLabel">The highest level of time to show labels for. If this is null, will determine this based on whether there are multiple
         /// of that time range in the collection. So if all the media is from the same year, it will not show the year label.</param>
-        public MediaView(NavigatorViewModel nav, MediaCollection collection, int thumbnailHeight, bool useLabels=true, TimeRange? maxLabel=TimeRange.Year)
+        public MediaView(NavigatorViewModel nav, MediaCollection collection, int thumbnailHeight, bool useLabels=true, bool expandEvents=false, TimeRange? maxLabel=TimeRange.Year)
         {
             _nav = nav;
             _collection = collection;
             _thumbnailHeight = thumbnailHeight;
             _useLabels = useLabels;
             _maxLabel = maxLabel;
+            _expandEvents = expandEvents;
             _collection.CollectionChanged += MediaCollectionChanged;
+            _collection.ItemPropertyChanged += CollectionItem_PropertyChanged;
 
-            _fullList = new ObservableCollection<ICollectableViewModel>();
-            _fullList.CollectionChanged += RefreshView;
             _viewList = new ObservableCollection<ICollectableViewModel>();
 
             // Build the initial list
@@ -47,8 +47,7 @@ namespace PhotoGalleryApp.Utils
         public void Cleanup()
         {
             _collection.CollectionChanged -= MediaCollectionChanged;
-            _fullList.CollectionChanged -= RefreshView;
-            foreach(ICollectableViewModel item in _fullList)
+            foreach(ICollectableViewModel item in _viewList)
             {
                 item.Cleanup();
             }
@@ -60,7 +59,6 @@ namespace PhotoGalleryApp.Utils
 
 
         // _fullList has all the items. _viewList contains the list filtered and sorted, with labels added
-        private ObservableCollection<ICollectableViewModel> _fullList;
         private ObservableCollection<ICollectableViewModel> _viewList;
 
         public ObservableCollection<ICollectableViewModel> View
@@ -68,11 +66,25 @@ namespace PhotoGalleryApp.Utils
             get { return _viewList; }
         }
 
-        public ObservableCollection<ICollectableViewModel> AllItems
-        {
-            get { return _fullList; }
-        }
 
+
+        private bool _expandEvents;
+        /// <summary>
+        /// Whether to represent an Event as a single EventTileViewModel or to replace it with
+        /// all of its child Media.
+        /// </summary>
+        public bool ExpandEvents
+        {
+            get { return _expandEvents; }
+            set
+            {
+                if (_expandEvents != value) 
+                {
+                    _expandEvents = value;
+                    CollectionChanged_Reset();
+                }
+            }
+        }
 
         private int _thumbnailHeight;
         private bool _useLabels;
@@ -85,7 +97,7 @@ namespace PhotoGalleryApp.Utils
 
 
         // The method used to filter the items
-        public delegate bool FilterDelegate(ICollectableViewModel vm);
+        public delegate bool FilterDelegate(ICollectable c);
         public FilterDelegate? Filter;
 
 
@@ -93,13 +105,13 @@ namespace PhotoGalleryApp.Utils
         /**
          * Apply all filters to the given item and return the results
          */
-        private bool FilterResults(ICollectableViewModel vm)
+        private bool FilterResults(ICollectable c)
         {
             if (Filter == null)
                 return true;
 
             // Trick to get a list of return values from multiple event handlers
-            IEnumerable<bool> results = Filter.GetInvocationList().Select(x => (bool)x.DynamicInvoke(vm));
+            IEnumerable<bool> results = Filter.GetInvocationList().Select(x => (bool)x.DynamicInvoke(c));
             foreach(bool r in results)
             {
                 if (!r)
@@ -117,47 +129,9 @@ namespace PhotoGalleryApp.Utils
         /// </summary>
         public void Refresh()
         {
-            RefreshView(null, new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Reset));
+            CollectionChanged_Reset();
         }
 
-        /// <summary>
-        /// When an ICollectableViewModel property used in filtering (its list of tags) has changed,
-        /// then update only that item in the view.
-        /// </summary>
-        /// <param name="vm"></param>
-        public void FilterStatusChanged(ICollectableViewModel vm)
-        {
-            if (Filter == null)
-                return;
-
-            int ind = _viewList.IndexOf(vm);
-            bool result = FilterResults(vm);
-            if (result && ind == -1)
-            {
-                RefreshView_Add(new List<ICollectableViewModel> { vm });
-            }
-            else if (!result && ind != -1) 
-            { 
-                RemoveAt(ind);
-            }
-        }
-
-        /// <summary>
-        /// When an ICollectableViewModel property used to sort (its timestamp) has changed,
-        /// then update only that item in the view.
-        /// </summary>
-        /// <param name="vm"></param>
-        public void SortPropertyChanged(ICollectableViewModel vm)
-        {
-            int ind = _viewList.IndexOf(vm);
-            if(ind != -1)
-            {
-                RemoveAt(ind);
-                RefreshView_Add(new List<ICollectableViewModel> { vm });
-            }
-            else
-                RefreshView_Add(new List<ICollectableViewModel> { vm });
-        }
 
         /// <summary>
         /// When the filter has become more restrictive (a tag added to it), then remove any items
@@ -170,7 +144,7 @@ namespace PhotoGalleryApp.Utils
 
             for(int i = 0; i < _viewList.Count; i++)
             {
-                if (_viewList[i] is not TimeLabelViewModel && !FilterResults(_viewList[i]))
+                if (_viewList[i] is not TimeLabelViewModel && !FilterResults(_viewList[i].GetModel()))
                     RemoveAt(i--);
             }
         }
@@ -182,25 +156,117 @@ namespace PhotoGalleryApp.Utils
             if (Filter == null)
                 return;
 
-            for (int i = 0; i < _fullList.Count; i++)
+            // Generate list of all items valid with the current filter
+            List<ICollectable> items = new List<ICollectable>();
+            foreach(ICollectable c in _collection)
             {
-                List<ICollectableViewModel> newItems = new List<ICollectableViewModel>();
-                if( (!_viewList.Contains(_fullList[i])) ||
-                    (FilterResults(_fullList[i]) && !_viewList.Contains(_fullList[i]))
-                  )
-                    newItems.Add(_fullList[i]);
+                AddICollectableToList(items, c);
+            }
 
-                RefreshView_Add(newItems);
+
+            foreach(ICollectable c in items)
+            {
+                bool found = false;
+                foreach(ICollectableViewModel vm in _viewList)
+                {
+                    if(vm.GetModel() == c)
+                    {
+                        found = true;
+                        break;
+                    }
+                }
+
+                if (!found)
+                    AddItem(CreateICollectableViewModel(c));
+            }
+        }
+
+
+        /// <summary>
+        /// When an ICollectableViewModel property used in filtering (its list of tags) has changed,
+        /// then update only that item in the view.
+        /// </summary>
+        /// <param name="vm"></param>
+        public void FilterStatusChanged(ICollectable c)
+        {
+            if (Filter == null)
+                return;
+
+
+            int ind;
+            for(ind = 0; ind < _viewList.Count; ind++)
+            {
+                if (_viewList[ind].GetModel() == c)
+                    break;
+            }
+
+            bool result = FilterResults(c);
+
+            if (result && ind == _viewList.Count)
+            {
+                AddItem(CreateICollectableViewModel(c));
+            }
+            else if (!result && ind != _viewList.Count) 
+            { 
+                RemoveAt(ind);
             }
         }
 
 
 
+        /**
+         * Adds an item to the view list, and any labels needed
+         */
+        private void AddItem(ICollectableViewModel vm)
+        {
+            // If the view is empty, insert the item and its labels
+            if(_viewList.Count == 0)
+            {
+                if(_useLabels)
+                {
+                    if(ShouldShowYears())
+                        _viewList.Add(new TimeLabelViewModel(new PrecisionDateTime(vm.Timestamp, TimeRange.Year)));
+                    if(ShouldShowMonths())
+                        _viewList.Add(new TimeLabelViewModel(new PrecisionDateTime(vm.Timestamp, TimeRange.Month)));
+                    if(ShouldShowDays())
+                        _viewList.Add(new TimeLabelViewModel(new PrecisionDateTime(vm.Timestamp, TimeRange.Day)));
+                }
+                _viewList.Add(vm);
+                return;
+            }
 
+            PrecisionDateTime? lastLabel = null;
+            // Find the point where the item belongs, sorting-wise
+            for(int i = 0; i < _viewList.Count+1; i++)
+            {
+                if(i == _viewList.Count || _viewList[i].Timestamp > vm.Timestamp)
+                {
+                    if(_useLabels)
+                    {
+                        // Add labels if they don't already exist
+                        if ((lastLabel == null || lastLabel.Year != vm.Timestamp.Year) && ShouldShowYears())
+                            _viewList.Insert(i++, new TimeLabelViewModel(new PrecisionDateTime(vm.Timestamp, TimeRange.Year)));
+
+                        if ((lastLabel == null || lastLabel.Month != vm.Timestamp.Month) && ShouldShowMonths())
+                            _viewList.Insert(i++, new TimeLabelViewModel(new PrecisionDateTime(vm.Timestamp, TimeRange.Month)));
+
+                        if ((lastLabel == null || lastLabel.Day != vm.Timestamp.Day) && ShouldShowDays())
+                            _viewList.Insert(i++, new TimeLabelViewModel(new PrecisionDateTime(vm.Timestamp, TimeRange.Day)));
+                    }
+
+                    _viewList.Insert(i, vm);
+                    break;
+                }
+
+                if (_useLabels && _viewList[i] is TimeLabelViewModel)
+                    lastLabel = _viewList[i].Timestamp;
+            }
+        }
 
 
         private void RemoveAt(int i)
         {
+
             if (_viewList[i] is TimeLabelViewModel)
                 throw new Exception("Index is a TimeLabelViewModel");
 
@@ -214,7 +280,9 @@ namespace PhotoGalleryApp.Utils
             {
                 i--;
                 while (i >= 0 && _viewList[i] is TimeLabelViewModel)
+                {
                     _viewList.RemoveAt(i--);
+                }
             }
 
             // If the month and year labels are empty, remove them
@@ -238,172 +306,6 @@ namespace PhotoGalleryApp.Utils
                         _viewList.RemoveAt(i - 1); 
                     }
                 }
-            }
-        }
-
-
-
-        /**
-         * When the full list of items changes, update the view
-         */
-        private void RefreshView(object? sender, NotifyCollectionChangedEventArgs e)
-        {
-            switch(e.Action)
-            {
-                case NotifyCollectionChangedAction.Add:
-                    if (e.NewItems == null)
-                        throw new ArgumentException("Adding items to MediaView, but NewItems is null");
-
-                    RefreshView_Add(e.NewItems);
-                    break;
-
-                case NotifyCollectionChangedAction.Remove:
-                    if(e.OldItems == null)
-                        throw new ArgumentException("Removing items from MediaView, but OldItems is null");
-
-                    RefreshView_Remove(e.OldItems);
-                    break;
-
-                case NotifyCollectionChangedAction.Replace:
-                    if(e.NewItems == null || e.OldItems == null)
-                        throw new ArgumentException("Replacing items in MediaView, but NewItems or OldItems is null");
-
-                    RefreshView_Replace(e.NewItems, e.OldItems);
-                    break;
-
-                case NotifyCollectionChangedAction.Reset:
-                    RefreshView_Reset();
-                    break;
-
-                default:
-                    return;
-            }
-        }
-
-        private void RefreshView_Add(IList newItems)
-        {
-            foreach(ICollectableViewModel vm in newItems)
-            {
-                // Don't add if doesn't meet filter
-                if (Filter != null && !FilterResults(vm))
-                    continue;
-
-                // If the view is empty, insert the item and its labels
-                if(_viewList.Count == 0)
-                {
-                    if(_useLabels)
-                    {
-                        if(ShouldShowYears())
-                            _viewList.Add(new TimeLabelViewModel(new PrecisionDateTime(vm.Timestamp, TimeRange.Year)));
-                        if(ShouldShowMonths())
-                            _viewList.Add(new TimeLabelViewModel(new PrecisionDateTime(vm.Timestamp, TimeRange.Month)));
-                        if(ShouldShowDays())
-                            _viewList.Add(new TimeLabelViewModel(new PrecisionDateTime(vm.Timestamp, TimeRange.Day)));
-                    }
-                    _viewList.Add(vm);
-                    continue;
-                }
-
-                PrecisionDateTime? lastLabel = null;
-                // Find the point where the item belongs, sorting-wise
-                for(int i = 0; i < _viewList.Count+1; i++)
-                {
-                    if(i == _viewList.Count || _viewList[i].Timestamp > vm.Timestamp)
-                    {
-                        if(_useLabels)
-                        {
-                            // Add labels if they don't already exist
-                            if ((lastLabel == null || lastLabel.Year != vm.Timestamp.Year) && ShouldShowYears())
-                                _viewList.Insert(i++, new TimeLabelViewModel(new PrecisionDateTime(vm.Timestamp, TimeRange.Year)));
-
-                            if ((lastLabel == null || lastLabel.Month != vm.Timestamp.Month) && ShouldShowMonths())
-                                _viewList.Insert(i++, new TimeLabelViewModel(new PrecisionDateTime(vm.Timestamp, TimeRange.Month)));
-
-                            if ((lastLabel == null || lastLabel.Day != vm.Timestamp.Day) && ShouldShowDays())
-                                _viewList.Insert(i++, new TimeLabelViewModel(new PrecisionDateTime(vm.Timestamp, TimeRange.Day)));
-                        }
-
-                        _viewList.Insert(i, vm);
-                        break;
-                    }
-
-                    if (_useLabels && _viewList[i] is TimeLabelViewModel)
-                        lastLabel = _viewList[i].Timestamp;
-                }
-            }
-        }
-
-        private void RefreshView_Remove(IList oldItems)
-        {
-            // Find the item and remove it
-            foreach(ICollectableViewModel vm in oldItems)
-            {
-                int i;
-                for(i = 0; i < _viewList.Count; i++)
-                {
-                    if (vm == _viewList[i])
-                        break;
-                }
-
-                if (i == _viewList.Count)
-                    Trace.WriteLine("Error: Can't find item when removing from MediaView");
-                else
-                    RemoveAt(i);
-            }
-        } 
-
-        private void RefreshView_Replace(IList newItems, IList oldItems)
-        {
-            RefreshView_Add(newItems);
-            RefreshView_Remove(oldItems);
-        }
-
-        private void RefreshView_Reset()
-        {
-            // Copy and sort the full list
-            _viewList = new ObservableCollection<ICollectableViewModel>(_fullList.OrderBy(media => media.Timestamp));
-
-            // Remove any items that don't meet the filter criteria
-            for (int i = 0; i < _viewList.Count; i++)
-            {
-                if (Filter != null && !FilterResults(_viewList[i]))
-                {
-                    _viewList.RemoveAt(i);
-                    i--;
-                }
-            }
-
-            if (_viewList.Count == 0)
-                return;
-
-            if (!_useLabels)
-                return;
-
-            // Insert the initial labels
-            PrecisionDateTime currTime = _viewList[0].Timestamp;
-            if(ShouldShowYears())
-                _viewList.Insert(0, new TimeLabelViewModel(new PrecisionDateTime(currTime, TimeRange.Year)));
-            if(ShouldShowMonths())
-                _viewList.Insert(0, new TimeLabelViewModel(new PrecisionDateTime(currTime, TimeRange.Month)));
-            if(ShouldShowDays())
-                _viewList.Insert(0, new TimeLabelViewModel(new PrecisionDateTime(currTime, TimeRange.Day)));
-            for (int i = 4; i < _viewList.Count; i++)
-            {
-                // If the current item is a new year or month, add a label for it
-                PrecisionDateTime ts = _viewList[i].Timestamp;
-                if (ts.Year != currTime.Year && ShouldShowYears())
-                {
-                    _viewList.Insert(i++, new TimeLabelViewModel(new PrecisionDateTime(currTime, TimeRange.Year)));
-                }
-                if(ts.Month != currTime.Month && ShouldShowMonths())
-                {
-                    _viewList.Insert(i++, new TimeLabelViewModel(new PrecisionDateTime(currTime, TimeRange.Month)));
-                }
-                if(ts.Day != currTime.Day && ShouldShowDays())
-                {
-                    _viewList.Insert(i++, new TimeLabelViewModel(new PrecisionDateTime(currTime, TimeRange.Day)));
-                }
-                currTime = ts;
             }
         }
 
@@ -485,39 +387,48 @@ namespace PhotoGalleryApp.Utils
         }
 
 
-        private void CollectionChanged_Add(IList newItems)
+
+        private void CollectionChanged_Add(IList newColls)
         {
-            foreach(ICollectable model in newItems)
+            List<ICollectable> newItems = new List<ICollectable>(); 
+            foreach(ICollectable c in newColls)
             {
-                ICollectableViewModel vm = CreateICollectableViewModel(model);
-                _fullList.Add(vm);
+                AddICollectableToList(newItems, c);
+            }
+
+            foreach(ICollectable c in newItems)
+            {
+                AddItem(CreateICollectableViewModel(c));
             }
         }
 
         private void CollectionChanged_Remove(IList oldI)
         {
-            List<ICollectable> oldItems = oldI.Cast<ICollectable>().ToList();
+            List<ICollectable> oldColls = oldI.Cast<ICollectable>().ToList();
 
-            if(oldItems.Count > 0)
+            List<ICollectable> oldItems = new List<ICollectable>();
+            foreach(ICollectable c in oldColls)
             {
-                //TODO Not sure this is actually more efficient
-                // For each item in the list, iterate through the removed items to find a match.
-                // Do this because likely the removed items list will be much shorter than the
-                // full list
-                for (int i = 0; i < _fullList.Count; i++)
+                AddICollectableToList(oldItems, c);
+            }
+
+
+            foreach(ICollectable c in oldItems)
+            {
+                int i;
+                for(i = 0; i < _viewList.Count; i++)
                 {
-                    for (int j = 0; j < oldItems.Count; j++)
+                    if (_viewList[i].GetModel() == c)
                     {
-                        if (_fullList[i].GetModel() == oldItems[j])
-                        {
-                            _fullList.RemoveAt(i);
-                            oldItems.RemoveAt(j);
-                            break;
-                        }
+                        RemoveAt(i);
+                        break;
                     }
                 }
+                if(i == _viewList.Count)
+                    Trace.WriteLine("Error: Can't find item when removing from MediaView");
             }
         }
+
 
         private void CollectionChanged_Replace(IList newItems, IList oldItems)
         {
@@ -525,43 +436,84 @@ namespace PhotoGalleryApp.Utils
             CollectionChanged_Add(newItems);
         }
 
+
         private void CollectionChanged_Reset()
         {
-            // Remove any view models where the model doesn't exist anymore
-            for (int i = 0; i < _fullList.Count; i++)
+            List<ICollectable> collList = new List<ICollectable>();
+            foreach(ICollectable c in _collection)
             {
-                bool found = false;
-                foreach (ICollectable c in _collection)
+                AddICollectableToList(collList, c); 
+            }
+
+            List<ICollectableViewModel> newList = new List<ICollectableViewModel>();
+            foreach(ICollectable c in collList) 
+                newList.Add(CreateICollectableViewModel(c));
+
+
+            newList = (newList.OrderBy(media => media.Timestamp)).ToList<ICollectableViewModel>();
+
+
+            if (newList.Count != 0 && _useLabels)
+            {
+                int startingInd = 0;
+                // Insert the initial labels
+                PrecisionDateTime currTime = newList[0].Timestamp;
+                if(ShouldShowYears())
+                    newList.Insert(startingInd++, new TimeLabelViewModel(new PrecisionDateTime(currTime, TimeRange.Year)));
+
+                if(ShouldShowMonths())
+                    newList.Insert(startingInd++, new TimeLabelViewModel(new PrecisionDateTime(currTime, TimeRange.Month)));
+
+                if(ShouldShowDays())
+                    newList.Insert(startingInd++, new TimeLabelViewModel(new PrecisionDateTime(currTime, TimeRange.Day)));
+
+                for (int i = startingInd+1; i < newList.Count; i++)
                 {
-                    if(c == _fullList[i].GetModel())
+                    // If the current item is a new year or month, add a label for it
+                    PrecisionDateTime ts = newList[i].Timestamp;
+                    if (ts.Year != currTime.Year && ShouldShowYears())
                     {
-                        found = true;
-                        break;
+                        newList.Insert(i++, new TimeLabelViewModel(new PrecisionDateTime(ts, TimeRange.Year)));
                     }
-                }
-                if(!found)
-                {
-                    _fullList.RemoveAt(i);
-                    i--;
+                    if(ts.Month != currTime.Month && ShouldShowMonths())
+                    {
+                        newList.Insert(i++, new TimeLabelViewModel(new PrecisionDateTime(ts, TimeRange.Month)));
+                    }
+                    if(ts.Day != currTime.Day && ShouldShowDays())
+                    {
+                        newList.Insert(i++, new TimeLabelViewModel(new PrecisionDateTime(ts, TimeRange.Day)));
+                    }
+                    currTime = ts;
                 }
             }
 
-            // Add view models for media that is new in the collection
-            List<ICollectableViewModel> toAdd = new List<ICollectableViewModel>();
-            foreach (ICollectable c in _collection)
+            _viewList.Clear();
+            foreach(ICollectableViewModel vm in newList)
+                _viewList.Add(vm);
+        }
+
+
+        /**
+         * Adds the given collectable to the given list if it fits the current filter. If the collectable is an Event,
+         * and ExpandEvents is true, then evaluate & add each item within the collection instead.
+         */
+        private void AddICollectableToList(List<ICollectable> list, ICollectable collectable)
+        {
+            if(collectable is Event)
             {
-                bool found = false;
-                foreach (ICollectableViewModel vm in _fullList)
+                if (ExpandEvents)
                 {
-                    if(vm.GetModel() == c)
+                    Event e = (Event)collectable;
+                    foreach (ICollectable c in e.Collection)
                     {
-                        found = true;
-                        break;
+                        AddICollectableToList(list, c);
                     }
                 }
-                if(!found)
-                    _fullList.Add(CreateICollectableViewModel(c));
+                else if(Filter != null && FilterResults(collectable))
+                        list.Add(collectable);
             }
+            else if (Filter != null && FilterResults(collectable))
+                list.Add(collectable);
         }
 
 
@@ -576,29 +528,48 @@ namespace PhotoGalleryApp.Utils
             if (model is Media)
             {
                 MediaViewModel vm = MediaViewModel.CreateMediaViewModel((Media)model, true, 0, _thumbnailHeight);
-                vm.PropertyChanged += Item_PropertyChanged;
                 return vm;
             }
             else
             {
                 EventTileViewModel vm = new EventTileViewModel((Event)model, _nav, _thumbnailHeight);
-                vm.PropertyChanged += Item_PropertyChanged;
                 return vm;
             }
         }
 
-        /**
-         * When a item's timestamp has changed, resort it in the list
-         */
-        private void Item_PropertyChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs e)
-        {
-            if (sender == null || sender is not ICollectableViewModel)
-                return;
 
-            if(e.PropertyName == "Timestamp")
+        /** 
+         * Capture when an item in the collection changes its StartTimestamp
+         */
+        private void CollectionItem_PropertyChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs e)
+        {
+            if(sender is Event && e.PropertyName=="StartTimestamp") 
             {
-                ICollectableViewModel vm = (ICollectableViewModel)sender;
-                SortPropertyChanged(vm);
+                SortPropertyChanged((ICollectable)sender);
+            }
+        }
+
+        /// <summary>
+        /// When an ICollectableViewModel property used to sort (its timestamp) has changed,
+        /// then update only that item in the view.
+        /// </summary>
+        /// <param name="vm"></param>
+        public void SortPropertyChanged(ICollectable c)
+        {
+            if(c is Event && !ExpandEvents)
+            {
+                int ind;
+                for (ind = 0; ind < _viewList.Count; ind++)
+                {
+                    if (_viewList[ind].GetModel() == c)
+                        break;
+                }
+
+                if (ind != _viewList.Count)
+                    RemoveAt(ind);
+
+                if (FilterResults(c))
+                    AddItem(CreateICollectableViewModel(c));
             }
         }
     }

@@ -6,6 +6,7 @@ using System.Collections.Specialized;
 using System.ComponentModel;
 using System.Diagnostics;
 using System.Linq;
+using System.Printing.IndexedProperties;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows;
@@ -41,7 +42,7 @@ namespace PhotoGalleryApp.ViewModels
         /// </summary>
         /// <param name="collection">The MediaCollection model to be associated with</param>
         /// <param name="sorting">A SortDescription object describing how to sort the collection of media. Can be null</param>
-        public MediaCollectionViewModel(NavigatorViewModel nav, MediaCollection collection, SortDescription? sorting, bool previewMode = false, TimeRange? maxViewLabel=TimeRange.Year, MediaView.FilterDelegate filter=null)
+        public MediaCollectionViewModel(NavigatorViewModel nav, MediaCollection collection, SortDescription? sorting, bool previewMode = false, TimeRange? maxViewLabel=TimeRange.Year, MediaView.FilterDelegate filter=null, bool expandEvents=false)
         {
             _nav = nav;
             _previewMode = previewMode;
@@ -64,19 +65,14 @@ namespace PhotoGalleryApp.ViewModels
 
 
             // Init the view, which does filtering & sorting
-            _view = new MediaView(_nav, MediaCollectionModel, ThumbnailHeight, !_previewMode, maxViewLabel);
-            _view.View.CollectionChanged += View_CollectionChanged;
+            _view = new MediaView(_nav, MediaCollectionModel, ThumbnailHeight, !_previewMode, expandEvents, maxViewLabel);
             _view.Filter += MediaFilter;
+            _view.View.CollectionChanged += View_CollectionChanged;
             //TODO Add this into constructor instead
             if (filter != null)
-            {
                 _view.Filter += filter;
-                // If filter has changed, rebuild the list
-                _view.FilterMoreRestrictive();
-            }
+            _view.Refresh();
 
-
-            EventList_Reset();
 
             // Setup tag-related things
             FilterTags.CollectionChanged += FilterTagsChanged;
@@ -86,6 +82,7 @@ namespace PhotoGalleryApp.ViewModels
             _scrollChangedTimer.Tick += ScrollChangedStopped;
 
             // Load all the media in the collection 
+            ReadyToLoadMedia = true;
             LoadAllMedia();
         }
 
@@ -123,6 +120,11 @@ namespace PhotoGalleryApp.ViewModels
 
 
 
+        /**
+         * Delay loading media until everything is set up
+         */
+        private bool ReadyToLoadMedia = false;
+
 
 
         /// <summary>
@@ -155,6 +157,19 @@ namespace PhotoGalleryApp.ViewModels
             get { return _previewMode; }
         }
 
+
+        /*
+        public bool ShouldExpandEvents
+        {
+            get { return _view.ExpandEvents; }
+            set {
+                _view.ExpandEvents = value;
+
+                // The view has reset, so reload images
+                LoadVisibleMediaThenAll();
+            }
+        }*/
+
         #endregion Fields and Properties
 
 
@@ -164,6 +179,8 @@ namespace PhotoGalleryApp.ViewModels
         /* When the view changes, deselect any items not longer in the view */
         private void View_CollectionChanged(object? sender, NotifyCollectionChangedEventArgs e)
         {
+            LoadVisibleMediaThenAll();
+
             switch(e.Action)
             {
                 case NotifyCollectionChangedAction.Remove:
@@ -185,11 +202,6 @@ namespace PhotoGalleryApp.ViewModels
                     break;
 
                 case NotifyCollectionChangedAction.Reset:
-                    foreach (ICollectableViewModel vm in _view.AllItems)
-                    {
-                        if (vm.IsSelected && !MediaView.Contains(vm))
-                            vm.IsSelected = false;
-                    }
                     break;
             }
         }
@@ -197,37 +209,6 @@ namespace PhotoGalleryApp.ViewModels
         /* When the media collection changes, refresh the load task and update the list of events */
         private void MediaCollectionChanged(object? sender, NotifyCollectionChangedEventArgs e)
         {
-            LoadVisibleMediaThenAll();
-
-            switch(e.Action)
-            {
-                case NotifyCollectionChangedAction.Add:
-                    if (e.NewItems == null)
-                        throw new ArgumentException("Adding items to MediaCollection, but NewItems is null");
-
-                    EventList_Add(e.NewItems);
-                    break;
-
-                case NotifyCollectionChangedAction.Remove:
-                    if (e.OldItems == null)
-                        throw new ArgumentException("Removing items from MediaCollection, but OldItems is null");
-
-                    EventList_Remove(e.OldItems);
-                    break;
-
-                case NotifyCollectionChangedAction.Replace:
-                    if (e.NewItems == null || e.OldItems == null)
-                        throw new ArgumentException("Replacing items in MediaCollection, but OldItems or NewItems is null");
-
-                    EventList_Add(e.NewItems);
-                    EventList_Remove(e.OldItems);
-                    break;
-
-                case NotifyCollectionChangedAction.Reset:
-                    EventList_Reset();
-                    break;
-
-            }
         }
 
         #endregion MediaCollection/View Listeners
@@ -369,11 +350,7 @@ namespace PhotoGalleryApp.ViewModels
                 return;
 
             Media media = (Media)sender;
-            foreach(ICollectableViewModel vm in _view.AllItems)
-            {
-                if(vm.GetModel() == media)
-                    _view.FilterStatusChanged(vm);
-            }
+            _view.FilterStatusChanged(media);
         }
 
 
@@ -384,15 +361,15 @@ namespace PhotoGalleryApp.ViewModels
         /// </summary>
         /// <param name="item">The MediaViewModel object to accept or reject.</param>
         /// <returns>bool, whether the media was accepted or not.</returns>
-        public bool MediaFilter(ICollectableViewModel vm)
+        public bool MediaFilter(ICollectable c)
         {
             // If no tags picked, show all of the media
             if (FilterTags.Count == 0)
                 return true;
 
-            if (vm is MediaViewModel)
+            if (c is Media)
             {
-                Media media = ((MediaViewModel)vm).Media;
+                Media media = (Media)c;
                 foreach (string tag in FilterTags)
                 {
                     if (!media.Tags.Contains(tag))
@@ -425,62 +402,6 @@ namespace PhotoGalleryApp.ViewModels
 
 
         #region Events
-
-        private ObservableCollection<EventTileViewModel> _events = new ObservableCollection<EventTileViewModel>();
-        public ObservableCollection<EventTileViewModel> Events { get { return _events; } }
-
-
-        /**
-         * When event is added to the collection, add to the event list
-         */
-        private void EventList_Add(IList newItems)
-        {
-            foreach(ICollectable c in newItems)
-            {
-                if(c is Event)
-                    _events.Add(new EventTileViewModel((Event)c, _nav, ThumbnailHeight));
-            }
-            OnPropertyChanged("Events");
-        }
-
-        /**
-         * When event is remove from the collection, remove from the event list
-         */
-        private void EventList_Remove(IList oldItems)
-        {
-            foreach(ICollectable c in oldItems)
-            {
-                if(c is Event)
-                {
-                    for(int i = 0; i < _events.Count; i++)
-                    {
-                        if (_events[i].GetModel() == c)
-                        {
-                            _events.RemoveAt(i);
-                            break;
-                        }
-                    }
-                }
-            }
-            OnPropertyChanged("Events");
-        }
-
-        /** Rebuild the event list */
-        private void EventList_Reset()
-        {
-            _events.Clear();
-
-            foreach(ICollectableViewModel vm in _view.AllItems)
-            {
-                if(vm is EventTileViewModel)
-                {
-                    _events.Add((EventTileViewModel)vm);
-                }
-            }
-            OnPropertyChanged("Events");
-        }
-
-
 
         private RelayCommand _createEventCommand;
         /// <summary>
@@ -930,6 +851,9 @@ namespace PhotoGalleryApp.ViewModels
          */
         private async void LoadAllMedia() 
         {
+            if (!ReadyToLoadMedia)
+                return;
+
             if (PreviewMode)
                 return;
 
@@ -961,6 +885,9 @@ namespace PhotoGalleryApp.ViewModels
          */
         private async void LoadPriorityMediaThenAll(List<ICollectableViewModel> items)
         {
+            if (!ReadyToLoadMedia)
+                return;
+
             // Save this task's ID to a local variable
             uint taskID = ++_imageLoadID;
 

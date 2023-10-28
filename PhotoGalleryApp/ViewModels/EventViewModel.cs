@@ -124,12 +124,10 @@ namespace PhotoGalleryApp.ViewModels
 
         private void Collection_PropertyChanged(object? sender, PropertyChangedEventArgs e)
         {
-            MediaCollection coll = (MediaCollection)sender;
-
-            if(e.PropertyName == nameof(coll.StartTimestamp))
+            if(e.PropertyName == nameof(Event.StartTimestamp))
                 OnPropertyChanged(nameof(StartTimestamp));
 
-            if(e.PropertyName == nameof(coll.EndTimestamp))
+            if(e.PropertyName == nameof(Event.EndTimestamp))
                 OnPropertyChanged(nameof(EndTimestamp));
         }
     }

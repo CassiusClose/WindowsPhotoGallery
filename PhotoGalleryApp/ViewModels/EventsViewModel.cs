@@ -8,6 +8,7 @@ using System.Collections.Specialized;
 using System.ComponentModel;
 using System.Diagnostics;
 using System.Linq;
+using System.Reflection.Metadata.Ecma335;
 using System.Security.Cryptography.Xml;
 using System.Text;
 using System.Threading;
@@ -72,11 +73,22 @@ namespace PhotoGalleryApp.ViewModels
             // If it's a time range (year or month), open a new gallery with the collection filtered accordingly
             else 
             {
-                _nav.NewPage(new GalleryViewModel(folder.Timestamp.ToString(), _nav, _collection, folder.Timestamp.Precision + 1, (ICollectableViewModel vm) =>
+                _nav.NewPage(new GalleryViewModel(folder.Timestamp.ToString(), _nav, _collection, folder.Timestamp.Precision + 1, (ICollectable c) =>
                 {
-                    if (vm.Timestamp.Matches(folder.Timestamp))
-                        return true;
-                    return false;
+                    if(c is Event)
+                    {
+                        Event e = (Event) c;
+                        if (e.StartTimestamp.Matches(folder.Timestamp))
+                            return true;
+                        return false;
+                    }
+                    else
+                    {
+                        Media m = (Media) c;
+                        if (m.Timestamp.Matches(folder.Timestamp))
+                            return true;
+                        return false;
+                    }
                 }));
             }
         }
@@ -88,7 +100,7 @@ namespace PhotoGalleryApp.ViewModels
             {
                 if (c is Event) { 
                     Event e = (Event)c;
-                    if (folder.Timestamp == e.Collection.StartTimestamp && folder.Label == e.Name)
+                    if (folder.Timestamp == e.StartTimestamp && folder.Label == e.Name)
                         return e;
 
                     Event? result = GetEventFromFolder(folder, e.Collection);

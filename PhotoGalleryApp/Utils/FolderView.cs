@@ -177,12 +177,12 @@ namespace PhotoGalleryApp.Utils
                         if (co is Media)
                             pdt = ((Media)co).Timestamp;
                         else
-                            pdt = ((Event)co).Collection.StartTimestamp;
+                            pdt = ((Event)co).StartTimestamp;
 
                         if (pdt.Year == ts.Year)
                             yearFound = true;
 
-                        if(pdt.Month == ts.Month)
+                        if(yearFound == true && pdt.Month == ts.Month)
                         {
                             monthFound = true;
                             break;
