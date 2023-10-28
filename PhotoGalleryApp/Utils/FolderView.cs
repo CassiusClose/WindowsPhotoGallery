@@ -115,7 +115,7 @@ namespace PhotoGalleryApp.Utils
 
                 // For each new event, add an entry into its proper folder
                 Event e = (Event)c;
-                FolderLabelViewModel month = GetMonthFolder(e.Collection.StartTimestamp);
+                FolderLabelViewModel month = GetMonthFolder(e.StartTimestamp);
                 FolderLabelViewModel eventFolder = CreateEventFolder(e);
                 eventFolder.FolderOpened += ChildFolderOpened;
                 month.Children.Add(eventFolder);
@@ -135,7 +135,7 @@ namespace PhotoGalleryApp.Utils
                 if (c is Media)
                     ts = ((Media)c).Timestamp;
                 else
-                    ts = ((Event)c).Collection.StartTimestamp;
+                    ts = ((Event)c).StartTimestamp;
 
                 // Find the year and month folder of the event
 
@@ -232,7 +232,7 @@ namespace PhotoGalleryApp.Utils
                 {
                     Event e = (Event)model;
                     // Create folder if doesn't exist
-                    FolderLabelViewModel month = GetMonthFolder(e.Collection.StartTimestamp);
+                    FolderLabelViewModel month = GetMonthFolder(e.StartTimestamp);
                     month.Children.Add(CreateEventFolder(e));
                 }
             }
@@ -244,7 +244,7 @@ namespace PhotoGalleryApp.Utils
         /** Create a folder for an event, and nest folders for each child event in it */
         private FolderLabelViewModel CreateEventFolder(Event e)
         {
-            FolderLabelViewModel vm = new FolderLabelViewModel(e.Name, new PrecisionDateTime(e.Collection.StartTimestamp, TimeRange.Second));
+            FolderLabelViewModel vm = new FolderLabelViewModel(e.Name, new PrecisionDateTime(e.StartTimestamp, TimeRange.Second));
             vm.FolderOpened += ChildFolderOpened;
             foreach(ICollectable c in e.Collection)
             {

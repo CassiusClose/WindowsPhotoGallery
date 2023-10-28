@@ -70,14 +70,14 @@ namespace PhotoGalleryApp.ViewModels
         public PrecisionDateTime StartTimestamp
         {
             get {
-                return _event.Collection.StartTimestamp; 
+                return _event.StartTimestamp; 
             }
         }
 
         public PrecisionDateTime EndTimestamp
         {
             get { 
-                return _event.Collection.EndTimestamp; 
+                return _event.EndTimestamp; 
             }
         }
 

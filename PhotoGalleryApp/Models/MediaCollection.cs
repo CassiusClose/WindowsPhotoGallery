@@ -106,7 +106,13 @@ namespace PhotoGalleryApp.Models
          * Pass on any children's tags CollectionChanged events.
          */
         [XmlIgnore]
-        public NotifyCollectionChangedEventHandler? MediaTagsChanged; 
+        public NotifyCollectionChangedEventHandler? MediaTagsChanged;
+
+        /**
+         * Pass on children's PropertyChanged events
+         */
+        [XmlIgnore]
+        public PropertyChangedEventHandler? ItemPropertyChanged;
 
         #endregion Fields and Properties
 
@@ -133,7 +139,7 @@ namespace PhotoGalleryApp.Models
                 }
                 else
                 {
-                    PrecisionDateTime? t = ((Event)c).Collection.StartTimestamp;
+                    PrecisionDateTime? t = ((Event)c).StartTimestamp;
                     if (t != null && (earliest == null || t < earliest))
                         earliest = t;
                     if (t != null && (latest == null || t > latest))
@@ -154,6 +160,10 @@ namespace PhotoGalleryApp.Models
          */
         private void Item_PropertyChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs e)
         {
+            // Pass on PropertyChanged notifications for items in the collection to listeners
+            if(ItemPropertyChanged != null)
+                ItemPropertyChanged(sender, e);
+
             if(sender is Media)
             {
                 Media m = (Media)sender;
@@ -163,7 +173,7 @@ namespace PhotoGalleryApp.Models
             else
             {
                 Event ev = (Event)sender;
-                if(e.PropertyName == nameof(ev.Collection.StartTimestamp))
+                if(e.PropertyName == nameof(ev.StartTimestamp))
                     ResetTimeRange();
             }
         }
@@ -194,10 +204,10 @@ namespace PhotoGalleryApp.Models
                 //((Event)i).Collection.AddTagsChangedListener(handler);
                 //MediaTagsChanged_Add(((Event)item).Collection.Tags);
 
-                if(StartTimestamp == null || ev.Collection.StartTimestamp < StartTimestamp)
-                    StartTimestamp = ev.Collection.StartTimestamp;
-                if(EndTimestamp == null || ev.Collection.EndTimestamp > EndTimestamp)
-                    EndTimestamp = ev.Collection.EndTimestamp;
+                if(StartTimestamp == null || ev.StartTimestamp < StartTimestamp)
+                    StartTimestamp = ev.StartTimestamp;
+                if(EndTimestamp == null || ev.EndTimestamp > EndTimestamp)
+                    EndTimestamp = ev.EndTimestamp;
             }
 
             item.PropertyChanged += Item_PropertyChanged;
@@ -232,7 +242,7 @@ namespace PhotoGalleryApp.Models
                 // Uncomment if a MediaCollection's tag list should contain tags from nested events
                 MediaTagsChanged_Remove(((Event)item).Collection.Tags);
 
-                if (ev.Collection.StartTimestamp.Equals(StartTimestamp) || ev.Collection.EndTimestamp.Equals(EndTimestamp))
+                if (ev.StartTimestamp.Equals(StartTimestamp) || ev.EndTimestamp.Equals(EndTimestamp))
                     ResetTimeRange();
             }
 

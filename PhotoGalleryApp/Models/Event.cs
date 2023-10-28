@@ -1,4 +1,5 @@
-﻿using System;
+﻿using PhotoGalleryApp.Utils;
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -32,6 +33,7 @@ namespace PhotoGalleryApp.Models
             _name = name;
 
             _collection = new MediaCollection();
+            ((INotifyPropertyChanged)_collection).PropertyChanged += Collection_PropertyChanged;
         }
 
 
@@ -54,7 +56,10 @@ namespace PhotoGalleryApp.Models
         /// </summary>
         public string Name { 
             get { return _name; } 
-            set { _name = value; }
+            set { 
+                _name = value;
+                OnPropertyChanged();
+            }
         }
 
         private Media? _thumbnail = null;
@@ -74,6 +79,17 @@ namespace PhotoGalleryApp.Models
         }
 
 
+        /// <summary>
+        /// The Timestamp of the earliest Media in this event
+        /// </summary>
+        public PrecisionDateTime StartTimestamp => _collection.StartTimestamp;
+
+        /// <summary>
+        /// The Timestamp of the latest Media in this event
+        /// </summary>
+        public PrecisionDateTime EndTimestamp => _collection.EndTimestamp;
+
+
 
         #endregion Fields and Properties
 
@@ -88,5 +104,17 @@ namespace PhotoGalleryApp.Models
             return true;
         }
 
+
+        /**
+         * When the media collection changes its Timestamps, notify any listeners for the Timestamp properties in this class.
+         */
+        private void Collection_PropertyChanged(object? sender, PropertyChangedEventArgs e)
+        {
+            if(e.PropertyName == nameof(_collection.StartTimestamp))
+                OnPropertyChanged(nameof(StartTimestamp)); 
+
+            if(e.PropertyName == nameof(_collection.EndTimestamp))
+                OnPropertyChanged(nameof(EndTimestamp)); 
+        }
     }
 }

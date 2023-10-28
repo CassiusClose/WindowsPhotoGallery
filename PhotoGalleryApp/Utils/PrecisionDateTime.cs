@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+using System.Runtime.InteropServices.ObjectiveC;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -13,7 +14,7 @@ namespace PhotoGalleryApp.Utils
     /// So if you only knew the date that a media was created on, and not the time, you would define its
     /// timestamp as a precision of Day.
     /// </summary>
-    public class PrecisionDateTime
+    public class PrecisionDateTime : IComparable
     {
         public PrecisionDateTime()
         {
@@ -358,7 +359,7 @@ namespace PhotoGalleryApp.Utils
         {
             return !(a == b);
         }
-
+        
         public override bool Equals(object? obj)
         {
             if (ReferenceEquals(this, obj))
@@ -371,6 +372,17 @@ namespace PhotoGalleryApp.Utils
                 return this == (PrecisionDateTime)obj;
 
             return false;
+        }
+
+
+        public static bool operator <=(PrecisionDateTime? a, PrecisionDateTime? b)
+        {
+            return !(a > b);
+        }
+
+        public static bool operator >=(PrecisionDateTime? a, PrecisionDateTime? b)
+        {
+            return !(a < b);
         }
 
 
@@ -416,6 +428,50 @@ namespace PhotoGalleryApp.Utils
                 return false;
 
             return true;
+        }
+
+        public override int GetHashCode()
+        {
+            int code = (int)Precision;
+
+            code += ((int)Year / 100)*10;
+            if (Precision != TimeRange.Year)
+                return code;
+
+            code += Month * 100;
+            if (Precision != TimeRange.Month)
+                return code;
+
+            code += Day * 1000;
+            if (Precision != TimeRange.Day)
+                return code;
+
+            code += Hour * 10000;
+            if (Precision != TimeRange.Hour)
+                return code;
+
+            code += Minute * 100000;
+            if (Precision != TimeRange.Minute)
+                return code;
+
+            code += Second * 100000;
+            return code;
+        }
+
+        public int CompareTo(object? obj)
+        {
+            if (obj is not PrecisionDateTime)
+                throw new ArgumentException("CompareTo() argument is not of type PrecisionDateTime");
+
+            PrecisionDateTime dt = (PrecisionDateTime)obj;
+
+            if (this < dt)
+                return -1;
+
+            if (this > dt)
+                return 1;
+
+            return 0;
         }
     }
 }

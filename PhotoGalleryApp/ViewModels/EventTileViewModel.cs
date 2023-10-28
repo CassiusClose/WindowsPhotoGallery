@@ -66,7 +66,7 @@ namespace PhotoGalleryApp.ViewModels
         /// </summary>
         protected override PrecisionDateTime _getTimestamp()
         {
-            return _event.Collection.StartTimestamp; 
+            return _event.StartTimestamp; 
 
         }
 
@@ -119,7 +119,7 @@ namespace PhotoGalleryApp.ViewModels
 
         private void Collection_PropertyChanged(object? sender, PropertyChangedEventArgs e)
         {
-            if(e.PropertyName == nameof(_event.Collection.StartTimestamp))
+            if(e.PropertyName == nameof(_event.StartTimestamp))
                 OnPropertyChanged(nameof(Timestamp));
         }
     }

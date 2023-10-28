@@ -335,7 +335,14 @@ namespace PhotoGalleryApp.ViewModels
         public override void CancelLoading()
         {
             for (int i = 0; i < _cancellationTokens.Count; i++)
-                _cancellationTokens[i].Cancel();
+            {
+                //TODO Is this okay? Why are they null? Seems to happen when a bunch of tasks get cancelled quickly
+                if (_cancellationTokens[i] != null)
+                {
+                    _cancellationTokens[i].Cancel();
+                }
+
+            }
         }
 
         #endregion Methods
