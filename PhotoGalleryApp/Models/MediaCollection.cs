@@ -106,7 +106,7 @@ namespace PhotoGalleryApp.Models
          * Pass on any children's tags CollectionChanged events.
          */
         [XmlIgnore]
-        public NotifyCollectionChangedEventHandler? MediaTagsChanged;
+        public NotifyCollectionChangedEventHandler? ItemTagsChanged;
 
         /**
          * Pass on children's PropertyChanged events
@@ -201,8 +201,8 @@ namespace PhotoGalleryApp.Models
                 Event ev = (Event)item;
 
                 // Uncomment if a MediaCollection's tag list should contain tags from nested events
-                //((Event)i).Collection.AddTagsChangedListener(handler);
-                //MediaTagsChanged_Add(((Event)item).Collection.Tags);
+                ev.Collection.AddTagsChangedListener(MediaTags_CollectionChanged);
+                MediaTagsChanged_Add(ev.Collection.Tags);
 
                 if(StartTimestamp == null || ev.StartTimestamp < StartTimestamp)
                     StartTimestamp = ev.StartTimestamp;
@@ -263,9 +263,9 @@ namespace PhotoGalleryApp.Models
                 if(i is Media)
                     ((Media)i).TagsChanged += handler;
                 // Uncomment if a MediaCollection's tag list should contain tags from nested events
-                /*else
+                else
                     ((Event)i).Collection.AddTagsChangedListener(handler);
-                */
+                
             }
         }
 
@@ -306,8 +306,8 @@ namespace PhotoGalleryApp.Models
             }
 
 
-            if (MediaTagsChanged != null)
-                MediaTagsChanged(sender, e);
+            if (ItemTagsChanged != null)
+                ItemTagsChanged(sender, e);
 
         }
 
@@ -337,11 +337,11 @@ namespace PhotoGalleryApp.Models
                         }
                     }
                     // Uncomment if a MediaCollection's tag list should contain tags from nested events
-                    /*else
+                    else
                     {
                         if (((Event)item).Collection.Tags.Contains(oldItems[i]))
                             oldItems.RemoveAt(i--);
-                    }*/
+                    }
                 }
             }
 
@@ -366,47 +366,20 @@ namespace PhotoGalleryApp.Models
                     }
                 }
                 // Uncomment if a MediaCollection's tag list should contain tags from nested events
-                /*else
+                else
                 {
                     foreach(string tag in ((Event)c).Collection.Tags) 
                     { 
                         if (!newTags.Contains(tag))
                             newTags.Add(tag);
                     }
-                }*/
+                }
             }
 
             // Replace the list & send out one "reset" notification. It's likely more efficient than
             // sending out a "reset" when calling Clear() and then sending out an "add" for each tag
             Tags.ReplaceItems(newTags);
         }
-        
-
-
-
-        /// <summary>
-        /// Returns a list of all the Event objects nested in this collection.
-        /// </summary>
-        /// <returns>All the events contained in the collection.</returns>
-        /*public List<Event> GetEvents()
-        {
-            List<Event> events = new List<Event>();
-
-            foreach(ICollectable c in this)
-            {
-                if(c is Event && c is not TimeEvent)
-                {
-                    Event ev = (Event)c;
-                    events.Add(ev);
-
-                    foreach (Event e in ev.Collection.GetEvents())
-                        events.Add(e);
-                }
-            }
-
-            return events;
-        }*/
-
 
         #endregion Methods
     }

@@ -377,12 +377,13 @@ namespace PhotoGalleryApp.Utils
 
         public static bool operator <=(PrecisionDateTime? a, PrecisionDateTime? b)
         {
-            return !(a > b);
+            return (a < b || a.Matches(b));
         }
 
+        // TODO It's weird that >= uses Matches instead of ==. Should == not require precisions to be the same?
         public static bool operator >=(PrecisionDateTime? a, PrecisionDateTime? b)
         {
-            return !(a < b);
+            return (a > b || a.Matches(b));
         }
 
 
@@ -394,6 +395,7 @@ namespace PhotoGalleryApp.Utils
         /// </summary>
         /// <param name="b"></param>
         /// <returns></returns>
+        //TODO This is diff than == because == requries precisions to be equal. Is that desired func?
         public bool Matches(PrecisionDateTime b)
         {
             if (Precision < b.Precision)

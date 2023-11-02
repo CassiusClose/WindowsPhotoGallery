@@ -39,6 +39,8 @@ namespace PhotoGalleryApp.ViewModels
             _timestamp = dt;
         }
 
+        public override void Cleanup() { }
+
 
         /// <summary>
         /// The display string

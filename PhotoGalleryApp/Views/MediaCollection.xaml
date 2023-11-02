@@ -185,7 +185,6 @@
     <Grid Background="Transparent">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
-            <RowDefinition Height="Auto"/>
             <RowDefinition/>
         </Grid.RowDefinitions>
 
@@ -238,27 +237,8 @@
 
         </StackPanel> 
 
-        <!-- Tag Filtering panel -->
-        <StackPanel 
-            Grid.Row="1"
-            x:Name="TagFilteringPanel"
-            Orientation="Horizontal"
-            >
-            <!-- Drop down list that lets you add tags to the filter -->
-            <local:ChooserDropDown ItemsSource="{Binding AllTags}" ButtonText="Add Tag to Filter">
-                <ei:Interaction.Triggers>
-                    <ei:EventTrigger EventName="ItemSelected">
-                        <ei:CallMethodAction TargetObject="{Binding}" MethodName="AddTagToFilter"/>
-                    </ei:EventTrigger>
-                </ei:Interaction.Triggers>
-            </local:ChooserDropDown>
-
-            <!-- A list of all currently selected tags, clicking removes them -->
-            <ItemsControl ItemsSource="{Binding Path=FilterTags, Mode=OneWay}" Style="{StaticResource FilterTagsList}"/>
-        </StackPanel>
-
         <ScrollViewer
-            Grid.Row="2" 
+            Grid.Row="1" 
             x:Name="MediaScrollViewer" 
             HorizontalScrollBarVisibility="Disabled" 
             PreviewMouseWheel="ScrollViewer_MouseWheel"

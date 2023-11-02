@@ -35,6 +35,8 @@ namespace PhotoGalleryApp.ViewModels
             _gallery = gallery;
         }
 
+        public override void Cleanup() { }
+
         #endregion Constructors
 
 

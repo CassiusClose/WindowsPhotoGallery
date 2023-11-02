@@ -58,6 +58,15 @@ namespace PhotoGalleryApp.ViewModels
             LoadWholeCache();
         }
 
+        public override void Cleanup()
+        {
+            foreach (MediaViewModel vm in _imageCache)
+                vm.Cleanup();
+
+            if(SidebarContent != null)
+                SidebarContent.Cleanup();
+        }
+
 
         #endregion Constructors
 
@@ -96,11 +105,11 @@ namespace PhotoGalleryApp.ViewModels
 
 
 
-        private ViewModelBase _sidebarContent;
+        private ViewModelBase? _sidebarContent = null;
         /// <summary>
         /// Holds the ViewModel whose data is displayed on the sidebar.
         /// </summary>
-        public ViewModelBase SidebarContent
+        public ViewModelBase? SidebarContent
         {
             get { return _sidebarContent; }
             set
@@ -129,9 +138,6 @@ namespace PhotoGalleryApp.ViewModels
 
         #endregion Fields and Properties
 
-
-
-        #region Methods
 
 
         #region Change Handlers
@@ -174,23 +180,6 @@ namespace PhotoGalleryApp.ViewModels
 
 
         #endregion Change Handlers
-
-
-        #region Misc
-
-        /// <summary>
-        /// Called when this page is no longer visible to the user. This cancels any image loading operations that might be going on.
-        /// </summary>
-        public override void NavigatorLostFocus()
-        {
-            foreach (MediaViewModel vm in _imageCache)
-                vm.CancelLoading();
-        }
-
-        #endregion Misc
-
-
-        #endregion Methods
 
 
 
@@ -239,6 +228,7 @@ namespace PhotoGalleryApp.ViewModels
              * The cache has a default length, which it will be, unless the number of items to display in the slideshow
              * is smaller than that length. In that case, the cache will be sized to fit the number of items.
              */
+            //TODO Move to settings
             BACK_CACHE_NUM = 1;
             FORWARD_CACHE_NUM = 2;
             CACHE_LEN = BACK_CACHE_NUM + FORWARD_CACHE_NUM + 1;

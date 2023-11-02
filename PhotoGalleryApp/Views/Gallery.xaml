@@ -40,6 +40,7 @@
         <StackPanel Grid.Row="1" Orientation="Horizontal">
             <Button Command="{Binding AddFilesCommand}">Add Images</Button>
             <Button Command="{Binding SaveGalleryCommand}">Save Gallery</Button>
+            <Button Command="{Binding SearchCommand}">Search</Button>
         </StackPanel>
 
         <local:MediaCollection

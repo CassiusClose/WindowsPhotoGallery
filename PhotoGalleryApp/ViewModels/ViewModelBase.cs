@@ -18,7 +18,7 @@ namespace PhotoGalleryApp.ViewModels
     /// and
     /// <see href="https://intellitect.com/getting-started-model-view-viewmodel-mvvm-pattern-using-windows-presentation-framework-wpf/"/>
     /// </remarks>
-    public class ViewModelBase : NotifyPropertyChanged
+    public abstract class ViewModelBase : NotifyPropertyChanged
     {
         /// <summary>
         /// Called by NavigatorViewModel when this ViewModel page is popped from the history stack.
@@ -27,6 +27,6 @@ namespace PhotoGalleryApp.ViewModels
         /// </summary>
         public virtual void NavigatorLostFocus() { }
 
-        public virtual void Cleanup() { }
+        public abstract void Cleanup();
     }
 }

@@ -1,4 +1,5 @@
-﻿using PhotoGalleryApp.Models;
+﻿using PhotoGalleryApp.Filtering;
+using PhotoGalleryApp.Models;
 using PhotoGalleryApp.ViewModels;
 using System;
 using System.CodeDom.Compiler;
@@ -27,7 +28,7 @@ namespace PhotoGalleryApp.Utils
         /// </summary>
         /// <param name="maxLabel">The highest level of time to show labels for. If this is null, will determine this based on whether there are multiple
         /// of that time range in the collection. So if all the media is from the same year, it will not show the year label.</param>
-        public MediaView(NavigatorViewModel nav, MediaCollection collection, int thumbnailHeight, bool useLabels=true, bool expandEvents=false, TimeRange? maxLabel=TimeRange.Year)
+        public MediaView(NavigatorViewModel nav, MediaCollection collection, int thumbnailHeight, FilterSet? filters=null, bool useLabels=true, bool expandEvents=false, TimeRange? maxLabel=TimeRange.Year)
         {
             _nav = nav;
             _collection = collection;
@@ -35,6 +36,21 @@ namespace PhotoGalleryApp.Utils
             _useLabels = useLabels;
             _maxLabel = maxLabel;
             _expandEvents = expandEvents;
+
+            if(filters != null)
+            {
+                if(filters.MediaCollection != collection)
+                    throw new ArgumentException("The MediaCollection in the FilterSet passed to MediaView is not the same MediaCollection passed to MediaView.");
+            }
+            if (filters == null)
+                filters = new FilterSet(collection);
+
+            _filters = filters;
+            filters.FilterCriteriaLoosened += FilterLoosened;
+            filters.FilterCriteriaTightened += FilterTightened;
+            filters.FilteredPropertyChanged += FilterStatusChanged;
+
+
             _collection.CollectionChanged += MediaCollectionChanged;
             _collection.ItemPropertyChanged += CollectionItem_PropertyChanged;
 
@@ -46,11 +62,17 @@ namespace PhotoGalleryApp.Utils
 
         public void Cleanup()
         {
+            _filters.FilterCriteriaLoosened -= FilterLoosened;
+            _filters.FilterCriteriaTightened -= FilterTightened;
+            _filters.FilteredPropertyChanged -= FilterStatusChanged;
+
             _collection.CollectionChanged -= MediaCollectionChanged;
+            _collection.ItemPropertyChanged -= CollectionItem_PropertyChanged;
+
             foreach(ICollectableViewModel item in _viewList)
-            {
                 item.Cleanup();
-            }
+
+            _filters.Cleanup();
         }
 
 
@@ -96,9 +118,8 @@ namespace PhotoGalleryApp.Utils
         private TimeRange? _maxLabel;
 
 
-        // The method used to filter the items
-        public delegate bool FilterDelegate(ICollectable c);
-        public FilterDelegate? Filter;
+        private FilterSet _filters;
+        public FilterSet ViewFilters { get { return _filters; } }
 
 
 
@@ -107,18 +128,7 @@ namespace PhotoGalleryApp.Utils
          */
         private bool FilterResults(ICollectable c)
         {
-            if (Filter == null)
-                return true;
-
-            // Trick to get a list of return values from multiple event handlers
-            IEnumerable<bool> results = Filter.GetInvocationList().Select(x => (bool)x.DynamicInvoke(c));
-            foreach(bool r in results)
-            {
-                if (!r)
-                    return false;
-            }
-
-            return true;
+            return _filters.Filter(c);
         }
 
 
@@ -137,11 +147,8 @@ namespace PhotoGalleryApp.Utils
         /// When the filter has become more restrictive (a tag added to it), then remove any items
         /// in the view that no longer meet the filter
         /// </summary>
-        public void FilterMoreRestrictive()
+        public void FilterTightened()
         {
-            if (Filter == null)
-                return;
-
             for(int i = 0; i < _viewList.Count; i++)
             {
                 if (_viewList[i] is not TimeLabelViewModel && !FilterResults(_viewList[i].GetModel()))
@@ -151,10 +158,12 @@ namespace PhotoGalleryApp.Utils
 
         /// When the filter has become less restrictive (a tag removed from it), then add any items
         /// that now fit the filter
-        public void FilterLessRestrictive()
+        public void FilterLoosened()
         {
-            if (Filter == null)
-                return;
+            if(!_filters.AreFiltersActive())
+            {
+                //TODO Is it more efficient to rebuild the whole list when there are no active filters?
+            }
 
             // Generate list of all items valid with the current filter
             List<ICollectable> items = new List<ICollectable>();
@@ -189,10 +198,6 @@ namespace PhotoGalleryApp.Utils
         /// <param name="vm"></param>
         public void FilterStatusChanged(ICollectable c)
         {
-            if (Filter == null)
-                return;
-
-
             int ind;
             for(ind = 0; ind < _viewList.Count; ind++)
             {
@@ -509,10 +514,10 @@ namespace PhotoGalleryApp.Utils
                         AddICollectableToList(list, c);
                     }
                 }
-                else if(Filter != null && FilterResults(collectable))
+                else if(FilterResults(collectable))
                         list.Add(collectable);
             }
-            else if (Filter != null && FilterResults(collectable))
+            else if (FilterResults(collectable))
                 list.Add(collectable);
         }
 

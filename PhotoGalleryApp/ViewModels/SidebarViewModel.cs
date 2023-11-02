@@ -20,6 +20,9 @@ namespace PhotoGalleryApp.ViewModels
             _sidebarEventsCommand = new RelayCommand(OpenEvents);
         }
 
+        public override void Cleanup() { }
+
+
         private NavigatorViewModel _nav;
 
         private MediaCollection _collection;

@@ -163,12 +163,10 @@ namespace PhotoGalleryApp.Views
             if(PreviewMode)
             {
                 OptionsPanel.Visibility = Visibility.Collapsed;
-                TagFilteringPanel.Visibility = Visibility.Collapsed;
             }
             else
             {
                 OptionsPanel.Visibility = Visibility.Visible;
-                TagFilteringPanel.Visibility = Visibility.Visible;
             }
         }
 

@@ -25,6 +25,8 @@ namespace PhotoGalleryApp.ViewModels
             _history = new Stack<ViewModelBase>();
         }
 
+        public override void Cleanup() { }
+
         #endregion Constructors
 
 

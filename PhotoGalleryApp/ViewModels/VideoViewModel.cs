@@ -45,6 +45,13 @@ namespace PhotoGalleryApp.ViewModels
             }
         }
 
+        public override void Cleanup() 
+        {
+            CancelLoading();
+            _thumbnailViewModel.Cleanup();
+        }
+
+
         #endregion Constructors
 
         /// <summary>

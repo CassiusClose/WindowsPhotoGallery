@@ -13,6 +13,7 @@ using System.Windows;
 using System.Windows.Data;
 using System.Windows.Input;
 using System.Windows.Threading;
+using PhotoGalleryApp.Filtering;
 using PhotoGalleryApp.Models;
 using PhotoGalleryApp.Utils;
 
@@ -31,18 +32,10 @@ namespace PhotoGalleryApp.ViewModels
     class MediaCollectionViewModel : ViewModelBase
     {
         /// <summary>
-        /// Creates a new viewmodel associated with the given MediaCollection.
+        /// Creates a new viewmodel associated with the given MediaCollection. 
         /// </summary>
         /// <param name="collection">The MediaCollection model to be associated with</param>
-        public MediaCollectionViewModel(NavigatorViewModel nav, MediaCollection collection) : this(nav, collection, null) { }
-
-        /// <summary>
-        /// Creates a new viewmodel associated with the given MediaCollection. The provided sorting
-        /// rule is applied to the items View.
-        /// </summary>
-        /// <param name="collection">The MediaCollection model to be associated with</param>
-        /// <param name="sorting">A SortDescription object describing how to sort the collection of media. Can be null</param>
-        public MediaCollectionViewModel(NavigatorViewModel nav, MediaCollection collection, SortDescription? sorting, bool previewMode = false, TimeRange? maxViewLabel=TimeRange.Year, MediaView.FilterDelegate filter=null, bool expandEvents=false)
+        public MediaCollectionViewModel(NavigatorViewModel nav, MediaCollection collection, bool previewMode = false, TimeRange? maxViewLabel=TimeRange.Year, FilterSet? viewFilters=null, bool expandEvents=false)
         {
             _nav = nav;
             _previewMode = previewMode;
@@ -51,7 +44,6 @@ namespace PhotoGalleryApp.ViewModels
             _selectMediaCommand = new RelayCommand(SelectMedia);
             _scrollChangedCommand = new RelayCommand(ScrollChanged);
             _openMediaCommand = new RelayCommand(OpenMedia);
-            _removeTagFromFilterCommand = new RelayCommand(RemoveTagFromFilter);
             _changeThumbnailHeightCommand = new RelayCommand(ChangeThumbnailHeight);
             _createEventCommand = new RelayCommand(CreateNewEvent);
             _addSelectedToEventCommand = new RelayCommand(AddSelectedToEvent);
@@ -59,23 +51,11 @@ namespace PhotoGalleryApp.ViewModels
 
             // Init media lists
             MediaCollectionModel = collection;
-            MediaCollectionModel.Tags.CollectionChanged += CollectionTagsChanged;
-            MediaCollectionModel.MediaTagsChanged += MediaTagsChanged;
-            MediaCollectionModel.CollectionChanged += MediaCollectionChanged;
-
 
             // Init the view, which does filtering & sorting
-            _view = new MediaView(_nav, MediaCollectionModel, ThumbnailHeight, !_previewMode, expandEvents, maxViewLabel);
-            _view.Filter += MediaFilter;
+            _view = new MediaView(_nav, MediaCollectionModel, ThumbnailHeight, viewFilters, !_previewMode, expandEvents, maxViewLabel);
             _view.View.CollectionChanged += View_CollectionChanged;
-            //TODO Add this into constructor instead
-            if (filter != null)
-                _view.Filter += filter;
-            _view.Refresh();
 
-
-            // Setup tag-related things
-            FilterTags.CollectionChanged += FilterTagsChanged;
 
             // Init scroll timer
             _scrollChangedTimer.Interval = new TimeSpan(0, 0, 0, 0, 150);
@@ -88,12 +68,8 @@ namespace PhotoGalleryApp.ViewModels
 
         public override void Cleanup()
         {
-            MediaCollectionModel.Tags.CollectionChanged -= CollectionTagsChanged;
-            MediaCollectionModel.MediaTagsChanged -= MediaTagsChanged;
-            MediaCollectionModel.CollectionChanged -= MediaCollectionChanged;
-            FilterTags.CollectionChanged -= FilterTagsChanged;
+            CancelLoadTasks();
             _scrollChangedTimer.Stop();
-            _scrollChangedTimer = null;
 
             _view.View.CollectionChanged -= View_CollectionChanged;
             _view.Cleanup();
@@ -113,6 +89,8 @@ namespace PhotoGalleryApp.ViewModels
         public MediaCollection MediaCollectionModel;
 
         private MediaView _view;
+
+        public MediaView MediaViewClass { get { return _view; } }
 
         public ObservableCollection<ICollectableViewModel> MediaView { 
             get { return _view.View; }
@@ -155,6 +133,17 @@ namespace PhotoGalleryApp.ViewModels
         public bool PreviewMode
         {
             get { return _previewMode; }
+        }
+
+
+        /// <summary>
+        /// A collection of all tags in the associated gallery.
+        /// </summary>
+        public ObservableCollection<string> AllTags 
+        {
+            get {
+                return MediaCollectionModel.Tags; 
+            }
         }
 
 
@@ -206,199 +195,7 @@ namespace PhotoGalleryApp.ViewModels
             }
         }
 
-        /* When the media collection changes, refresh the load task and update the list of events */
-        private void MediaCollectionChanged(object? sender, NotifyCollectionChangedEventArgs e)
-        {
-        }
-
         #endregion MediaCollection/View Listeners
-
-
-
-        #region Tags/Filtering
-
-
-        /// <summary>
-        /// A collection of all tags in the associated gallery.
-        /// </summary>
-        public ObservableCollection<string> AllTags 
-        {
-            get {
-                return MediaCollectionModel.Tags; 
-            }
-        }
-
-        /**
-         * When AllTags changes, remove any obselete tags from the filter & update the property
-         */
-        private void CollectionTagsChanged(object sender, NotifyCollectionChangedEventArgs e)
-        {
-            OnPropertyChanged("AllTags");
-
-            switch(e.Action)
-            {
-                case NotifyCollectionChangedAction.Remove:
-                    if (e.OldItems == null)
-                        throw new ArgumentException("Removing tags from MediaCollection, but OldItems is null");
-
-                    CollectionTagsChanged_Remove(e.OldItems);
-                    break;
-
-                case NotifyCollectionChangedAction.Replace:
-                    if (e.OldItems == null)
-                        throw new ArgumentException("Replacing tags from MediaCollection, but OldItems is null");
-
-                    CollectionTagsChanged_Remove(e.OldItems);
-                    break;
-
-                case NotifyCollectionChangedAction.Reset:
-                    CollectionTagsChanged_Reset();
-                    break;
-            }
-        }
-
-        /**
-         * If the filter contains any removed tags, remove them from the filter
-         */
-        private void CollectionTagsChanged_Remove(IList tags)
-        {
-            foreach (string tag in tags)
-            {
-                if (FilterTags.Contains(tag))
-                    FilterTags.Remove(tag);
-            }
-        }
-
-        /**
-         * If the AllTags list doesn't contain any filter tags, remove them from the filter
-         */
-        private void CollectionTagsChanged_Reset()
-        {
-            foreach (string tag in FilterTags)
-            {
-                if (!AllTags.Contains(tag))
-                    FilterTags.Remove(tag);
-            }
-        }
-
-
-
-
-
-
-        private ObservableCollection<string> _filterTags = new ObservableCollection<string>();
-        /// <summary>
-        /// A collection of the tags currently selected to be displayed.
-        /// </summary>
-        public ObservableCollection<string> FilterTags
-        {
-            get { return _filterTags; }
-        }
-
-
-        /**
-         * When FilterTags change, update the view
-         */
-        private void FilterTagsChanged(object sender, NotifyCollectionChangedEventArgs e)
-        {
-            switch(e.Action)
-            {
-                case NotifyCollectionChangedAction.Add:
-                    if (e.NewItems == null)
-                        throw new ArgumentException("Adding items to FilterTags, but NewItems is null");
-
-                    _view.FilterMoreRestrictive();
-                    break;
-
-                case NotifyCollectionChangedAction.Remove:
-                    if (e.OldItems == null)
-                        throw new ArgumentException("Removing items from FilterTags, but OldItems is null");
-
-                    if (FilterTags.Count == 0)
-                        DeselectAllMedia();
-
-                    _view.FilterLessRestrictive();
-                    break;
-
-                case NotifyCollectionChangedAction.Replace:
-                    if (e.NewItems == null || e.OldItems == null)
-                        throw new ArgumentException("Replacing items from FilterTags, but OldItems or NewItems is null");
-
-                    _view.FilterMoreRestrictive();
-                    _view.FilterLessRestrictive();
-                    break;
-
-                case NotifyCollectionChangedAction.Reset:
-                    _view.Refresh();
-                    break;
-            }
-        }
-
-
-        /**
-         * If tags change for a media item in the collection, update it's status in the view
-         * individually.
-         */
-        private void MediaTagsChanged(object sender, NotifyCollectionChangedEventArgs e)
-        {
-            // If the filter is active, no need to do anything.
-            //
-            // This also covers when the filter is removed due to none of the tags being
-            // left in the media. In that case, the FilterTagsChanged handler will update
-            // the view and this doesn't need to.
-            if (FilterTags.Count == 0)
-                return;
-
-            Media media = (Media)sender;
-            _view.FilterStatusChanged(media);
-        }
-
-
-
-        /// <summary>
-        /// Filters the gallery's collection of images based on the selected tags.
-        /// If no tags are selected, all images are accepted.
-        /// </summary>
-        /// <param name="item">The MediaViewModel object to accept or reject.</param>
-        /// <returns>bool, whether the media was accepted or not.</returns>
-        public bool MediaFilter(ICollectable c)
-        {
-            // If no tags picked, show all of the media
-            if (FilterTags.Count == 0)
-                return true;
-
-            if (c is Media)
-            {
-                Media media = (Media)c;
-                foreach (string tag in FilterTags)
-                {
-                    if (!media.Tags.Contains(tag))
-                        return false;
-                }
-                return true;
-            }
-            //TODO How to filter events?
-            else
-                return false;
-        }
-
-
-
-        /// <summary>
-        /// An event handler that adds the given tag to the list of selected tags, if it is not already added.
-        /// </summary>
-        /// <param name="sender">The element that this event was triggered on.</param>
-        /// <param name="args">The event's arguments, of type PhotoGalleryApp.Views.ItemChosenEventArgs.</param>
-        public void AddTagToFilter(object sender, EventArgs eArgs)
-        {
-            PhotoGalleryApp.Views.ItemChosenEventArgs args = (PhotoGalleryApp.Views.ItemChosenEventArgs)eArgs;
-            if(args.Item != null && !FilterTags.Contains(args.Item))
-                FilterTags.Add(args.Item);
-        }
-
-
-        #endregion Tags/Filtering
-
 
 
         #region Events
@@ -719,24 +516,6 @@ namespace PhotoGalleryApp.ViewModels
             }
         }
 
-
-
-        private RelayCommand _removeTagFromFilterCommand;
-        /// <summary>
-        /// A command which removes a tag from the list of selected tags.
-        /// </summary>
-        public ICommand RemoveTagFromFilterCommand => _removeTagFromFilterCommand;
-
-        /// <summary>
-        /// Removes the given tag from the list of selected tags.
-        /// </summary>
-        /// <param name="parameter">The tag to remove, as a string.</param>
-        public void RemoveTagFromFilter(object parameter)
-        {
-            FilterTags.Remove(parameter as string);
-            DeselectAllMedia();
-        }
-
         #endregion Tag Buttons
 
         #region ChangeThumbnailHeight
@@ -910,6 +689,14 @@ namespace PhotoGalleryApp.ViewModels
             // If the task isn't outdated, then resume loading the rest of the collection 
             if (taskID == _imageLoadID)
                 LoadAllMedia();
+        }
+
+        /**
+         * Stops all current load tasks
+         */
+        private void CancelLoadTasks()
+        {
+            _imageLoadID++;
         }
 
         #endregion Image Loading

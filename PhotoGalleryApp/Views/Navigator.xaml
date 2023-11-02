@@ -31,6 +31,14 @@
         <DataTemplate DataType="{x:Type vms:EventViewModel}">
             <local:EventPage/>
         </DataTemplate>
+
+        <DataTemplate DataType="{x:Type vms:SearchPageViewModel}">
+            <local:SearchPage/>
+        </DataTemplate>
+
+        <DataTemplate DataType="{x:Type vms:SearchResultsViewModel}">
+            <local:SearchResults/>
+        </DataTemplate>
     </UserControl.Resources>
 
     <Grid>

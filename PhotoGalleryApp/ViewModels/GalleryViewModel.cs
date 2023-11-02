@@ -19,6 +19,7 @@ using System.Windows;
 using PhotoGalleryApp.Utils;
 using System.Diagnostics;
 using System.Diagnostics.Eventing.Reader;
+using PhotoGalleryApp.Filtering;
 
 namespace PhotoGalleryApp.ViewModels
 {
@@ -29,7 +30,7 @@ namespace PhotoGalleryApp.ViewModels
     class GalleryViewModel : ViewModelBase
     {
         #region Constructors
-        public GalleryViewModel(string name, NavigatorViewModel navigator, MediaCollection coll, TimeRange? maxViewLabel=TimeRange.Year, MediaView.FilterDelegate filter=null)
+        public GalleryViewModel(string name, NavigatorViewModel navigator, MediaCollection coll, TimeRange? maxViewLabel=TimeRange.Year, FilterSet filters=null)
         {
             _navigator = navigator;
             _name = name;
@@ -38,9 +39,10 @@ namespace PhotoGalleryApp.ViewModels
             _addFilesCommand = new RelayCommand(AddFiles);
             _saveGalleryCommand = new RelayCommand(SaveGallery);
             _escapePressedCommand = new RelayCommand(EscapePressed);
+            _searchCommand = new RelayCommand(OpenSearch);
 
             // Init the media collection
-            _mediaCollection = new MediaCollectionViewModel(navigator, coll, new SortDescription("Timestamp", ListSortDirection.Ascending), false, maxViewLabel, filter);
+            _mediaCollection = new MediaCollectionViewModel(navigator, coll, false, maxViewLabel, filters);
         }
         
         public override void Cleanup()
@@ -164,6 +166,17 @@ namespace PhotoGalleryApp.ViewModels
 
         #endregion KeyCommands
 
+
+        private RelayCommand _searchCommand;
+        public ICommand SearchCommand => _searchCommand;
+
+        /// <summary>
+        /// Opens the page for advanced sorting
+        /// </summary>
+        private void OpenSearch()
+        {
+            _navigator.NewPage(new SearchPageViewModel(_navigator, _mediaCollection.MediaCollectionModel, _mediaCollection.MediaViewClass.ViewFilters.Clone()));
+        }
 
         #endregion Commands
     }

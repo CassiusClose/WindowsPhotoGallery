@@ -18,6 +18,8 @@ namespace PhotoGalleryApp.ViewModels
             _confirmTextCommand = new RelayCommand(ConfirmText);
         }
 
+        public override void Cleanup() { }
+
 
         private string _text="";
         /// <summary>

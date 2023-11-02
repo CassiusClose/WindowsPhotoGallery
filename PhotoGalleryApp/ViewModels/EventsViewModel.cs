@@ -1,4 +1,5 @@
-﻿using PhotoGalleryApp.Models;
+﻿using PhotoGalleryApp.Filtering;
+using PhotoGalleryApp.Models;
 using PhotoGalleryApp.Utils;
 using System;
 using System.Collections;
@@ -73,23 +74,11 @@ namespace PhotoGalleryApp.ViewModels
             // If it's a time range (year or month), open a new gallery with the collection filtered accordingly
             else 
             {
-                _nav.NewPage(new GalleryViewModel(folder.Timestamp.ToString(), _nav, _collection, folder.Timestamp.Precision + 1, (ICollectable c) =>
-                {
-                    if(c is Event)
-                    {
-                        Event e = (Event) c;
-                        if (e.StartTimestamp.Matches(folder.Timestamp))
-                            return true;
-                        return false;
-                    }
-                    else
-                    {
-                        Media m = (Media) c;
-                        if (m.Timestamp.Matches(folder.Timestamp))
-                            return true;
-                        return false;
-                    }
-                }));
+                FilterSet filters = new FilterSet(_collection);
+                TimeRangeFilter filt = (TimeRangeFilter)filters.GetCriteriaByType(typeof(TimeRangeFilter));
+                filt.SetTimeRange(folder.Timestamp, folder.Timestamp);
+
+                _nav.NewPage(new GalleryViewModel(folder.Timestamp.ToString(), _nav, _collection, folder.Timestamp.Precision + 1, filters));
             }
         }
 
