@@ -16,7 +16,7 @@ namespace PhotoGalleryApp.Filtering
     /// <summary>
     /// A type of FilterCriteria that filters based on timestamp. This stores a start & stop timestamp, and only allows media within that range.
     /// </summary>
-    class TimeRangeFilter : FilterCriteria
+    public class TimeRangeFilter : FilterCriteria
     {
         public TimeRangeFilter(MediaCollection mediaCollection) : base(mediaCollection) { }
 

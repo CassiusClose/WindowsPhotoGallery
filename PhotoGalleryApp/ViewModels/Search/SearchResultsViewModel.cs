@@ -7,7 +7,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace PhotoGalleryApp.ViewModels
+namespace PhotoGalleryApp.ViewModels.Search
 {
     /// <summary>
     /// ViewModel for the result of a search. Right now, just shows the media, but later on, this will show details about the search parameters.

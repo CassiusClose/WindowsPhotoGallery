@@ -20,6 +20,7 @@ using PhotoGalleryApp.Utils;
 using System.Diagnostics;
 using System.Diagnostics.Eventing.Reader;
 using PhotoGalleryApp.Filtering;
+using PhotoGalleryApp.ViewModels.Search;
 
 namespace PhotoGalleryApp.ViewModels
 {

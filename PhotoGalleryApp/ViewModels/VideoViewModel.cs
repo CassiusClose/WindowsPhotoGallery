@@ -48,7 +48,8 @@ namespace PhotoGalleryApp.ViewModels
         public override void Cleanup() 
         {
             CancelLoading();
-            _thumbnailViewModel.Cleanup();
+            if(_thumbnailViewModel != null)
+                _thumbnailViewModel.Cleanup();
         }
 
 
@@ -76,7 +77,7 @@ namespace PhotoGalleryApp.ViewModels
         public bool ThumbnailMode { get; private set; }
 
 
-        private ImageViewModel _thumbnailViewModel;
+        private ImageViewModel? _thumbnailViewModel = null;
         /// <summary>
         /// The ImageViewModel associated with this video's thumbnail. Trying to get this property
         /// when Thumbnail Mode is not active will throw an error.

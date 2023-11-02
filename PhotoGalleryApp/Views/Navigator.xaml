@@ -4,7 +4,9 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
              xmlns:local="clr-namespace:PhotoGalleryApp.Views"
+             xmlns:local_search="clr-namespace:PhotoGalleryApp.Views.Search"
              xmlns:vms="clr-namespace:PhotoGalleryApp.ViewModels"
+             xmlns:vms_search="clr-namespace:PhotoGalleryApp.ViewModels.Search"
              mc:Ignorable="d" 
              d:DesignHeight="450" d:DesignWidth="800">
 
@@ -32,12 +34,12 @@
             <local:EventPage/>
         </DataTemplate>
 
-        <DataTemplate DataType="{x:Type vms:SearchPageViewModel}">
-            <local:SearchPage/>
+        <DataTemplate DataType="{x:Type vms_search:SearchPageViewModel}">
+            <local_search:SearchPage/>
         </DataTemplate>
 
-        <DataTemplate DataType="{x:Type vms:SearchResultsViewModel}">
-            <local:SearchResults/>
+        <DataTemplate DataType="{x:Type vms_search:SearchResultsViewModel}">
+            <local_search:SearchResults/>
         </DataTemplate>
     </UserControl.Resources>
 

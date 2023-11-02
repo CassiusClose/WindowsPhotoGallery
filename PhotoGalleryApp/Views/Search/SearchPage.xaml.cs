@@ -13,7 +13,7 @@ using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
 
-namespace PhotoGalleryApp.Views
+namespace PhotoGalleryApp.Views.Search
 {
     /// <summary>
     /// Interaction logic for SearchPage.xaml

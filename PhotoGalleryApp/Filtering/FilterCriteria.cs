@@ -38,6 +38,7 @@ namespace PhotoGalleryApp.Filtering
 
 
         protected MediaCollection _mediaCollection;
+        public MediaCollection MediaCollection { get { return _mediaCollection; } }
 
         /**
          * Should be called when the filter parameters change to potentially let more items pass

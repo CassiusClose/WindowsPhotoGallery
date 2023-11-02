@@ -13,14 +13,14 @@ using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
 
-namespace PhotoGalleryApp.Views
+namespace PhotoGalleryApp.Views.Search
 {
     /// <summary>
-    /// Interaction logic for SearchResults.xaml
+    /// Interaction logic for TagSelector.xaml
     /// </summary>
-    public partial class SearchResults : UserControl
+    public partial class TagSelector : UserControl
     {
-        public SearchResults()
+        public TagSelector()
         {
             InitializeComponent();
         }
