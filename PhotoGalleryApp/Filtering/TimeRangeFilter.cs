@@ -54,9 +54,6 @@ namespace PhotoGalleryApp.Filtering
             else
                 return false;
 
-            if (itemTime.Year == 2019)
-                Trace.WriteLine("2019");
-
             return (itemTime >= StartTime && itemTime <= EndTime);
         }
 
