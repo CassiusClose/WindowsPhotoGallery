@@ -18,7 +18,14 @@ namespace PhotoGalleryApp.ViewModels.Search
         {
             _nav = navigator;
 
-            _mediaCollection = new MediaCollectionViewModel(navigator, coll, false, Utils.TimeRange.Year, searchFilter, true);
+            // If only sorting by time range, then don't expand the events.
+            // Otherwise, do, so only the images with certain tags, for
+            // example, are displayed
+            bool expandEvents = true;
+            if(!((TagFilter)searchFilter.GetCriteriaByType(typeof(TagFilter))).IsFilterActive())
+                expandEvents = false;
+
+            _mediaCollection = new MediaCollectionViewModel(navigator, coll, false, Utils.TimeRange.Year, searchFilter, expandEvents);
         }
 
         public override void Cleanup()

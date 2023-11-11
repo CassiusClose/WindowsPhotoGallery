@@ -1,4 +1,5 @@
 ﻿using System;
+using System.CodeDom;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
@@ -58,70 +59,42 @@ namespace PhotoGalleryApp.Utils
             Precision = TimeRange.Second;
         }
 
-        public PrecisionDateTime(DateTime dt, TimeRange precision)
+        /**
+         * If the new PrecisionDateTime is more precise than the given one,
+         * then the constructor will fill in the more detailed date time
+         * information.
+         * 
+         * If fillAtBeginningOfRange is true, then it will fill in times from
+         * the beginning of the precision range. So if the precision changes
+         * from year to month, the new month will be January.
+         * 
+         * If fillAtBeginningOfRange is false, then it will fill in times from
+         * the end of the precision range. So if the precision changes from
+         * year to  month, the new month will be December.
+         */
+        public PrecisionDateTime(DateTime dt, TimeRange precision, bool fillDataAtBeginningOfRange=true)
         {
-            switch (precision)
-            {
-                case TimeRange.Year:
-                    _dt = new DateTime(dt.Year, 1, 1);
-                    break;
-
-                case TimeRange.Month:
-                    _dt = new DateTime(dt.Year, dt.Month, 1);
-                    break;
-
-                case TimeRange.Day:
-                    _dt = new DateTime(dt.Year, dt.Month, dt.Day);
-                    break;
-
-                case TimeRange.Hour:
-                    _dt = new DateTime(dt.Year, dt.Month, dt.Day, dt.Hour, 0, 0);
-                    break;
-
-                case TimeRange.Minute:
-                    _dt = new DateTime(dt.Year, dt.Month, dt.Day, dt.Hour, dt.Minute, 0);
-                    break;
-
-                case TimeRange.Second:
-                    _dt = new DateTime(dt.Year, dt.Month, dt.Day, dt.Hour, dt.Minute, dt.Second);
-                    break;
-            }
-
+            _dt = FillDateTimeAtPrecision(dt, precision, fillDataAtBeginningOfRange);
             Precision = precision;
         }
 
-        public PrecisionDateTime(PrecisionDateTime dt, TimeRange precision)
+        /**
+         * If the new PrecisionDateTime is more precise than the given one,
+         * then the constructor will fill in the more detailed date time
+         * information.
+         * 
+         * If fillAtBeginningOfRange is true, then it will fill in times from
+         * the beginning of the precision range. So if the precision changes
+         * from year to month, the new month will be January.
+         * 
+         * If fillAtBeginningOfRange is false, then it will fill in times from
+         * the end of the precision range. So if the precision changes from
+         * year to  month, the new month will be December.
+         */
+        public PrecisionDateTime(PrecisionDateTime dt, TimeRange precision, bool fillAtBeginningOfRange=true)
         {
+            _dt = FillDateTimeAtPrecision(dt._dt, dt.Precision, fillAtBeginningOfRange);
             Precision = precision;
-            if (dt.Precision < precision)
-                Trace.WriteLine("Warning: Trying to create a PrecisionDateTime from an existing PrecisionDateTime with less precision");
-
-            switch (precision)
-            {
-                case TimeRange.Year:
-                    _dt = new DateTime(dt.Year, 1, 1);
-                    break;
-
-                case TimeRange.Month:
-                    _dt = new DateTime(dt.Year, dt.Month, 1);
-                    break;
-
-                case TimeRange.Day:
-                    _dt = new DateTime(dt.Year, dt.Month, dt.Day);
-                    break;
-
-                case TimeRange.Hour:
-                    _dt = new DateTime(dt.Year, dt.Month, dt.Day, dt.Hour, 0, 0);
-                    break;
-
-                case TimeRange.Minute:
-                    _dt = new DateTime(dt.Year, dt.Month, dt.Day, dt.Hour, dt.Minute, 0);
-                    break;
-
-                case TimeRange.Second:
-                    _dt = new DateTime(dt.Year, dt.Month, dt.Day, dt.Hour, dt.Minute, dt.Second);
-                    break;
-            }
         }
 
 
@@ -174,6 +147,89 @@ namespace PhotoGalleryApp.Utils
         public string ToString(string format)
         {
             return _dt.ToString(format);
+        }
+
+
+
+        /**
+         * Create a DateTime object from the given DateTime object. Assumes the given DateTime
+         * object has the given precision. Creates timestamp data at higher precision. So if the
+         * given DateTime object has Day precision, this function will generate data for hour,
+         * minute, & second. fillDataAtBeginningOfRange determines whether the generated data is
+         * at the beginning of the precision range (when precision is year, set month to January),
+         * or if it's at the end of the precision range (when precisino is year, set month to
+         * December).
+         */
+        protected static DateTime FillDateTimeAtPrecision(DateTime dt, TimeRange precision, bool fillDataAtBeginningOfRange)
+        {
+            if(fillDataAtBeginningOfRange)
+            {
+                switch(precision)
+                {
+                    case TimeRange.Year:
+                        return new DateTime(dt.Year, 1, 1);
+
+                    case TimeRange.Month:
+                        return new DateTime(dt.Year, dt.Month, 1);
+
+                    case TimeRange.Day:
+                        return new DateTime(dt.Year, dt.Month, dt.Day);
+
+                    case TimeRange.Hour:
+                        return new DateTime(dt.Year, dt.Month, dt.Day, dt.Hour, 0, 0);
+
+                    case TimeRange.Minute:
+                        return new DateTime(dt.Year, dt.Month, dt.Day, dt.Hour, dt.Minute, 0);
+
+                    case TimeRange.Second:
+                        return new DateTime(dt.Year, dt.Month, dt.Day, dt.Hour, dt.Minute, dt.Second);
+                }
+            }  
+            else
+            {
+                switch (precision)
+                {
+                    case TimeRange.Year:
+                        return new DateTime(dt.Year, 12, 31, 23, 59, 59);
+
+                    case TimeRange.Month:
+                        switch(dt.Month)
+                        {
+                            case 1: case 3: case 5: case 7: case 8: case 10: case 12:
+                                return new DateTime(dt.Year, dt.Month, 31, 23, 59, 59);
+
+                            case 4: case 6: case 9: case 11:
+                                return new DateTime(dt.Year, dt.Month, 30, 23, 59, 59);
+
+                            case 2:
+                                if(DateTime.IsLeapYear(dt.Year))
+                                    return new DateTime(dt.Year, dt.Month, 29, 23, 59, 59);
+                                else
+                                    return new DateTime(dt.Year, dt.Month, 28, 23, 59, 59);
+                        }
+                        break;
+
+                    case TimeRange.Day:
+                        return new DateTime(dt.Year, dt.Month, dt.Day, 23, 59, 59);
+
+                    case TimeRange.Hour:
+                        return new DateTime(dt.Year, dt.Month, dt.Day, dt.Hour, 59, 59);
+
+                    case TimeRange.Minute:
+                        return new DateTime(dt.Year, dt.Month, dt.Day, dt.Hour, dt.Minute, 59);
+
+                    case TimeRange.Second:
+                        return new DateTime(dt.Year, dt.Month, dt.Day, dt.Hour, dt.Minute, dt.Second);
+                }
+            }
+
+            return new DateTime();
+        }
+
+        
+        public DateTime ToDateTime(bool fillDataAtBeginningOfRange)
+        {
+            return FillDateTimeAtPrecision(this._dt, Precision, fillDataAtBeginningOfRange);
         }
 
 

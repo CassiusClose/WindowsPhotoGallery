@@ -1,4 +1,5 @@
 ﻿using PhotoGalleryApp.Filtering;
+using PhotoGalleryApp.Utils;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -19,6 +20,26 @@ namespace PhotoGalleryApp.ViewModels.Search
         }
 
         private TimeRangeFilter _filter;
+
+        public PrecisionDateTime? StartTimestamp
+        {
+            get { return _filter.StartTime; }
+            set
+            {
+                _filter.StartTime = value;
+                OnPropertyChanged();
+            }
+        }
+
+        public PrecisionDateTime? EndTimestamp
+        {
+            get { return _filter.EndTime; }
+            set
+            {
+                _filter.EndTime = value;
+                OnPropertyChanged();
+            }
+        }
 
 
         public override void Cleanup()

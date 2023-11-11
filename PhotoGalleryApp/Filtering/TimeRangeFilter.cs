@@ -10,6 +10,7 @@ using System.Reflection.Metadata.Ecma335;
 using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading.Tasks;
+using System.Windows.Documents;
 
 namespace PhotoGalleryApp.Filtering
 {
@@ -20,12 +21,9 @@ namespace PhotoGalleryApp.Filtering
     {
         public TimeRangeFilter(MediaCollection mediaCollection) : base(mediaCollection) { }
 
-
-        private PrecisionDateTime? _startTime = null;
-        private PrecisionDateTime? _endTime = null;
-
-        public PrecisionDateTime? StartTime { get { return _startTime; } }
-        public PrecisionDateTime? EndTime { get { return _endTime; } }
+        
+        public PrecisionDateTime? StartTime = null;
+        public PrecisionDateTime? EndTime = null;
 
 
         /**
@@ -36,8 +34,8 @@ namespace PhotoGalleryApp.Filtering
             if (start > end)
                 throw new ArgumentException("TimeRangeFilter needs the start timestamp to be before or equal to the end timestamp");
 
-            _startTime = start;
-            _endTime = end;
+            StartTime = start;
+            EndTime = end;
 
             if(FilterCriteriaTightened != null)
                 FilterCriteriaTightened();
@@ -56,19 +54,22 @@ namespace PhotoGalleryApp.Filtering
             else
                 return false;
 
-            return (itemTime >= _startTime && itemTime <= _endTime);
+            if (itemTime.Year == 2019)
+                Trace.WriteLine("2019");
+
+            return (itemTime >= StartTime && itemTime <= EndTime);
         }
 
 
         public override bool IsFilterActive()
         {
-            return (_startTime != null && _endTime != null);
+            return (StartTime != null && EndTime != null);
         }
 
         public override void ClearFilter()
         {
-            _startTime = null;
-            _endTime = null;
+            StartTime = null;
+            EndTime = null;
 
             if(FilterCriteriaLoosened != null)
                 FilterCriteriaLoosened();
@@ -110,7 +111,7 @@ namespace PhotoGalleryApp.Filtering
             if (!IsFilterActive())
                 f.ClearFilter();
             else
-                f.SetTimeRange(_startTime, _endTime);
+                f.SetTimeRange(StartTime, EndTime);
         }
     }
 }
