@@ -235,6 +235,8 @@
 
             <Button Command="{Binding ChangeThumbnailHeightCommand}">Change Thumbnail Height</Button>
 
+            <ToggleButton IsChecked="{Binding ShouldExpandEvents}">Expand Events</ToggleButton>
+
         </StackPanel> 
 
         <ScrollViewer

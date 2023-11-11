@@ -147,17 +147,21 @@ namespace PhotoGalleryApp.ViewModels
         }
 
 
-        /*
         public bool ShouldExpandEvents
         {
             get { return _view.ExpandEvents; }
             set {
+                // Stop the View_CollectionChanged handler from reloading images, because there
+                // will be many updates when expanding all events. Instead, just reload once
+                // at the end.
+                _disableLoadMediaViewCC = true;
                 _view.ExpandEvents = value;
+                _disableLoadMediaViewCC = false;
 
                 // The view has reset, so reload images
                 LoadVisibleMediaThenAll();
             }
-        }*/
+        }
 
         #endregion Fields and Properties
 
@@ -165,10 +169,19 @@ namespace PhotoGalleryApp.ViewModels
 
         #region MediaCollection/View Listeners
 
+        /**
+         * Stops View_CollectionChanged from restarting image load tasks when
+         * there's a change in the View. Use this if there's an operation
+         * happening in this class where many changes will be made to the view,
+         * and you only want one image load task to be done.
+         */
+        private bool _disableLoadMediaViewCC = false;
+
         /* When the view changes, deselect any items not longer in the view */
         private void View_CollectionChanged(object? sender, NotifyCollectionChangedEventArgs e)
         {
-            LoadVisibleMediaThenAll();
+            if(!_disableLoadMediaViewCC)
+                LoadVisibleMediaThenAll();
 
             switch(e.Action)
             {
