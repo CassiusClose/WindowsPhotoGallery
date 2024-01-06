@@ -4,6 +4,7 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
              xmlns:local="clr-namespace:PhotoGalleryApp.Views"
+             xmlns:local_maps="clr-namespace:PhotoGalleryApp.Views.Maps"
              xmlns:local_search="clr-namespace:PhotoGalleryApp.Views.Search"
              xmlns:vms="clr-namespace:PhotoGalleryApp.ViewModels"
              xmlns:vms_search="clr-namespace:PhotoGalleryApp.ViewModels.Search"
@@ -22,8 +23,9 @@
         </DataTemplate>
 
         <DataTemplate DataType="{x:Type vms:MapViewModel}">
-            <local:Map 
-                LocationsSource="{Binding Locations}"/>
+            <local_maps:Map 
+                ItemsSource="{Binding MapItems}"
+                />
         </DataTemplate>
 
         <DataTemplate DataType="{x:Type vms:EventsViewModel}">

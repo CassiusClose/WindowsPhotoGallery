@@ -1,4 +1,5 @@
-﻿using PhotoGalleryApp.Models;
+﻿using Microsoft.Maps.MapControl.WPF;
+using PhotoGalleryApp.Models;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -60,7 +61,15 @@ namespace PhotoGalleryApp.ViewModels
         {
             if (_nav.CurrentPage.GetType() != typeof(MapViewModel))
             {
-                _nav.NewPage(new MapViewModel(_nav));
+                PhotoGalleryApp.Models.Map map = new PhotoGalleryApp.Models.Map();
+                map.Items.Add(new MapLocation("Miami", new Location(25.7617, -80.1918)));
+                map.Items.Add(new MapLocation("Nassau", new Location(25.0443, -77.3504)));
+                MapPath p = new MapPath("Path 1");
+                p.Points.Add(new Location(30, 30));
+                p.Points.Add(new Location(31, 30));
+                p.Points.Add(new Location(34, 37));
+                map.Items.Add(p);
+                _nav.NewPage(new MapViewModel(_nav, map));
             }
         }
 

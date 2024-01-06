@@ -1,0 +1,103 @@
+﻿<UserControl x:Class="PhotoGalleryApp.Views.Maps.Map"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             xmlns:local="clr-namespace:PhotoGalleryApp.Views.Maps"
+             xmlns:conv="clr-namespace:PhotoGalleryApp.Converters"
+             xmlns:m="clr-namespace:Microsoft.Maps.MapControl.WPF;assembly=Microsoft.Maps.MapControl.WPF"
+             mc:Ignorable="d" 
+             d:DesignHeight="450" d:DesignWidth="800"
+             Loaded="UserControl_Loaded">
+
+    <UserControl.Resources>
+        <Style x:Key="HiddenWhenNull" TargetType="ColumnDefinition">
+            <Setter Property="Width" Value="200"/>
+            <Style.Triggers>
+                <DataTrigger Binding="{Binding EditableMapItem}" Value="{x:Null}">
+                    <Setter Property="Width" Value="0"/>
+                </DataTrigger>
+            </Style.Triggers>
+        </Style>
+
+        <conv:BoolToVisibilityConverter x:Key="VisibilityConverter"/>
+    </UserControl.Resources>
+
+    <Grid x:Name="ControlContainer" VerticalAlignment="Stretch">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="30"/>
+            <RowDefinition/>
+        </Grid.RowDefinitions>
+
+        <StackPanel
+            Orientation="Horizontal"
+            Grid.Row="0"
+            >
+            <Label
+                Grid.Row="0" 
+                Content="Maps"
+                />
+            <Button 
+                Content="Add Location"
+                Command="{Binding AddLocationCommand}"
+                />
+
+            <Button
+                Content="Add Path"
+                Command="{Binding AddPathCommand}"
+                />
+
+            <Button
+                Content="Finish Editing"
+                Command="{Binding FinishEditingCommand}"
+                IsEnabled="{Binding EditMode}"
+                />
+
+
+        </StackPanel>
+        <Grid Grid.Row="1">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition 
+                    Style="{StaticResource HiddenWhenNull}"
+                    />
+            </Grid.ColumnDefinitions>
+
+            <m:Map 
+                Grid.Column="0"
+                VerticalAlignment="Stretch"
+                x:Name="MapView"
+                Mode="Aerial"
+                PreviewMouseDoubleClick="MapView_PreviewMouseDoubleClick"
+                >
+                <m:MapLayer
+                    x:Name="MapOverlay"
+                    >
+                    <Border 
+                        x:Name="Popup"
+                        BorderThickness="2"
+                        BorderBrush="Black"
+                        Height="200"
+                        Width="100"
+                        Background="White"
+                        Visibility="Hidden"
+                        m:MapLayer.Position="20, 20"
+                        >
+                        <StackPanel>
+                            <Label>Nassau</Label>
+                            <Button
+                                Content="Click Me"
+                                />
+                        </StackPanel>
+                    </Border>
+                </m:MapLayer>
+            </m:Map>
+
+            <local:MapItemDetails
+                Grid.Column="1"
+                DataContext="{Binding EditableMapItem}"
+                />
+
+        </Grid>
+    </Grid>
+</UserControl>

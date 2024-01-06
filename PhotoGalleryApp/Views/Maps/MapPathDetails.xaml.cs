@@ -13,14 +13,14 @@ using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
 
-namespace PhotoGalleryApp.Views
+namespace PhotoGalleryApp.Views.Maps
 {
     /// <summary>
-    /// Interaction logic for MapLocationPreview.xaml
+    /// Interaction logic for MapPathDetails.xaml
     /// </summary>
-    public partial class MapLocationPreview : UserControl
+    public partial class MapPathDetails : UserControl
     {
-        public MapLocationPreview()
+        public MapPathDetails()
         {
             InitializeComponent();
         }
