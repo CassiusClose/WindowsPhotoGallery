@@ -11,16 +11,6 @@
              Loaded="UserControl_Loaded">
 
     <UserControl.Resources>
-        <Style x:Key="HiddenWhenNull" TargetType="ColumnDefinition">
-            <Setter Property="Width" Value="200"/>
-            <Style.Triggers>
-                <DataTrigger Binding="{Binding EditableMapItem}" Value="{x:Null}">
-                    <Setter Property="Width" Value="0"/>
-                </DataTrigger>
-            </Style.Triggers>
-        </Style>
-
-        <conv:BoolToVisibilityConverter x:Key="VisibilityConverter"/>
     </UserControl.Resources>
 
     <Grid x:Name="ControlContainer" VerticalAlignment="Stretch">
@@ -57,10 +47,7 @@
         </StackPanel>
         <Grid Grid.Row="1">
             <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="*"/>
-                <ColumnDefinition 
-                    Style="{StaticResource HiddenWhenNull}"
-                    />
+                <ColumnDefinition/>
             </Grid.ColumnDefinitions>
 
             <m:Map 
@@ -69,35 +56,7 @@
                 x:Name="MapView"
                 Mode="Aerial"
                 PreviewMouseDoubleClick="MapView_PreviewMouseDoubleClick"
-                >
-                <m:MapLayer
-                    x:Name="MapOverlay"
-                    >
-                    <Border 
-                        x:Name="Popup"
-                        BorderThickness="2"
-                        BorderBrush="Black"
-                        Height="200"
-                        Width="100"
-                        Background="White"
-                        Visibility="Hidden"
-                        m:MapLayer.Position="20, 20"
-                        >
-                        <StackPanel>
-                            <Label>Nassau</Label>
-                            <Button
-                                Content="Click Me"
-                                />
-                        </StackPanel>
-                    </Border>
-                </m:MapLayer>
-            </m:Map>
-
-            <local:MapItemDetails
-                Grid.Column="1"
-                DataContext="{Binding EditableMapItem}"
                 />
-
         </Grid>
     </Grid>
 </UserControl>

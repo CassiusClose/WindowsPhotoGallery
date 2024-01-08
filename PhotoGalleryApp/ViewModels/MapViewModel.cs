@@ -1,4 +1,5 @@
-﻿using PhotoGalleryApp.Models;
+﻿using Microsoft.Maps.MapControl.WPF;
+using PhotoGalleryApp.Models;
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -6,6 +7,7 @@ using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Diagnostics;
 using System.Linq;
+using System.Security.Policy;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Data;
@@ -15,7 +17,7 @@ namespace PhotoGalleryApp.ViewModels
 {
     public class MapViewModel : ViewModelBase
     {
-        public MapViewModel(NavigatorViewModel nav, Map map)
+        public MapViewModel(NavigatorViewModel nav, PhotoGalleryApp.Models.Map map)
         {
             _nav = nav;
             _map = map;
@@ -42,7 +44,7 @@ namespace PhotoGalleryApp.ViewModels
 
         private NavigatorViewModel _nav;
 
-        private Map _map;
+        private PhotoGalleryApp.Models.Map _map;
 
 
         private ObservableCollection<MapItemViewModel> _mapItems;
@@ -100,6 +102,13 @@ namespace PhotoGalleryApp.ViewModels
 
         private void AddPath(object parameter)
         {
+            /*MapPath path = new MapPath("Path 1");
+            _map.Items.Add(path);
+            foreach (MapItemViewModel vm in _mapItems)
+            {
+                if (vm.GetModel() == path)
+                    EditableMapItem = vm;
+            }*/
         }
 
 

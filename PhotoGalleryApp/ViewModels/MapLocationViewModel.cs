@@ -3,6 +3,7 @@ using PhotoGalleryApp.Models;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Security.Permissions;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -23,7 +24,7 @@ namespace PhotoGalleryApp.ViewModels
         private MapLocation _location;
         
 
-        public Location Coordinates
+        public Location Location
         {
             get { return _location.Coordinates; }
             set

@@ -27,7 +27,7 @@ namespace PhotoGalleryApp.Models
         }
 
 
-        private LocationCollection _points;
+        private LocationCollection _points = new LocationCollection();
         public LocationCollection Points { 
             get { return _points; } 
             set { _points = value; }

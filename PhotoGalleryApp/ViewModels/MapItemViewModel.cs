@@ -31,8 +31,11 @@ namespace PhotoGalleryApp.ViewModels
             {
                 _editMode = value;
                 OnPropertyChanged();
+                EditModeChanged();
             }
         }
+
+        protected virtual void EditModeChanged() {}
 
 
         protected bool _previewOpen;

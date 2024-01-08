@@ -8,7 +8,9 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Data;
 using System.Windows.Input;
+using Microsoft.Maps.MapControl.WPF;
 using Microsoft.Xaml.Behaviors;
+using PhotoGalleryApp.Utils;
 using PhotoGalleryApp.ViewModels;
 using PhotoGalleryApp.Views.Behavior;
 
@@ -26,19 +28,16 @@ namespace PhotoGalleryApp.Views.Maps
             Loaded += MapObject_Loaded;
         }
 
-        /// <summary>
-        /// UserControls can't have non-default constructors, so users must call this function
-        /// before use. DataContext should be the MapItemViewModel associated with the item.
-        /// </summary>
-        public void Init(Map parentMap, MapItemViewModel dataContext)
-        {
-            DataContext = dataContext;
-            _parentMap = parentMap;
-            _parentMap.MouseLeftButtonClick += Map_Click;
-        }
-
         protected virtual void MapObject_Loaded(object sender, RoutedEventArgs e)
         {
+            Map? map = ViewAncestor.FindAncestor<Map>(this);
+            if (map == null)
+                throw new Exception("MapPath must have a Map parent");
+
+            _mapContainer = map.MapView;
+            map.MouseLeftButtonClick += Map_Click;
+
+
             BindingOperations.SetBinding(this, EditModeProperty, new Binding("EditMode"));
             BindingOperations.SetBinding(this, PreviewOpenProperty, new Binding("PreviewOpen"));
 
@@ -46,8 +45,9 @@ namespace PhotoGalleryApp.Views.Maps
             // on the map, hook into the MouseLeftButtonClick in the Map view class.
             Background = null;
 
-            LeftButtonClickBehavior b = new LeftButtonClickBehavior();
+            MapItemClickDragBehavior b = new MapItemClickDragBehavior(_mapContainer);
             b.MouseLeftButtonClick += MainMapItem_Click;
+            b.MouseDrag += MainMapItem_Drag;
             Interaction.GetBehaviors(GetMainMapItem()).Add(b);
         }
 
@@ -58,7 +58,7 @@ namespace PhotoGalleryApp.Views.Maps
         protected abstract UIElement GetMainMapItem();
 
 
-        protected Map? _parentMap;
+        protected Microsoft.Maps.MapControl.WPF.Map _mapContainer;
 
 
         #region Edit Mode Property
@@ -146,6 +146,11 @@ namespace PhotoGalleryApp.Views.Maps
          * Called when the main item is left button clicked
          */
         protected virtual void MainMapItem_Click(object sender, MouseEventArgs e) {}
+
+        /**
+         * Called when the main item is left button dragged
+         */
+        protected virtual void MainMapItem_Drag(object sender, MouseDragEventArgs e) {}
     }
 }
 

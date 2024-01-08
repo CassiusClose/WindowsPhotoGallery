@@ -20,7 +20,7 @@
         </DataTemplate>
     </UserControl.Resources>
 
-    <Grid>
+    <ScrollViewer VerticalScrollBarVisibility="Auto">
         <ContentControl Content="{Binding}"/>
-    </Grid>
+    </ScrollViewer>
 </UserControl>

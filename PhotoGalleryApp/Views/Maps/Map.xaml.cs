@@ -41,7 +41,6 @@ namespace PhotoGalleryApp.Views.Maps
             MapView.CredentialsProvider = new ApplicationIdCredentialsProvider(Keys.BingAPIKey);
 
             MapView.Loaded += MapView_Loaded;
-
         }
 
         private void MapView_Loaded(object sender, RoutedEventArgs e)
@@ -117,26 +116,19 @@ namespace PhotoGalleryApp.Views.Maps
 
             foreach(MapItemViewModel vm in ItemsSource)
             {
-                Trace.WriteLine("Adding");
-                Trace.WriteLine(vm);
                 MapItemView? o;
                 // If control doesn't exist, create it
                 if(!_items.TryGetValue(vm, out o))
                 {
                     if(vm is MapLocationViewModel)
                     {
-                        o = new MapLocation
-                        {
-                            DataContext = vm
-                        };
-                        o.Init(this, vm);
+                        o = new MapLocation { DataContext = vm };
                         MapView.Children.Add(o);
                         _items.Add(vm, o);
                     }
                     else if (vm is MapPathViewModel)
                     {
-                        o = new MapPath();
-                        o.Init(this, vm);
+                        o = new MapPath() { DataContext = vm };
                         MapView.Children.Add(o);
                         _items.Add(vm, o);
 
@@ -167,7 +159,7 @@ namespace PhotoGalleryApp.Views.Maps
          * Expose the event so that children of the map can hook into the click (children of the map should
          * have transparent backgrounds that don't detect clicks)
          */
-        public MouseEventHandler? MouseLeftButtonClick
+        public MouseButtonEventHandler? MouseLeftButtonClick
         {
             get { return _clickBehavior.MouseLeftButtonClick; }
             set { _clickBehavior.MouseLeftButtonClick += value; }

@@ -5,6 +5,7 @@ using Microsoft.Xaml.Behaviors.Media;
 using PhotoGalleryApp.Models;
 using PhotoGalleryApp.Utils;
 using PhotoGalleryApp.ViewModels;
+using PhotoGalleryApp.Views.Behavior;
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -17,6 +18,7 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Data;
 using System.Windows.Documents;
+using System.Windows.Ink;
 using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
@@ -40,27 +42,90 @@ namespace PhotoGalleryApp.Views.Maps
         {
             base.MapObject_Loaded(sender, e);
 
-            BindingOperations.SetBinding(this, LocationsProperty, new Binding("Points"));
-        }
 
+            // Hook map container events, because the only way to capture mouse
+            // movement across the whole canvas is to make this MapLayer's
+            // background not-null, and that would prevent mouse events from
+            // reaching other layers.
+            Map? map = ViewAncestor.FindAncestor<Map>(this);
+            if (map == null)
+                throw new Exception("MapPath must have a Map parent");
+
+            map.MouseMove += Map_MouseMove;
+            map.MouseUp += Map_MouseUp;
+            // Use preview to disable zoom on double click
+            map.PreviewMouseDoubleClick += Map_DoubleClick;
+
+            BindingOperations.SetBinding(this, LocationsProperty, new Binding("Points"));
+
+            BindingOperations.SetBinding(this, SelectionStartIndProperty, new Binding("SelectionStartInd"));
+            BindingOperations.SetBinding(this, SelectionEndIndProperty, new Binding("SelectionEndInd"));
+        }
 
         protected override UIElement GetMainMapItem()
         {
             return PathLine;
         }
 
-        protected override void EditModeChanged()
+
+
+        #region Selection Indices Properties
+
+        public static readonly DependencyProperty SelectionStartIndProperty = DependencyProperty.Register("SelectionStartInd", typeof(int), typeof(MapPath),
+            new PropertyMetadata(SelectionStartIndPropertyChanged));
+
+        /// <summary>
+        /// The user can select one or multiple points on this path. The points
+        /// will always be consecutive on the path. This set of points is
+        /// represented by a starting and ending index. The starting index  is
+        /// inclusive and the end index is exclusive. If nothing is selected,
+        /// the indices are -1.
+        /// </summary>
+        public int SelectionStartInd
         {
-            base.EditModeChanged();
-
-            // If entering edit mode, create edit pushpins for all points
-            if (EditMode)
-                Locations_Reset();
-            // If leaving edit mode, remove the edit pushpins
-            else
-                ClearPushpins();
-
+            get { return (int)GetValue(SelectionStartIndProperty); }
+            set { 
+                SetValue(SelectionStartIndProperty, value);
+                if (EditMode)
+                    RebuildSelection();
+            }
         }
+
+        public static void SelectionStartIndPropertyChanged(DependencyObject sender, DependencyPropertyChangedEventArgs e)
+        {
+            MapPath m = (MapPath)sender;
+            if(m.EditMode)
+                m.RebuildSelection();
+        }
+
+        public static readonly DependencyProperty SelectionEndIndProperty = DependencyProperty.Register("SelectionEndInd", typeof(int), typeof(MapPath),
+            new PropertyMetadata(SelectionEndIndPropertyChanged));
+
+        /// <summary>
+        /// The user can select one or multiple points on this path. The points
+        /// will always be consecutive on the path. This set of points is
+        /// represented by a starting and ending index. The starting index  is
+        /// inclusive and the end index is exclusive. If nothing is selected,
+        /// the indices are -1.
+        /// </summary>
+        public int SelectionEndInd
+        {
+            get { return (int)GetValue(SelectionEndIndProperty); }
+            set { 
+                SetValue(SelectionEndIndProperty, value);
+                if(EditMode)
+                    RebuildSelection();
+            }
+        }
+
+        public static void SelectionEndIndPropertyChanged(DependencyObject sender, DependencyPropertyChangedEventArgs e)
+        {
+            MapPath m = (MapPath)sender;
+            if(m.EditMode)
+                m.RebuildSelection();
+        }
+
+        #endregion Selection Indices Properties
 
 
 
@@ -69,16 +134,17 @@ namespace PhotoGalleryApp.Views.Maps
         public static readonly DependencyProperty LocationsProperty = DependencyProperty.Register("Locations", typeof(LocationCollection), typeof(MapPath),
             new PropertyMetadata(LocationsPropertyChanged));
  
-        /**
-         * An ordered collection of Locations that make up the path
-         */
+
+        /// <summary>
+        /// An ordered collection of Locations that make up the path
+        /// </summary>
         public LocationCollection Locations
         {
             get { return (LocationCollection)GetValue(LocationsProperty); }
             set {
                 SetValue(LocationsProperty, value);
-                if(EditMode)
-                    Locations_Reset();
+                if (EditMode)
+                    RebuildSelection();
             }
         }
 
@@ -92,16 +158,13 @@ namespace PhotoGalleryApp.Views.Maps
             if(e.NewValue != null && e.NewValue is LocationCollection)
                 ((LocationCollection)e.NewValue).CollectionChanged += control.Locations_CollectionChanged;
 
-            if(control.EditMode)
-                control.Locations_Reset();
+            if (control.EditMode)
+                control.RebuildSelection();
         }
 
 
         #region Locations CollectionChanged
 
-        /**
-         * If the edit pins are visible, update them
-         */
         private void Locations_CollectionChanged(object? sender, NotifyCollectionChangedEventArgs e)
         {
             if (!EditMode)
@@ -109,29 +172,6 @@ namespace PhotoGalleryApp.Views.Maps
 
             switch(e.Action)
             {
-                case NotifyCollectionChangedAction.Add:
-                    if (e.NewItems == null)
-                    {
-                        Trace.WriteLine("Error: MapPath - NewItems in CollChanged null");
-                        break;
-                    }
-
-                    Locations_Add(e.NewItems);
-
-                    break;
-
-                case NotifyCollectionChangedAction.Remove:
-                    if (e.OldItems == null)
-                    {
-                        Trace.WriteLine("Error: MapPath - OldItems in CollChanged null");
-                        break;
-                    }
-
-                    Locations_Remove(e.OldItems);
-
-                    break;
-
-
                 case NotifyCollectionChangedAction.Replace:
                     if (e.NewItems == null)
                     {
@@ -144,51 +184,58 @@ namespace PhotoGalleryApp.Views.Maps
                         break;
                     }
 
-                    Locations_Remove(e.OldItems);
-                    Locations_Add(e.NewItems);
+                    // If the point marked by the Nearby Pin changes, move the Nearby Pin with it
+                    if(_nearbyPin != null)
+                    {
+                        for (int i = 0; i < e.OldItems.Count; i++)
+                            if (_nearbyPin.Location == (Location)e.OldItems[i])
+                                _nearbyPin.Location = (Location)e.NewItems[i];
+                    }
 
+                    // If the point marked by the Selection Pin changes, move the Selection Pin with it
+                    if(_selectionPin != null)
+                    {
+                        for (int i = 0; i < e.OldItems.Count; i++)
+                            if (_selectionPin.Location == (Location)e.OldItems[i])
+                                _selectionPin.Location = (Location)e.NewItems[i];
+                    }
+
+                    // If any of the points changed are on the Selection Line,
+                    // change the associated points on the Selection Line to
+                    // match
+                    int numReplaced = e.OldItems.Count;
+                    int endIndex = e.OldStartingIndex + numReplaced;
+                    if(_selectionLine != null)
+                    {
+                        // If changed items start before the selection
+                        if(e.OldStartingIndex < SelectionStartInd)
+                        {
+                            // If changed items extend into the selection
+                            if(endIndex > SelectionStartInd)
+                            {
+                                int i = 0;
+                                for (int j = SelectionStartInd; j < endIndex; j++, i++)
+                                    _selectionLine.Locations[i] = Locations[j];
+                            }
+                        }
+                        // If changed items start in the selection
+                        else if(e.OldStartingIndex >= SelectionStartInd && e.OldStartingIndex < SelectionEndInd)
+                        {
+                            int end = Math.Min(SelectionEndInd, endIndex);
+                            int i = e.OldStartingIndex - SelectionStartInd;
+                            for(int j = e.OldStartingIndex; j < end; j++, i++)
+                                _selectionLine.Locations[i] = Locations[j];
+                        }
+                    }
                     break;
 
                 case NotifyCollectionChangedAction.Reset:
-
-                default:
-                    throw new NotImplementedException();
+                    // If the list is reset, who knows what happened. So just
+                    // rebuild the whole selection
+                    if (EditMode)
+                        RebuildSelection();
+                    break;
             }
-        }
-
-        private void Locations_Add(IList locs)
-        {
-            foreach(Location loc in locs)
-            {
-                AddLocationPushpin(loc);
-            }    
-        }
-
-        private void Locations_Remove(IList locs)
-        {
-            for(int i = 0; i < locs.Count; i++)
-            {
-                for(int j = 0; j < Children.Count; j++)
-                {
-                    if (Children[j] is Pushpin)
-                    {
-                        Pushpin p = (Pushpin)Children[j];
-                        if (p.Location == (Location)locs[i])
-                        {
-                            Children.RemoveAt(j);
-                            break;
-                        }
-                    }
-                }
-            }
-        }
-
-        public void Locations_Reset()
-        {
-            ClearPushpins();
-
-            foreach(Location l in Locations)
-                AddLocationPushpin(l);
         }
 
         #endregion Locations CollectionChanged
@@ -197,88 +244,240 @@ namespace PhotoGalleryApp.Views.Maps
         #endregion Locations Property
 
 
-        #region Methods
 
+        #region Selection
 
         /**
-         * Create an edit pin for the given location
+         * There are two options for selecting points on the path. If one point
+         * is selected, it is displayed as a single pushpin, which can be
+         * deleted and moved around. If multiple points are selected, they are
+         * displayed as a differently-color path. The path can be moved and
+         * deleted, but individual points cannot be edited.
          */
-        private void AddLocationPushpin(Location l)
+        private Pushpin? _selectionPin;
+        private MapPolyline? _selectionLine;
+
+        /**
+         * Keep track of whether the pin or line are currently being clicked or dragged.
+         * Turns true on MouseDown, and turns false on MouseUp.
+         */
+        private bool _selectionPinClick = false;
+        private bool _selectionLineClick = false;
+
+
+        private void CreateSelectionPin()
         {
-            Pushpin p = new Pushpin();
-            p.MouseDown += Pin_MouseDown;
-            p.MouseUp += Pin_MouseUp;
-            p.Location = l;
-            Children.Add(p);
+            _selectionPin = new Pushpin();
+            _selectionPin.Location = Locations[SelectionStartInd];
+            _selectionPin.MouseDown += SelectionPin_MouseDown;
+
+            MapItemClickDragBehavior b = new MapItemClickDragBehavior(_mapContainer);
+            b.MouseDrag += Selection_MouseDrag;
+            b.MouseLeftButtonClick += Selection_Click;
+            Microsoft.Xaml.Behaviors.Interaction.GetBehaviors(_selectionPin).Add(b);
+
+            Children.Add(_selectionPin);
         }
 
-
-        /**
-         * Remove all the edit pins
-         */
-        private void ClearPushpins()
+        private void RemoveSelectionPin()
         {
-            for(int i = 0; i < Children.Count; i++)
+            if(_selectionPin != null)
             {
-                if (Children[i] is Pushpin)
-                {
-                    Children.RemoveAt(i);
-                    i--;
-                }
+                Children.Remove(_selectionPin);
+                _selectionPin = null;
+            }
+        }
+
+        private void CreateSelectionLine()
+        {
+            _selectionLine = new MapPolyline();
+            _selectionLine.Stroke = new SolidColorBrush(Colors.Blue);
+            _selectionLine.StrokeThickness = 6;
+            _selectionLine.Locations = new LocationCollection();
+            _selectionLine.MouseDown += SelectionLine_MouseDown;
+
+            MapItemClickDragBehavior b = new MapItemClickDragBehavior(_mapContainer);
+            b.MouseDrag += Selection_MouseDrag;
+            b.MouseLeftButtonClick += Selection_Click;
+            Microsoft.Xaml.Behaviors.Interaction.GetBehaviors(_selectionLine).Add(b);
+
+            for(int i = SelectionStartInd; i < SelectionEndInd; i++)
+            {
+                _selectionLine.Locations.Add(Locations[i]);
+            }
+            Children.Add(_selectionLine);
+        }
+
+        private void RemoveSelectionLine()
+        {
+            if(_selectionLine != null)
+            {
+                Children.Remove(_selectionLine);
+                _selectionLine = null;
             }
         }
 
 
         /**
-         * Inserts a point at the given location. If append is true, the point will be
-         * connected to the last point in the list. Otherwise, it will be inserted in the
-         * list such that it breaks up the line segment closest to it
+         * When the selection is clicked, remove the selected points
          */
-        private void InsertPointAt(Location loc, bool append)
+        private void Selection_Click(object sender, MouseButtonEventArgs e)
         {
-            if(append)
-                PathLine.Locations.Add(loc);
+            ((MapPathViewModel)DataContext).RemoveSelection();
+        }
 
+        /**
+         * When the selection is dragged, move the selected points
+         */
+        private void Selection_MouseDrag(object sender, MouseDragEventArgs e)
+        {
+            ((MapPathViewModel)DataContext).MoveSelection(e.LatitudeDifference, e.LongitudeDifference);
+        }
+
+
+        private void SelectionPin_MouseDown(object sender, MouseButtonEventArgs e)
+        {
+            _selectionPinClick = true;
+        }
+
+        private void SelectionLine_MouseDown(object sender, MouseButtonEventArgs e)
+        {
+            _selectionLineClick = true;
+        }
+
+
+
+        /**
+         * Creates the selection item, either a Pushpin when one point is
+         * selected, or a Polyline when multiple points are selected. When the
+         * selection changes, call this.
+         */
+        private void RebuildSelection()
+        {
+            if(_selectionPin != null)
+                RemoveSelectionPin();
+
+            if(_selectionLine != null)
+                RemoveSelectionLine();
+
+            if (SelectionStartInd == -1 || SelectionEndInd == -1)
+                return;
+
+            if(SelectionEndInd - SelectionStartInd == 1)
+                CreateSelectionPin();
             else
+                CreateSelectionLine();
+        }
+
+
+        #endregion Selection
+
+
+
+        #region Nearby Pin
+
+        /**
+         * Because paths are potentially too big to enable placing a pin for
+         * each point, this solution is to place a pin on the closest point
+         * only. This pin will appear when the mouse is within a certain radius
+         * of the points. The user can click on the path to select whichever
+         * point is nearest.
+         */
+        private Pushpin? _nearbyPin = null;
+
+        /**
+         * Keep track of whether the pin is being clicked or dragged. Turns
+         * true on MouseDown, and turns false on MouseUp.
+         */
+        private bool _nearbyPinClick = false;
+
+        private void CreateNearbyPin(Location l)
+        {
+            _nearbyPin = new Pushpin();
+            _nearbyPin.Location = l;
+            _nearbyPin.MouseDown += NearbyPin_MouseDown;
+            MapItemClickDragBehavior b = new MapItemClickDragBehavior(_mapContainer);
+            b.MouseDrag += NearbyPin_MouseDrag;
+            Microsoft.Xaml.Behaviors.Interaction.GetBehaviors(_nearbyPin).Add(b);
+            Children.Add(_nearbyPin);
+        }
+
+        private void RemoveNearbyPin()
+        {
+            if(_nearbyPin != null)
             {
-                double minDist = double.PositiveInfinity;
-                int minInd = 0;
-                // Find the path segment closest to the new point
-                for (int i = 0; i < PathLine.Locations.Count - 1; i++)
-                {
-                    double x2 = PathLine.Locations[i + 1].Latitude;
-                    double x1 = PathLine.Locations[i].Latitude;
-                    double y2 = PathLine.Locations[i + 1].Longitude;
-                    double y1 = PathLine.Locations[i].Longitude;
-
-                    double dist;
-
-                    // Distance from point to line segment
-                    // Algorithm from: https://stackoverflow.com/questions/849211/shortest-distance-between-a-point-and-a-line-segment
-                    double l2 = Math.Pow((x1 - x2), 2) + Math.Pow((y1 - y2), 2);
-                    if (l2 == 0)
-                        dist = Math.Sqrt(Math.Pow(x2 - loc.Latitude, 2) + Math.Pow(y2 - loc.Longitude, 2));
-                    else
-                    {
-                        double t = ((loc.Latitude - x1) * (x2 - x1) + (loc.Longitude - y1) * (y2 - y1)) / l2;
-                        t = Math.Max(0, Math.Min(1, t));
-                        double x3 = x1 + t * (x2 - x1);
-                        double y3 = y1 + t * (y2 - y1);
-                        dist = Math.Sqrt(Math.Pow(x3 - loc.Latitude, 2) + Math.Pow(y3 - loc.Longitude, 2));
-                    }
-
-
-                    if(dist < minDist)
-                    {
-                        minDist = dist;
-                        minInd = i;
-                    }
-                }
-
-                PathLine.Locations.Insert(minInd+1, loc);
+                Children.Remove(_nearbyPin);
+                _nearbyPin = null;
             }
         }
 
+        /**
+         * When the user drags the Nearby Pin, move the associated point
+         */
+        private void NearbyPin_MouseDrag(object sender, MouseDragEventArgs e)
+        {
+            ((MapPathViewModel)DataContext).MovePoint(_nearbyPin.Location, e.LatitudeDifference, e.LongitudeDifference);
+        }
+
+        private void NearbyPin_MouseDown(object sender, MouseButtonEventArgs e)
+        {
+            _nearbyPinClick = true;
+        }
+
+
+        /**
+         * Find the nearest point to the given position, and if it's close
+         * enough, display it as the Nearby Pin
+         */
+        private void RebuildNearbyPin(Point clickLoc)
+        {
+            double minDist = double.PositiveInfinity;
+            int minInd = 0;
+            // Find the closest path point
+            for (int i = 0; i < Locations.Count; i++)
+            {
+                Location l = Locations[i];
+                Point pointLoc = _mapContainer.LocationToViewportPoint(l);
+
+                if (pointLoc.X < 0 || pointLoc.Y < 0 || pointLoc.X > this.RenderSize.Width || pointLoc.Y > this.RenderSize.Height)
+                    continue;
+
+                double dist = Math.Sqrt(Math.Pow(clickLoc.X - pointLoc.X, 2) + Math.Pow(clickLoc.Y - pointLoc.Y, 2));
+                if (dist < minDist)
+                {
+                    minDist = dist;
+                    minInd = i;
+                }
+            }
+
+            //TODO If the nearest point hasn't changed, just leave the pin
+            // Was causing flickering before
+            if (_nearbyPin != null)
+                RemoveNearbyPin();
+
+            // Don't add the point if it's on the selection line.
+            if(_selectionLine != null)
+            {
+                foreach(Location l in _selectionLine.Locations)
+                {
+                    if (l == Locations[minInd])
+                        return;
+                }
+            }
+
+            // If the point is close enough, show the nearby pin
+            if (minDist < 20)
+            {
+                if (_selectionPin == null || _selectionPin.Location != Locations[minInd])
+                    CreateNearbyPin(Locations[minInd]);
+            }
+        }
+
+        #endregion Nearby Pin
+
+
+
+        #region Methods
 
         protected override void OpenPreview()
         {
@@ -289,60 +488,59 @@ namespace PhotoGalleryApp.Views.Maps
                 Children.Add(_preview);
 
                 // Place it slightly above the first point
-                SetPositionOffset(_preview, new Point(-_preview.Width / 2, -_preview.Height - 50));
-                SetPosition(_preview, Locations[0]);
+                if(Locations != null && Locations.Count > 0)
+                {
+                    SetPositionOffset(_preview, new Point(-_preview.Width / 2, -_preview.Height - 50));
+                    SetPosition(_preview, Locations[0]);
+                }
             }
         }
+
+        protected override void EditModeChanged()
+        {
+            base.EditModeChanged();
+
+            // If leaving edit mode, remove all edit-mode related components
+            if (!EditMode)
+            {
+                RemoveSelectionLine();
+                RemoveSelectionPin();
+                RemoveNearbyPin();
+            }
+        }
+
 
         #endregion Methods
 
 
+
         #region Mouse Handling
 
-        protected override void Map_Click(object sender, MouseEventArgs e)
-        {
-            // If in edit mode, clicking on the background will place a point
-            // at that location, connected to the end of the path
-            if(EditMode)
-                InsertPointAt(_parentMap.MapView.ViewportPointToLocation(e.GetPosition(this)), true);
-        }
-
-        private void MapLayer_MouseMove(object sender, MouseEventArgs e)
-        {
-            if (e.LeftButton == MouseButtonState.Pressed)
-            {
-                // If currently dragging an edit pin, update that pin's location & the location in the path
-                if(_selPin != null)
-                {
-                    _pinDrag = true;
-
-                    Location newloc = _parentMap.MapView.ViewportPointToLocation(Point.Add(e.GetPosition(this), _mousePos));
-
-                    for(int i = 0; i < Locations.Count; i++)
-                    {
-                        //TODO How to differeniate when multiple pins have same location?
-                        // Update the path's coordinate
-                        if(_selPin.Location == Locations[i])
-                        {
-                            Locations[i] = newloc;
-                            break;
-                        }
-                    }
-                    _selPin.Location = newloc;
-                }
-
-                e.Handled = true;
-            }
-        }
-
-
+        /**
+         * When the user clicks on the path
+         */
         protected override void MainMapItem_Click(object sender, MouseEventArgs e)
         {
-            // If in edit mode, clicking on the path will insert a point on the path
-            if(EditMode)
+            /**
+             * If there is a pin nearby, clicking on the path will select that point
+             */
+            if(_nearbyPin != null)
             {
-                InsertPointAt(_parentMap.MapView.ViewportPointToLocation(e.GetPosition(this)), false);
+                ((MapPathViewModel)DataContext).SelectPoint(_nearbyPin.Location);
+
+                Children.Remove(_nearbyPin);
+                _nearbyPin = null;
             }
+            // If in edit mode, clicking on the path will insert a point on the path
+            else if(EditMode)
+            {
+                if(_nearbyPin == null)
+                {
+                    ((MapPathViewModel)DataContext).InsertPointAt(_mapContainer.ViewportPointToLocation(e.GetPosition(_mapContainer)), false);
+                    RebuildNearbyPin(e.GetPosition(_mapContainer));
+                }
+            }
+            // If not in edit mode, clicking on the path will open the preview box
             else
             {
                 // Tell the MapViewModel to open the preview box
@@ -354,67 +552,93 @@ namespace PhotoGalleryApp.Views.Maps
                 }
             }
 
+
             e.Handled = true;
         }
 
 
-        #region Pin Drag
-
-        private bool _pinDrag;
-        Vector _mousePos;
-        private Pushpin? _selPin = null;
 
 
-        private void Pin_MouseUp(object sender, MouseButtonEventArgs e)
+        /**
+         * In edit mode, double clicking on the map will append a point to the path
+         */
+        private void Map_DoubleClick(object sender, MouseButtonEventArgs e)
         {
-            if(sender is Pushpin)
-            {
-                e.Handled = true;
-
-                if(!_pinDrag && _selPin != null)
-                {
-                    Pushpin p = (Pushpin)sender;
-                    MapPathViewModel vm = (MapPathViewModel)DataContext;
-                    vm.RemovePoint(p.Location);
-                }
-
-            }
-
-
-            // Disable the background from capturing mouse clicks. Otherwise, the background will prevent mouse clicks
-            // from reaching the polylines
-            Background = null;
-
-            _selPin = null;
-            _pinDrag = false;
-        }
-
-        private void Pin_MouseDown(object sender, MouseButtonEventArgs e)
-        {
-            if (sender is not Pushpin)
+            if (!EditMode)
                 return;
 
-            e.Handled = true;
+            // Only add a point if clicking on the map, not the path or pins.
+            if (PathLine.IsMouseOver)
+                return;
 
-            if(_selPin == null) {
+            if (_nearbyPin != null && _nearbyPin.IsMouseOver)
+                return;
 
-                Pushpin p = (Pushpin)sender;
-                _selPin = p;
-                _mousePos = Point.Subtract(_parentMap.MapView.LocationToViewportPoint(p.Location), e.GetPosition(this));
-                _pinDrag = false;
-            }
+            //TODO Clicking on a selection pin will delete it, and then clicking again will
+            // finish the double click on the map background. The original click should really
+            // be absorbed by the pin
+            if (_selectionPin != null && _selectionPin.IsMouseOver)
+                return;
 
-            // Set background to transparent so it captures mouse clicks. This enables the layer's MouseMove event, which is used to
-            // move a pin around when it's being dragged. Wouldn't need to use this if it used the Pushpin's MouseMove instead of
-            // the MapLayer's MouseMove, but when using the pushpin, its location updates too slowly, so the mouse can move outside of the
-            // pushpin and it will stop moving along with the mouse.
-            Background = new SolidColorBrush(Colors.Transparent);
+            ((MapPathViewModel)DataContext).InsertPointAt(_mapContainer.ViewportPointToLocation(e.GetPosition(_mapContainer)), true);
         }
 
-        #endregion Pin Drag
+
+        /**
+         * When the user clicks on the map in edit mode, it deselects any selected points
+         */
+        protected override void Map_Click(object sender, MouseEventArgs e)
+        {
+            ((MapPathViewModel)DataContext).MapClick();
+        }
+
+
+        private void Map_MouseUp(object sender, MouseButtonEventArgs e)
+        {
+            // If a pushpin or line was clicked on, then the Nearby Pin
+            // will not be shown. So as soon as the click ends, reshow the
+            // Nearby Pin. Don't wait until the user moves the mouse.
+            if(_nearbyPinClick || _selectionPinClick || _selectionLineClick)
+                RebuildNearbyPin(e.GetPosition(_mapContainer));
+
+            _nearbyPinClick = false;
+            _selectionPinClick = false;
+            _selectionLineClick = false;
+        }
+
+
+
+        /**
+         * For some reason, MouseMove gets called even when the mouse is not
+         * moving when the mouse is hovering over a pushpin. Save the last
+         * mouse pos to detect when the mouse isn't actually moving
+         */
+        private Point _lastMousePos = new Point();
+
+        /**
+         * When the mouse moves, update the Nearby Pin
+         */
+        private void Map_MouseMove(object sender, MouseEventArgs e)
+        {
+            // For some reason, MouseMove gets called even when the mouse is not moving
+            // when the mouse is hovering over a pushpin. So don't do the handling if
+            // the mouse isn't actually moving
+            Point pos = e.GetPosition(_mapContainer);
+            if (pos == _lastMousePos)
+                return;
+
+            // Don't show the Nearby Pin if any of the pins/paths are been clicked or dragged
+            if (_selectionLineClick == false && _selectionPinClick == false && _nearbyPinClick == false && EditMode)
+            {
+                RebuildNearbyPin(e.GetPosition(_mapContainer));
+            }
+            else if (_nearbyPinClick == false)
+                RemoveNearbyPin();
+
+            _lastMousePos = e.GetPosition(_mapContainer);
+        }
 
 
         #endregion Mouse Handling
-
     }
 }

@@ -2,6 +2,7 @@
 using Microsoft.Xaml.Behaviors;
 using PhotoGalleryApp.Utils;
 using PhotoGalleryApp.ViewModels;
+using PhotoGalleryApp.Views.Behavior;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -49,11 +50,21 @@ namespace PhotoGalleryApp.Views.Maps
             }
         }
 
+        /**
+         * In edit mode, dragging the pin moves the location around
+         */
+        protected override void MainMapItem_Drag(object sender, MouseDragEventArgs e)
+        {
+            if(EditMode)
+                Pin.Location = new Location(Pin.Location.Latitude + e.LatitudeDifference, Pin.Location.Longitude + e.LongitudeDifference);
+        }
 
 
+        /**
+         * When the pin is clicked, tell the MapViewModel to open the preview
+         */
         protected override void MainMapItem_Click(object sender, MouseEventArgs e)
         {
-            // When the pin is clicked, tell the MapViewModel to open the preview
             Map? map = ViewAncestor.FindAncestor<Map>(this);
             if(map != null)
             {
@@ -63,52 +74,5 @@ namespace PhotoGalleryApp.Views.Maps
 
             e.Handled = true;
         }
-
-
-
-        private void MapLayer_MouseMove(object sender, MouseEventArgs e)
-        {
-            if (e.LeftButton == MouseButtonState.Pressed)
-            {
-                // If currently dragging the pin, update the pin's location
-                if(_pinClick && EditMode)
-                    Pin.Location = _parentMap.MapView.ViewportPointToLocation(Point.Add(e.GetPosition(this), _mousePos));
-
-                e.Handled = true;
-            }
-        }
-
-
-        #region Pin Drag
-
-        Vector _mousePos;
-        private bool _pinClick = false;
-
-
-        private void Pin_MouseUp(object sender, MouseButtonEventArgs e)
-        {
-            // Disable the background from capturing mouse clicks. Otherwise, the background will prevent mouse clicks
-            // from reaching the polylines
-            Background = null;
-            _pinClick = false;
-        }
-
-        private void Pin_MouseDown(object sender, MouseButtonEventArgs e)
-        {
-            if (sender is not Pushpin)
-                return;
-
-            _mousePos = Point.Subtract(_parentMap.MapView.LocationToViewportPoint(Pin.Location), e.GetPosition(this));
-            _pinClick = true;
-
-            // Set background to transparent so it captures mouse clicks. This enables the layer's MouseMove event, which is used to
-            // move a pin around when it's being dragged. Wouldn't need to use this if it used the Pushpin's MouseMove instead of
-            // the MapLayer's MouseMove, but when using the pushpin, its location updates too slowly, so the mouse can move outside of the
-            // pushpin and it will stop moving along with the mouse.
-            Background = new SolidColorBrush(Colors.Transparent);
-        }
-        #endregion Pin Drag
-
-
     }
 }

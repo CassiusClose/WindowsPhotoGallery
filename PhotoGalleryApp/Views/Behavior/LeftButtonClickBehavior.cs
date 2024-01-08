@@ -29,7 +29,7 @@ namespace PhotoGalleryApp.Views.Behavior
         /// Event triggered when the control is clicked on with the left mouse button. Perhaps not the best way to do this,
         /// as I'm not sure you can hook into this without accessing the behavior in the code-behind.
         /// </summary>
-        public MouseEventHandler? MouseLeftButtonClick = null;
+        public MouseButtonEventHandler? MouseLeftButtonClick = null;
 
 
         // If a potential click has been started (mouse down)
@@ -52,8 +52,8 @@ namespace PhotoGalleryApp.Views.Behavior
                 _clickPoint = e.GetPosition(AssociatedObject);
                 _clickStarted = true;
                 _drag = false;
+                e.Handled = true;
             }
-            e.Handled = true;
         }
 
         /**

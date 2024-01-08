@@ -2,6 +2,7 @@
 using PhotoGalleryApp.Models;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -64,11 +65,31 @@ namespace PhotoGalleryApp.ViewModels
                 PhotoGalleryApp.Models.Map map = new PhotoGalleryApp.Models.Map();
                 map.Items.Add(new MapLocation("Miami", new Location(25.7617, -80.1918)));
                 map.Items.Add(new MapLocation("Nassau", new Location(25.0443, -77.3504)));
-                MapPath p = new MapPath("Path 1");
+                /*MapPath p = new MapPath("Path 1");
                 p.Points.Add(new Location(30, 30));
                 p.Points.Add(new Location(31, 30));
                 p.Points.Add(new Location(34, 37));
+                map.Items.Add(p);*/
+
+
+                MapPath p = new MapPath("Rum to Mayaguana");
+                //using (StreamReader reader = new StreamReader("Main.2014-08-15.Rum-Mayaguana.txt"))
+                using (StreamReader reader = new StreamReader("Main.2014-11-23.Boqueron-CaboRojo.txt"))
+                {
+                    string? currentLine;
+                    while ((currentLine = reader.ReadLine()) != null)
+                    {
+                        Location l = new Location();
+                        string[] coords = currentLine.Split('\t', 5);
+                        l.Latitude = double.Parse(coords[2]);
+                        l.Longitude = double.Parse(coords[3]);
+                        p.Points.Add(l);
+                        //map.Items.Add(new MapLocation("Test", l));
+                    }
+                }
+
                 map.Items.Add(p);
+
                 _nav.NewPage(new MapViewModel(_nav, map));
             }
         }

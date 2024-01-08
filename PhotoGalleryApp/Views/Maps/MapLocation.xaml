@@ -7,14 +7,11 @@
              xmlns:maps="clr-namespace:Microsoft.Maps.MapControl.WPF;assembly=Microsoft.Maps.MapControl.WPF"
              mc:Ignorable="d" 
              d:DesignHeight="450" d:DesignWidth="800"
-             MouseMove="MapLayer_MouseMove"
              >
 
     <maps:Pushpin
         x:Name="Pin"
-        Location="{Binding Coordinates, Mode=TwoWay}"
-        MouseUp="Pin_MouseUp"
-        MouseDown="Pin_MouseDown"
+        Location="{Binding Location, Mode=TwoWay}"
         />
 
 </local:MapItemView>
