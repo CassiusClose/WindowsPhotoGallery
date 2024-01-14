@@ -154,12 +154,9 @@ namespace PhotoGalleryApp.ViewModels
                 // Stop the View_CollectionChanged handler from reloading images, because there
                 // will be many updates when expanding all events. Instead, just reload once
                 // at the end.
-                _disableLoadMediaViewCC = true;
+                DisableImageLoad();
                 _view.ExpandEvents = value;
-                _disableLoadMediaViewCC = false;
-
-                // The view has reset, so reload images
-                LoadVisibleMediaThenAll();
+                EnableImageLoad();
             }
         }
 
@@ -176,6 +173,18 @@ namespace PhotoGalleryApp.ViewModels
          * and you only want one image load task to be done.
          */
         private bool _disableLoadMediaViewCC = false;
+
+        public void DisableImageLoad()
+        {
+            _disableLoadMediaViewCC = false;
+        }
+        public void EnableImageLoad(bool reload = true)
+        {
+            _disableLoadMediaViewCC = true;
+            if (reload)
+                LoadVisibleMediaThenAll();
+        }
+
 
         /* When the view changes, deselect any items not longer in the view */
         private void View_CollectionChanged(object? sender, NotifyCollectionChangedEventArgs e)
@@ -240,7 +249,8 @@ namespace PhotoGalleryApp.ViewModels
         public void AddSelectedToEvent()
         {
             // Open popup, retrieve results
-            EventSelectionPopupViewModel vm = new EventSelectionPopupViewModel(_nav, ((MainWindow)System.Windows.Application.Current.MainWindow).Gallery.Collection);
+            //TODO Better way to access the gallery?
+            EventSelectionPopupViewModel vm = new EventSelectionPopupViewModel(_nav, ((MainWindow)System.Windows.Application.Current.MainWindow).Session.Gallery.Collection);
             EventSelectionPopupReturnArgs args = (EventSelectionPopupReturnArgs)_nav.OpenPopup(vm);
 
             // If user cancelled, do nothing
@@ -479,9 +489,6 @@ namespace PhotoGalleryApp.ViewModels
         /// <param name="eArgs">The event's arguments, of type PhotoGalleryApp.Views.ItemChosenEventArgs.</param>
         public void AddTagToSelected(object sender, EventArgs eArgs)
         {
-            // Want only one change event to fire, even though we're changing several items in the MediaCollection.
-            // So disable updates and then trigger one at the end. See MediaCollection.UpdateTags() for more info.
-
             PhotoGalleryApp.Views.ItemChosenEventArgs args = (PhotoGalleryApp.Views.ItemChosenEventArgs)eArgs;
             string tag = args.Item; 
             if (tag != null)
@@ -512,8 +519,6 @@ namespace PhotoGalleryApp.ViewModels
         /// <param name="eArgs">The event's arguments, of type PhotoGalleryApp.Views.ItemChosenEventArgs.</param>
         public void RemoveTagFromSelected(object sender, EventArgs eArgs)
         {
-            // Want only one change event to fire, even though we're changing several items in the MediaCollection.
-            // So disable updates and then trigger one at the end. See MediaCollection.UpdateTags() for more info.
             PhotoGalleryApp.Views.ItemChosenEventArgs args = (PhotoGalleryApp.Views.ItemChosenEventArgs)eArgs;
             string tag = args.Item;
             if(tag != null)

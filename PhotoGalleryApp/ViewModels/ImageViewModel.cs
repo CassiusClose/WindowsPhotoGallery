@@ -342,7 +342,10 @@ namespace PhotoGalleryApp.ViewModels
         {
             for (int i = 0; i < _cancellationTokens.Count; i++)
             {
-                //TODO Is this okay? Why are they null? Seems to happen when a bunch of tasks get cancelled quickly
+                //TODO Is this okay? Why are they null? Seems to happen when a
+                //bunch of tasks get cancelled quickly The situation has been
+                //avoided by disabling image loading during batch functions.
+                //But ithere probably is a better way to prevent it here.
                 if (_cancellationTokens[i] != null)
                 {
                     _cancellationTokens[i].Cancel();

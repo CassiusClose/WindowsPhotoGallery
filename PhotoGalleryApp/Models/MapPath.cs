@@ -14,6 +14,9 @@ namespace PhotoGalleryApp.Models
     /// </summary>
     public class MapPath : MapItem
     {
+        // Parameterless constructor for XML deserialization
+        private MapPath() {}
+
         public MapPath(string name)
         {
             _points = new LocationCollection();

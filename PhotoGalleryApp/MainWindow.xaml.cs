@@ -33,20 +33,13 @@ namespace PhotoGalleryApp
 
         private SidebarViewModel _sidebar;
 
-        public Gallery Gallery;
+        public UserSession Session;
 
         public MainWindow()
         {
             _nav = new NavigatorViewModel();
 
-            Gallery = Gallery.LoadGallery("gallery.xml");
-            //Gallery = new Gallery("Gallery", new MediaCollection());
-            if(Gallery == null)
-            {
-                Trace.WriteLine("ERROR IN SERIALIZATION");
-                System.Windows.Application.Current.Shutdown();
-                return;
-            }
+            Session = UserSession.LoadSession("session.xml");
 
             //TODO Check for missing media
             /*MediaCollection coll = gallery.MediaList;
@@ -62,11 +55,10 @@ namespace PhotoGalleryApp
                 }
             }*/
 
-            _sidebar = new SidebarViewModel(_nav, Gallery.Collection);
+            _sidebar = new SidebarViewModel(_nav, Session);
 
             //_nav.NewPage(new GalleryViewModel("All Items", _nav, Gallery.Collection));
-            _nav.NewPage(new EventsViewModel(_nav, Gallery.Collection));
-            //_nav.NewPage(new MapViewModel(_nav))k
+            _nav.NewPage(new EventsViewModel(_nav, Session.Gallery.Collection)); //_nav.NewPage(new MapViewModel(_nav))k
             DataContext = _nav;
 
             InitializeComponent();
@@ -76,11 +68,7 @@ namespace PhotoGalleryApp
 
         public void SaveGallery()
         {
-            XmlSerializer serializer = new XmlSerializer(typeof(Gallery));
-            TextWriter writer = new StreamWriter("gallery.xml");
-            serializer.Serialize(writer, Gallery);
-            writer.Close();
-
+            Session.SaveSession();
         }
     }
 }

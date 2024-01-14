@@ -119,7 +119,9 @@ namespace PhotoGalleryApp.ViewModels
                     else
                         m = new Video(filename);
 
+                    MediaCollection.DisableImageLoad();
                     MediaCollection.MediaCollectionModel.Add(m);
+                    MediaCollection.EnableImageLoad();
                 }
             }
         }

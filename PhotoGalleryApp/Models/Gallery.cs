@@ -25,8 +25,10 @@ namespace PhotoGalleryApp.Models
         {
             _name = name;
 
-            if(media != null)
+            if (media != null)
                 _media = media;
+            else
+                _media = new MediaCollection();
         }
 
 
@@ -49,23 +51,5 @@ namespace PhotoGalleryApp.Models
             get { return _media; } 
             set { _media = value; }
         }
-
-        #region Static
-
-
-        /// <summary>
-        /// De-serializes and creates a Gallery instance from the given XML file
-        /// </summary>
-        /// <param name="filename">The XMl file's name</param>
-        /// <returns>The constructed PhotoGallery object.</returns>
-        public static Gallery? LoadGallery(string filename)
-        {
-            XmlSerializer serializer = new XmlSerializer(typeof(Gallery));
-            FileStream fs = new FileStream(filename, FileMode.Open);
-            return (Gallery?)serializer.Deserialize(fs);
-        }
-
-
-        #endregion Static
     }
 }

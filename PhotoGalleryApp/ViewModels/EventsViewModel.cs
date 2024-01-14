@@ -109,7 +109,8 @@ namespace PhotoGalleryApp.ViewModels
 
         public void OpenGallery()
         {
-            GalleryViewModel vm = new GalleryViewModel("All Items", _nav, ((MainWindow)System.Windows.Application.Current.MainWindow).Gallery.Collection);
+            //TODO Better way to access the gallery?
+            GalleryViewModel vm = new GalleryViewModel("All Items", _nav, ((MainWindow)System.Windows.Application.Current.MainWindow).Session.Gallery.Collection);
             _nav.NewPage(vm);
         }
     }

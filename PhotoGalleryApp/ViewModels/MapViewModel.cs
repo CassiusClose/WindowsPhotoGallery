@@ -21,7 +21,7 @@ namespace PhotoGalleryApp.ViewModels
         {
             _nav = nav;
             _map = map;
-            _map.Items.CollectionChanged += MapItems_CollectionChanged;
+            _map.CollectionChanged += MapItems_CollectionChanged;
 
             _addLocationCommand = new RelayCommand(AddLocation);
             _addPathCommand = new RelayCommand(AddPath);
@@ -37,7 +37,7 @@ namespace PhotoGalleryApp.ViewModels
 
         public override void Cleanup() 
         {
-            _map.Items.CollectionChanged -= MapItems_CollectionChanged;
+            _map.CollectionChanged -= MapItems_CollectionChanged;
         }
 
 
@@ -90,7 +90,7 @@ namespace PhotoGalleryApp.ViewModels
             if(args.PopupAccepted)
             {
                 MapLocation loc = new MapLocation(args.Name, args.Location);
-                _map.Items.Add(loc);
+                _map.Add(loc);
             }
         }
 
@@ -130,7 +130,7 @@ namespace PhotoGalleryApp.ViewModels
                 }
 
 
-                _map.Items.Add(path);
+                _map.Add(path);
 
                 // Only put into edit mode if the user didn't provide path data
                 if (!args.LoadFromFile) 
@@ -271,17 +271,23 @@ namespace PhotoGalleryApp.ViewModels
                 MapPathViewModel vm = (MapPathViewModel)EditableMapItem;
                 // If the path has no points, then prompt user to either delete
                 // the path or stay in edit mode
-                if(vm.Points.Count == 0)
+                if (vm.Points.Count == 0)
                 {
                     YNPopupViewModel popup = new YNPopupViewModel("The path you are editing has no points. It will be deleted.");
                     PopupReturnArgs args = _nav.OpenPopup(popup);
 
-                    if(args.PopupAccepted)
+                    if (args.PopupAccepted)
                     {
-                        _map.Items.Remove(EditableMapItem.GetModel());
+                        _map.Remove(EditableMapItem.GetModel());
                         EditableMapItem = null;
                     }
                 }
+                else
+                    EditableMapItem = null;
+            }
+            else
+            {
+                EditableMapItem = null;
             }
         }
 
@@ -362,7 +368,7 @@ namespace PhotoGalleryApp.ViewModels
         private void MapItems_Reset()
         {
             _mapItems.Clear();
-            foreach (MapItem item in _map.Items)
+            foreach (MapItem item in _map)
                 _mapItems.Add(CreateMapItemViewModel(item));
         }
 
