@@ -126,9 +126,9 @@ namespace PhotoGalleryApp.ViewModels
 
                 if (args.LoadFromFile)
                 {
-                    Trace.WriteLine("LOADING FROM FILE: " + args.Filename);
+                    LocationCollection coll = PathFileFormats.LoadFromTxtFile(args.Filename);
+                    path.Points = coll;
                 }
-
 
                 _map.Add(path);
 
