@@ -11,6 +11,7 @@
              Loaded="UserControl_Loaded">
 
     <UserControl.Resources>
+        <conv:NotConverter x:Key="NotConverter"/>
     </UserControl.Resources>
 
     <Grid x:Name="ControlContainer" VerticalAlignment="Stretch">
@@ -30,11 +31,14 @@
             <Button 
                 Content="Add Location"
                 Command="{Binding AddLocationCommand}"
+                CommandParameter="{Binding Path=Center, ElementName=MapView}"
+                IsEnabled="{Binding EditMode, Converter={StaticResource NotConverter}}"
                 />
 
             <Button
                 Content="Add Path"
                 Command="{Binding AddPathCommand}"
+                IsEnabled="{Binding EditMode, Converter={StaticResource NotConverter}}"
                 />
 
             <Button

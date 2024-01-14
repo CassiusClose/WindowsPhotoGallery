@@ -79,6 +79,19 @@ namespace PhotoGalleryApp.ViewModels
 
         private void AddLocation(object parameter)
         {
+            if (parameter is not Location)
+                throw new ArgumentException("AddLocation argument must be the location to add at");
+
+            // Show the user the popup to create a location
+            CreateLocationPopupViewModel popup = new CreateLocationPopupViewModel((Location)parameter);
+            CreateLocationPopupReturnArgs args = (CreateLocationPopupReturnArgs)_nav.OpenPopup(popup);
+
+            // If not cancelled, then create the location
+            if(args.PopupAccepted)
+            {
+                MapLocation loc = new MapLocation(args.Name, args.Location);
+                _map.Items.Add(loc);
+            }
         }
 
 
@@ -102,13 +115,33 @@ namespace PhotoGalleryApp.ViewModels
 
         private void AddPath(object parameter)
         {
-            /*MapPath path = new MapPath("Path 1");
-            _map.Items.Add(path);
-            foreach (MapItemViewModel vm in _mapItems)
+            // Show the user the popup to create a path
+            CreatePathPopupViewModel popup = new CreatePathPopupViewModel();
+            CreatePathPopupReturnArgs args = (CreatePathPopupReturnArgs)_nav.OpenPopup(popup);
+
+            // If not cancelled, then create the path
+            if (args.PopupAccepted)
             {
-                if (vm.GetModel() == path)
-                    EditableMapItem = vm;
-            }*/
+                MapPath path = new MapPath(args.Name);
+
+                if (args.LoadFromFile)
+                {
+                    Trace.WriteLine("LOADING FROM FILE: " + args.Filename);
+                }
+
+
+                _map.Items.Add(path);
+
+                // Only put into edit mode if the user didn't provide path data
+                if (!args.LoadFromFile) 
+                { 
+                    foreach (MapItemViewModel vm in _mapItems)
+                    {
+                        if (vm.GetModel() == path)
+                            EditableMapItem = vm;
+                    }
+                }
+            }
         }
 
 
@@ -232,7 +265,24 @@ namespace PhotoGalleryApp.ViewModels
          */
         private void FinishEditing()
         {
-            EditableMapItem = null;
+            // If the user is editing a path
+            if(EditableMapItem is MapPathViewModel)
+            {
+                MapPathViewModel vm = (MapPathViewModel)EditableMapItem;
+                // If the path has no points, then prompt user to either delete
+                // the path or stay in edit mode
+                if(vm.Points.Count == 0)
+                {
+                    YNPopupViewModel popup = new YNPopupViewModel("The path you are editing has no points. It will be deleted.");
+                    PopupReturnArgs args = _nav.OpenPopup(popup);
+
+                    if(args.PopupAccepted)
+                    {
+                        _map.Items.Remove(EditableMapItem.GetModel());
+                        EditableMapItem = null;
+                    }
+                }
+            }
         }
 
 

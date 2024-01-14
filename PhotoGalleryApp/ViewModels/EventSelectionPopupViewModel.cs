@@ -26,6 +26,12 @@ namespace PhotoGalleryApp.ViewModels
             _folders = new FolderView(coll, false);
             _folders.FolderOpened += FolderChosen;
         }
+        public override void Cleanup()
+        {
+            _folders.Cleanup();
+            _folders.FolderOpened -= FolderChosen;
+        }
+
 
         private NavigatorViewModel _nav;
         private MediaCollection _collection;
@@ -37,23 +43,27 @@ namespace PhotoGalleryApp.ViewModels
         }
 
 
-        private EventSelectionPopupReturnArgs returnData = new EventSelectionPopupReturnArgs(EventSelectionPopupReturnArgs.ReturnType.Cancelled);
+        // If the user creates a new event, this is the name
+        private string? _newEventName = null;
+        // If the user chooses an existing event, this is it
+        private Event? _chosenEvent = null;
+
 
 
         /**
          * Either return that the user canceled, created a new event, or chose an event
          */
-        public override object? GetPopupResults()
+        public override PopupReturnArgs GetPopupResults()
         {
-            return returnData;
+            if(_chosenEvent != null)
+                return new EventSelectionPopupReturnArgs(EventSelectionPopupReturnArgs.EventType.EventChosen, _chosenEvent);
+
+            if(_newEventName != null)
+                return new EventSelectionPopupReturnArgs(EventSelectionPopupReturnArgs.EventType.EventCreated, _newEventName);
+
+            return new EventSelectionPopupReturnArgs();
         }
 
-
-        public override void Cleanup()
-        {
-            _folders.Cleanup();
-            _folders.FolderOpened -= FolderChosen;
-        }
 
         /**
          * When an event is chosen, find the event instance and close the popup
@@ -63,12 +73,11 @@ namespace PhotoGalleryApp.ViewModels
             // If it's an event, open the event's collection
             if (folder.Timestamp.Precision == TimeRange.Second)
             {
-                Event? e = EventsViewModel.GetEventFromFolder(folder, _collection);
-                if (e == null)
+                _chosenEvent = EventsViewModel.GetEventFromFolder(folder, _collection);
+                if (_chosenEvent == null)
                     return;
 
-                returnData = new EventSelectionPopupReturnArgs(EventSelectionPopupReturnArgs.ReturnType.EventChosen, e);
-                ClosePopup();
+                ClosePopup(true);
             }
         }
 
@@ -79,11 +88,23 @@ namespace PhotoGalleryApp.ViewModels
         {
             TextEntryPopupViewModel vm = new TextEntryPopupViewModel();
             TextEntryPopupReturnArgs args = (TextEntryPopupReturnArgs)_nav.OpenPopup(vm);
-            if (args.Action == TextEntryPopupReturnArgs.ReturnType.TextEntered && args.Text != null)
+            if(args.PopupAccepted && args.Text != null)
             {
-                returnData = new EventSelectionPopupReturnArgs(EventSelectionPopupReturnArgs.ReturnType.EventCreated, args.Text);
-                ClosePopup(); 
+                _newEventName = args.Text;
+                ClosePopup(true); 
             }
+        }
+
+        protected override bool ValidateData()
+        {
+            if (string.IsNullOrWhiteSpace(_newEventName) && _chosenEvent == null)
+            {
+                ValidationErrorText = "Pick one option";
+                return false;
+            }
+
+            ValidationErrorText = "";
+            return true;
         }
     }
 
@@ -93,31 +114,28 @@ namespace PhotoGalleryApp.ViewModels
     /// Stores data returned from the event selection popup. Keeps track of whether the
     /// user created a new event, chose an event, or did nothing.
     /// </summary>
-    public class EventSelectionPopupReturnArgs
+    public class EventSelectionPopupReturnArgs : PopupReturnArgs
     {
-        public EventSelectionPopupReturnArgs(ReturnType returnType)
-        {
-            Action = returnType;
-        }
+        public EventSelectionPopupReturnArgs() { }
 
-        public EventSelectionPopupReturnArgs(ReturnType returnType, Event e)
+        public EventSelectionPopupReturnArgs(EventType action, Event e)
         {
-            Action = returnType;
+            Action = action;
             Event = e;
         }
 
-        public EventSelectionPopupReturnArgs(ReturnType returnType, string newName)
+        public EventSelectionPopupReturnArgs(EventType action, string newName)
         {
-            Action = returnType;
+            Action = action;
             NewEventName = newName;
         }
 
-        public enum ReturnType
+        public enum EventType
         {
-            EventChosen, EventCreated, Cancelled
+            EventChosen, EventCreated
         }
 
-        public ReturnType Action;
+        public EventType Action;
         public Event? Event = null;
         public string? NewEventName = null;
     }

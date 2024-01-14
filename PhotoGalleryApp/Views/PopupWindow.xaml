@@ -4,10 +4,12 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:PhotoGalleryApp.Views"
+        xmlns:maps="clr-namespace:PhotoGalleryApp.Views.Maps"
         xmlns:vms="clr-namespace:PhotoGalleryApp.ViewModels"
         mc:Ignorable="d"
         Title="PopupWindow" Height="450" Width="800"
-        Keyboard.KeyDown="Window_KeyDown">
+        Keyboard.KeyDown="Window_KeyDown"
+        >
 
     <Window.Resources>
         <DataTemplate DataType="{x:Type vms:EventSelectionPopupViewModel}">
@@ -16,9 +18,34 @@
         <DataTemplate DataType="{x:Type vms:TextEntryPopupViewModel}">
             <local:TextEntryPopup DataContext="{Binding}"/>
         </DataTemplate>
+        <DataTemplate DataType="{x:Type vms:CreatePathPopupViewModel}">
+            <maps:CreatePathPopup DataContext="{Binding}"/>
+        </DataTemplate>
+        <DataTemplate DataType="{x:Type vms:CreateLocationPopupViewModel}">
+            <maps:CreateLocationPopup DataContext="{Binding}"/>
+        </DataTemplate>
+        <DataTemplate DataType="{x:Type vms:PopupViewModel}">
+            <local:MessagePopup DataContext="{Binding}"/>
+        </DataTemplate>
     </Window.Resources>
     
-    <Grid>
+    <StackPanel>
+        <Label
+            Content="{Binding ValidationErrorText}"
+            Foreground="Red"
+            />
         <ContentControl Content="{Binding}"/>
-    </Grid>
+        <StackPanel Orientation="Horizontal">
+            <Button 
+                Content="Cancel" 
+                Command="{Binding ClosePopupCommand}"
+                CommandParameter="{StaticResource FalseValue}"
+                />
+            <Button 
+                Content="Accept" 
+                Command="{Binding ClosePopupCommand}"
+                CommandParameter="{StaticResource TrueValue}"
+                />
+        </StackPanel>
+    </StackPanel>
 </Window>

@@ -244,11 +244,11 @@ namespace PhotoGalleryApp.ViewModels
             EventSelectionPopupReturnArgs args = (EventSelectionPopupReturnArgs)_nav.OpenPopup(vm);
 
             // If user cancelled, do nothing
-            if (args.Action == EventSelectionPopupReturnArgs.ReturnType.Cancelled)
+            if (!args.PopupAccepted)
                 return;
 
             // If user chose an event, add media to it
-            if(args.Action == EventSelectionPopupReturnArgs.ReturnType.EventChosen)
+            if(args.Action == EventSelectionPopupReturnArgs.EventType.EventChosen)
             {
                 if (args.Event == null) 
                     return;

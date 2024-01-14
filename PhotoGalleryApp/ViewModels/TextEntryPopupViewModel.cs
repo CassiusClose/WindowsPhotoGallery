@@ -13,11 +13,6 @@ namespace PhotoGalleryApp.ViewModels
     /// </summary>
     public class TextEntryPopupViewModel : PopupViewModel
     {
-        public TextEntryPopupViewModel()
-        {
-            _confirmTextCommand = new RelayCommand(ConfirmText);
-        }
-
         public override void Cleanup() { }
 
 
@@ -34,38 +29,23 @@ namespace PhotoGalleryApp.ViewModels
                 OnPropertyChanged();
             }
         }
-        
-        /**
-         * The text currently in the textbox is not neccessarily confirmed.
-         * The user could cancel the action & there would still be text in the
-         * textbox. So have this as null until the user explicitly calls the
-         * ConfirmTextCommand by pressing the button or hitting enter.
-         */
-        private string? _confirmedText = null;
 
-
-
-        private RelayCommand _confirmTextCommand;
-        public ICommand ConfirmTextCommand => _confirmTextCommand;
-
-        /// <summary>
-        /// Accept the entered text as the result and close the popup
-        /// </summary>
-        public void ConfirmText()
+        protected override bool ValidateData()
         {
-            _confirmedText = Text;
-            ClosePopup();
+            if(string.IsNullOrWhiteSpace(Text))
+            {
+                ValidationErrorText = "Text entry cannot be empty";    
+                return false;
+            }
+
+            ValidationErrorText = "";
+            return true;
         }
 
 
-
-
-        public override object? GetPopupResults()
+        public override PopupReturnArgs GetPopupResults()
         {
-            //TODO Check for empty string
-            if (_confirmedText != null)
-                return new TextEntryPopupReturnArgs(Text, TextEntryPopupReturnArgs.ReturnType.TextEntered);
-            return new TextEntryPopupReturnArgs(TextEntryPopupReturnArgs.ReturnType.Cancelled);
+            return new TextEntryPopupReturnArgs(Text);
         }
     }
 
@@ -74,24 +54,13 @@ namespace PhotoGalleryApp.ViewModels
     /// Stores data returned from the text entry popup. Keeps track of whether the
     /// user entered text or cancelled.
     /// </summary>
-    public class TextEntryPopupReturnArgs
+    public class TextEntryPopupReturnArgs : PopupReturnArgs
     {
-        public TextEntryPopupReturnArgs(ReturnType returnType)
+        public TextEntryPopupReturnArgs(string? text)
         {
-            Action = returnType;
-        }
-        public TextEntryPopupReturnArgs(string text, ReturnType returnType)
-        {
-            Action = returnType;
             Text = text;
         }
 
-        public enum ReturnType
-        {
-            TextEntered, Cancelled
-        }
-
-        public ReturnType Action;
         public string? Text = null;
     }
 }

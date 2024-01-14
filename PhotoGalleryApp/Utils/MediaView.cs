@@ -57,7 +57,7 @@ namespace PhotoGalleryApp.Utils
             _viewList = new ObservableCollection<ICollectableViewModel>();
 
             // Build the initial list
-            MediaCollectionChanged(null, new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Reset));
+            CollectionChanged_Reset();
         }
 
         public void Cleanup()
@@ -561,6 +561,7 @@ namespace PhotoGalleryApp.Utils
         /// <param name="vm"></param>
         public void SortPropertyChanged(ICollectable c)
         {
+            Trace.WriteLine("Sort Property Changed");
             if(c is Event && !ExpandEvents)
             {
                 int ind;

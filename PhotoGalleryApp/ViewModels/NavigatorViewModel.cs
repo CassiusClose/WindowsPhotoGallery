@@ -96,13 +96,24 @@ namespace PhotoGalleryApp.ViewModels
         /// </summary>
         /// <param name="vm"></param>
         /// <returns></returns>
-        public object? OpenPopup(PopupViewModel vm)
+        public PopupReturnArgs OpenPopup(PopupViewModel vm)
         {
+            //TODO This isn't MVVM
             PopupWindow popup = new PopupWindow();
             popup.DataContext = vm;
-            popup.ShowDialog();
 
-            object? results = vm.GetPopupResults();
+            // The Accept and Cancel buttons will set the Window's DialogResult
+            // property, so use that here to determine if the user accepted or
+            // cancelled.
+            Nullable<bool> accepted = popup.ShowDialog();
+            if (!accepted.HasValue)
+                throw new Exception("PopupWindow's ShowDialog returned null");
+
+            // Set the Accepted bool here, so subclasses don't have to deal
+            // with it
+            PopupReturnArgs results = vm.GetPopupResults();
+            results.PopupAccepted = accepted.Value;
+
             vm.Cleanup();
 
             return results;
