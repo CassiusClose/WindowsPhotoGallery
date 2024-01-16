@@ -21,6 +21,7 @@ using System.Windows.Documents;
 using System.Windows.Ink;
 using System.Windows.Input;
 using System.Windows.Media;
+using System.Windows.Media.Animation;
 using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
@@ -431,45 +432,29 @@ namespace PhotoGalleryApp.Views.Maps
          */
         private void RebuildNearbyPin(Point clickLoc)
         {
-            double minDist = double.PositiveInfinity;
-            int minInd = 0;
-            // Find the closest path point
-            for (int i = 0; i < Locations.Count; i++)
-            {
-                Location l = Locations[i];
-                Point pointLoc = _mapContainer.LocationToViewportPoint(l);
-
-                if (pointLoc.X < 0 || pointLoc.Y < 0 || pointLoc.X > this.RenderSize.Width || pointLoc.Y > this.RenderSize.Height)
-                    continue;
-
-                double dist = Math.Sqrt(Math.Pow(clickLoc.X - pointLoc.X, 2) + Math.Pow(clickLoc.Y - pointLoc.Y, 2));
-                if (dist < minDist)
-                {
-                    minDist = dist;
-                    minInd = i;
-                }
-            }
-
             //TODO If the nearest point hasn't changed, just leave the pin
             // Was causing flickering before
             if (_nearbyPin != null)
                 RemoveNearbyPin();
 
+            Location? vert = MapUtils.GetClosestVertexOnPath(Locations, clickLoc, _mapContainer);
+            if (vert == null)
+                return;
+
             // Don't add the point if it's on the selection line.
             if(_selectionLine != null)
             {
                 foreach(Location l in _selectionLine.Locations)
-                {
-                    if (l == Locations[minInd])
+                    if (l == vert)
                         return;
-                }
             }
 
             // If the point is close enough, show the nearby pin
-            if (minDist < 20)
+            double dist = MapUtils.Dist(clickLoc, _mapContainer.LocationToViewportPoint(vert));
+            if (dist < 20)
             {
-                if (_selectionPin == null || _selectionPin.Location != Locations[minInd])
-                    CreateNearbyPin(Locations[minInd]);
+                if (_selectionPin == null || _selectionPin.Location != vert)
+                    CreateNearbyPin(vert);
             }
         }
 
@@ -490,8 +475,10 @@ namespace PhotoGalleryApp.Views.Maps
                 // Place it slightly above the first point
                 if(Locations != null && Locations.Count > 0)
                 {
-                    SetPositionOffset(_preview, new Point(-_preview.Width / 2, -_preview.Height - 50));
-                    SetPosition(_preview, Locations[0]);
+                    SetPositionOffset(_preview, new Point(-_preview.Width / 2, -_preview.Height - 20));
+
+                    Location previewLoc = MapUtils.GetClosestLocationOnPath(Locations, _lastPathClickPos, _mapContainer);
+                    SetPosition(_preview, previewLoc);
                 }
             }
         }
@@ -515,6 +502,13 @@ namespace PhotoGalleryApp.Views.Maps
 
 
         #region Mouse Handling
+
+
+        /**
+         * Keeps track of the last place the user clicked on the path Polyline.
+         * This lets the popup window be opened at that position.
+         */
+        private Point _lastPathClickPos;
 
         /**
          * When the user clicks on the path
@@ -548,6 +542,7 @@ namespace PhotoGalleryApp.Views.Maps
                 if(map != null)
                 {
                     MapViewModel vm = (MapViewModel)map.DataContext;
+                    _lastPathClickPos = e.GetPosition(_mapContainer);
                     vm.TogglePreview(DataContext);
                 }
             }
