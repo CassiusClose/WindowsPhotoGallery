@@ -41,6 +41,14 @@
         <DataTemplate DataType="{x:Type vms_search:SearchResultsViewModel}">
             <local_search:SearchResults/>
         </DataTemplate>
+
+        <DataTemplate DataType="{x:Type vms:LocationPageViewModel}">
+            <local_maps:LocationPage/>
+        </DataTemplate>
+
+        <DataTemplate DataType="{x:Type vms:PathPageViewModel}">
+            <local_maps:PathPage/>
+        </DataTemplate>
     </UserControl.Resources>
 
     <Grid>

@@ -19,6 +19,10 @@
                 Content="{Binding Name}"
                 />
             <Button
+                Content="Open"
+                Command="{Binding OpenPageCommand}"
+                />
+            <Button
                 Content="Edit"
                 Command="{Binding DataContext.EditItemCommand, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType={x:Type local:Map}}}"
                 CommandParameter="{Binding}"

@@ -58,10 +58,10 @@ namespace PhotoGalleryApp.ViewModels
         private MapItemViewModel? CreateMapItemViewModel(MapItem item)
         {
             if(item is MapPath)
-                return new MapPathViewModel((MapPath)item);
+                return new MapPathViewModel(_nav, (MapPath)item);
 
             if (item is MapLocation)
-                return new MapLocationViewModel((MapLocation)item);
+                return new MapLocationViewModel(_nav, (MapLocation)item);
 
             return null;
         }

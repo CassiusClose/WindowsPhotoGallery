@@ -6,6 +6,7 @@ using System.Linq;
 using System.Security.Permissions;
 using System.Text;
 using System.Threading.Tasks;
+using System.Windows.Input;
 
 namespace PhotoGalleryApp.ViewModels
 {
@@ -14,13 +15,18 @@ namespace PhotoGalleryApp.ViewModels
     /// </summary>
     public class MapLocationViewModel : MapItemViewModel
     {
-        public MapLocationViewModel(MapLocation location)
+        public MapLocationViewModel(NavigatorViewModel nav, MapLocation location)
         {
+            _openPageCommand = new RelayCommand(OpenPage);
+
+            _nav = nav;
             _location = location;
         }
+
         public override void Cleanup() { }
 
 
+        private NavigatorViewModel _nav;
         private MapLocation _location;
         
 
@@ -41,6 +47,18 @@ namespace PhotoGalleryApp.ViewModels
         public override MapItem GetModel()
         {
             return _location;
+        }
+
+
+        private RelayCommand _openPageCommand;
+        public ICommand OpenPageCommand => _openPageCommand;
+        
+        /**
+         * Opens the page with the full info about the location
+         */
+        public void OpenPage()
+        {
+            _nav.NewPage(new LocationPageViewModel(_nav, _location));
         }
     }
 }

@@ -17,15 +17,20 @@ namespace PhotoGalleryApp.ViewModels
     /// </summary>
     public class MapPathViewModel : MapItemViewModel
     {
-        public MapPathViewModel(MapPath path)
+        public MapPathViewModel(NavigatorViewModel nav, MapPath path)
         {
+            _openPageCommand = new RelayCommand(OpenPage);
+
+            _nav = nav;
             _path = path;
+
             Points.CollectionChanged += Points_CollectionChanged;
         }
 
         public override void Cleanup() {}
 
 
+        private NavigatorViewModel _nav;
         private MapPath _path;
 
 
@@ -317,6 +322,19 @@ namespace PhotoGalleryApp.ViewModels
 
 
         #endregion Clicks
+
+
+
+        private RelayCommand _openPageCommand;
+        public ICommand OpenPageCommand => _openPageCommand;
+        
+        /**
+         * Opens the page with the full info about the path 
+         */
+        public void OpenPage()
+        {
+            _nav.NewPage(new PathPageViewModel(_nav, _path));
+        }
 
 
 
