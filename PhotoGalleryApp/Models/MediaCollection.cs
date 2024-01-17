@@ -27,12 +27,22 @@ namespace PhotoGalleryApp.Models
         /// </summary>
         public MediaCollection()
         {
-            Tags = new RangeObservableCollection<string>();
+            _tagCollection = new MaintainedParentCollection<ICollectable, string>(this, 
+                                                                                  _tags_IsItemCollection,
+                                                                                  _tags_GetItemCollection,
+                                                                                  _tags_GetItem,
+                                                                                  _tags_GetPropertyName);
+
         }
 
         public MediaCollection(List<ICollectable> list) : base(list)
         {
-            Tags = new RangeObservableCollection<string>();
+            _tagCollection = new MaintainedParentCollection<ICollectable, string>(this, 
+                                                                                  _tags_IsItemCollection,
+                                                                                  _tags_GetItemCollection,
+                                                                                  _tags_GetItem,
+                                                                                  _tags_GetPropertyName);
+
         }
 
         #endregion Constructors
@@ -103,7 +113,9 @@ namespace PhotoGalleryApp.Models
 
 
         /**
-         * Pass on any children's tags CollectionChanged events.
+         * Pass on any children's tags CollectionChanged events. So users can
+         * subscribe to individual children's CollectionChanged events without
+         * having to maintain subscriptions when the list changes.
          */
         [XmlIgnore]
         public NotifyCollectionChangedEventHandler? ItemTagsChanged;
@@ -113,6 +125,55 @@ namespace PhotoGalleryApp.Models
          */
         [XmlIgnore]
         public PropertyChangedEventHandler? ItemPropertyChanged;
+
+
+        /**
+         * Connect these to each child's collection changed events, to pass them on.
+         */
+        private void MediaTags_CollectionChanged(object? sender, NotifyCollectionChangedEventArgs e) { if (ItemTagsChanged != null) ItemTagsChanged(sender, e); }
+
+        #region Maintained Lists
+
+        /// <summary>
+        /// A collection of all the tags present in the collection (compiled
+        /// from the tags of each image). Tags are not added here, they are
+        /// added to the media within the gallery, and those changes are
+        /// reflected here.
+        /// </summary>
+        public RangeObservableCollection<string> Tags { get { return _tagCollection.Items; } }
+        private MaintainedParentCollection<ICollectable, string> _tagCollection;
+
+        #region Maintained Parent Collection Functions
+        /**
+         * The MaintainedParentCollection class makes it cleaner to maintain a
+         * complete list of all the instances of a certain field in the
+         * children, such as Tags above. To do this, it needs certain functions
+         * for each field, which are stored below.
+         */
+
+
+        private bool _tags_IsItemCollection(ICollectable c) { return true; }
+
+        private ObservableCollection<string> _tags_GetItemCollection(ICollectable c)
+        {
+            if (c is Media)
+                return ((Media)c).Tags;
+            else if (c is Event)
+                return ((Event)c).Collection.Tags;
+
+            throw new ArgumentException("MediaCollection GetItemCollection() was given not a collection. Maybe IsItemCollection() is wrong?");
+        }
+
+        private string _tags_GetItem(ICollectable c) {
+            throw new ArgumentException("MediaCollection GetItem() was given a collection. Maybe IsItemCollection() is wrong?"); }
+
+        private string _tags_GetPropertyName(ICollectable c) {
+            throw new ArgumentException("MediaCollection GetPropertyName() was given a collection. Maybe IsItemCollection() is wrong?"); }
+
+        #endregion Maintained Parent Collection Functions
+
+
+        #endregion  Maintained Lists
 
         #endregion Fields and Properties
 
@@ -201,7 +262,7 @@ namespace PhotoGalleryApp.Models
                 Event ev = (Event)item;
 
                 // Uncomment if a MediaCollection's tag list should contain tags from nested events
-                ev.Collection.AddTagsChangedListener(MediaTags_CollectionChanged);
+                ev.Collection.ItemTagsChanged += MediaTags_CollectionChanged;
                 MediaTagsChanged_Add(ev.Collection.Tags);
 
                 if(StartTimestamp == null || ev.StartTimestamp < StartTimestamp)
@@ -229,6 +290,7 @@ namespace PhotoGalleryApp.Models
             if (item is Media)
             {
                 Media m = (Media)item;
+                m.TagsChanged -= MediaTags_CollectionChanged;
 
                 MediaTagsChanged_Remove(((Media)m).Tags);
 
@@ -239,12 +301,15 @@ namespace PhotoGalleryApp.Models
             {
                 Event ev = (Event)item;
 
+                ev.Collection.ItemTagsChanged -= MediaTags_CollectionChanged;
                 // Uncomment if a MediaCollection's tag list should contain tags from nested events
                 MediaTagsChanged_Remove(((Event)item).Collection.Tags);
 
                 if (ev.StartTimestamp.Equals(StartTimestamp) || ev.EndTimestamp.Equals(EndTimestamp))
                     ResetTimeRange();
             }
+
+            item.PropertyChanged -= Item_PropertyChanged;
 
             // Do this after above, so the time range is reset by the time CollectionChanged notifications go out
             // RemoveItem is used internally by functions such as Remove, so overriding here is enough

@@ -51,6 +51,11 @@ namespace PhotoGalleryApp.Filtering
         public FilterSet.FilterCriteriaLoosenedEvent? FilterCriteriaLoosened = null;
 
         /**
+         * Should be called when the filter parameters change, and tightness or looseness cannot be determined.
+         */
+        public FilterSet.FilterCriteriaChangedEvent? FilterCriteriaChanged = null;
+
+        /**
          * Should be called when a MediaCollection item property filtered by this class changes
          */
         public FilterSet.FilteredPropertyChangedEvent? FilteredPropertyChanged = null;

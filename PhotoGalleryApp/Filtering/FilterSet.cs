@@ -4,6 +4,7 @@ using System.CodeDom;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
+using System.Security.Permissions;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -23,7 +24,7 @@ namespace PhotoGalleryApp.Filtering
 
         public void Cleanup()
         {
-            foreach(FilterCriteria c in _criteria)
+            foreach (FilterCriteria c in _criteria)
                 c.Cleanup();
         }
 
@@ -61,7 +62,7 @@ namespace PhotoGalleryApp.Filtering
          */
         public bool AreFiltersActive()
         {
-            foreach(FilterCriteria crit in _criteria)
+            foreach (FilterCriteria crit in _criteria)
             {
                 if (crit.IsFilterActive())
                     return true;
@@ -111,7 +112,7 @@ namespace PhotoGalleryApp.Filtering
         {
             FilterSet newSet = new FilterSet(_mediaCollection);
 
-            foreach(FilterCriteria c in _criteria)
+            foreach (FilterCriteria c in _criteria)
             {
                 FilterCriteria crit = newSet.GetCriteriaByType(c.GetType());
                 c.CopyTo(crit);
@@ -149,6 +150,16 @@ namespace PhotoGalleryApp.Filtering
          */
         public delegate void FilterCriteriaLoosenedEvent();
         public FilterCriteriaLoosenedEvent? FilterCriteriaLoosened = null;
+
+        /**
+         * If one of the FilterCriteria changes its criteria in such a way that
+         * tightened or loosened cannot be determined, that FilterCriteria will
+         * notify its FilterSet, and the FilterSet will notify any external
+         * listeners through this event.
+         */
+        public delegate void FilterCriteriaChangedEvent();
+        public FilterCriteriaChangedEvent? FilterCriteriaChanged = null;
+
 
         public void Criteria_FilterLoosened()
         {

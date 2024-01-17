@@ -34,11 +34,40 @@ namespace PhotoGalleryApp.Filtering
             if (start > end)
                 throw new ArgumentException("TimeRangeFilter needs the start timestamp to be before or equal to the end timestamp");
 
+            bool tightened = false;
+            bool loosened = false;
+            // If the new start time increases the time range, filter is loosened
+            if (StartTime == null || StartTime < start)
+                tightened = true;
+            else
+                loosened = true;
+
+            // If the new end time increases the time range, filter is loosened
+            if (EndTime == null || EndTime > end)
+                tightened = true;
+            else
+                loosened = true;
+
             StartTime = start;
             EndTime = end;
 
-            if(FilterCriteriaTightened != null)
-                FilterCriteriaTightened();
+
+            if(tightened && loosened)
+            {
+                if(FilterCriteriaChanged != null)
+                    FilterCriteriaChanged();
+            }
+            else if(tightened)
+            {
+                if(FilterCriteriaTightened != null)
+                    FilterCriteriaTightened();
+            }
+            else if(loosened)
+            {
+                if (FilterCriteriaLoosened != null)
+                    FilterCriteriaLoosened();
+            }
+
         }
 
         public override bool Filter(ICollectable c)

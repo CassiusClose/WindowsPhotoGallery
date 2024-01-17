@@ -115,10 +115,8 @@ namespace PhotoGalleryApp.Filtering
 
                 case NotifyCollectionChangedAction.Reset:
                 case NotifyCollectionChangedAction.Replace:
-                    if (FilterCriteriaLoosened != null)
-                        FilterCriteriaLoosened();
-                    if (FilterCriteriaTightened != null)
-                        FilterCriteriaTightened();
+                    if (FilterCriteriaChanged != null)
+                        FilterCriteriaChanged();
                     break;
             }
         }

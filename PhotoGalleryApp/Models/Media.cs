@@ -170,7 +170,7 @@ namespace PhotoGalleryApp.Models
         /// <summary>
         /// A collection of tags associated with the image, used for easier sorting & filtering of images.
         /// </summary>
-        public ObservableCollection<string> Tags { get; set; }
+        public ObservableCollection<string> Tags { get; }
 
         /**
          * Attaching directly to Tags.CollectionChanged from the outside gives no sense of what
