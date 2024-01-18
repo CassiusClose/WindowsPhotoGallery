@@ -142,6 +142,7 @@ namespace PhotoGalleryApp.ViewModels
         /// </summary>
         public void SaveGallery()
         {
+            //TODO Move to top bar
             ((MainWindow)System.Windows.Application.Current.MainWindow).SaveGallery();
         }
 

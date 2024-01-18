@@ -70,5 +70,11 @@ namespace PhotoGalleryApp
         {
             Session.SaveSession();
         }
+
+
+        public static UserSession GetCurrentSession()
+        {
+            return ((MainWindow)System.Windows.Application.Current.MainWindow).Session;
+        }
     }
 }

@@ -25,7 +25,7 @@ namespace PhotoGalleryApp.ViewModels.Search
             _filter = filter;
             _filter.PropertyChanged += _filter_PropertyChanged;
 
-            _mapItemNameCollection = new MaintainedParentCollection<MapItem, string>(((MainWindow)System.Windows.Application.Current.MainWindow).Session.Map,
+            _mapItemNameCollection = new MaintainedParentCollection<MapItem, string>(MainWindow.GetCurrentSession().Map,
                                                                                      _mapItemNames_IsItemCollection,
                                                                                      _mapItemNames_GetItemCollection,
                                                                                      _mapItemNames_GetItem,
@@ -109,7 +109,7 @@ namespace PhotoGalleryApp.ViewModels.Search
         public void ChooseMapItemForFilter(object sender, Views.ItemChosenEventArgs e)
         {
             string locName = e.Item;
-            Map map = ((MainWindow)System.Windows.Application.Current.MainWindow).Session.Map;
+            Map map = MainWindow.GetCurrentSession().Map;
             foreach(MapItem i in map)
             {
                 //TODO ID some better way than by name?
