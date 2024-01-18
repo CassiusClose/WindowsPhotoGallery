@@ -96,6 +96,17 @@ namespace PhotoGalleryApp.ViewModels.Search
             }
         }
 
+        public MapItemFilterViewModel MapItemFilter
+        {
+            get
+            {
+                ViewModelBase vm = GetFilterCriteriaViewModel(typeof(MapItemFilterViewModel), typeof(MapItemFilter));
+                if(vm is not MapItemFilterViewModel)
+                    throw new Exception("MapItemFilterViewModel is not of the right type");
+                return (MapItemFilterViewModel)vm;
+            }
+        }
+
 
         /**
          * Return the ViewModel for a specific FilterCriteria type. Need to pass both the ViewModel type and the FilterCriteria type.

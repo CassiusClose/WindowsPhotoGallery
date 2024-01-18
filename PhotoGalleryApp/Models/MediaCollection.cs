@@ -33,7 +33,13 @@ namespace PhotoGalleryApp.Models
                                                                                   _tags_GetItem,
                                                                                   _tags_GetPropertyName);
 
+            _mapItemCollection = new MaintainedParentCollection<ICollectable, MapItem>(this,
+                                                                                       _mapItems_IsItemCollection, 
+                                                                                       _mapItems_GetItemCollection, 
+                                                                                       _mapItems_GetItem, 
+                                                                                       _mapItems_GetPropertyName);
         }
+
 
         public MediaCollection(List<ICollectable> list) : base(list)
         {
@@ -43,18 +49,17 @@ namespace PhotoGalleryApp.Models
                                                                                   _tags_GetItem,
                                                                                   _tags_GetPropertyName);
 
+            _mapItemCollection = new MaintainedParentCollection<ICollectable, MapItem>(this,
+                                                                                       _mapItems_IsItemCollection, 
+                                                                                       _mapItems_GetItemCollection, 
+                                                                                       _mapItems_GetItem, 
+                                                                                       _mapItems_GetPropertyName);
         }
 
         #endregion Constructors
 
 
         #region Fields and Properties
-
-        /// <summary>
-        /// A collection of all the tags present in the collection (compiled from the tags of each image). Tags are not
-        /// added here, they are added to the media within the gallery, and those changes are reflected here.
-        /// </summary>
-        public RangeObservableCollection<string> Tags { get; private set; }
 
 
 
@@ -121,7 +126,17 @@ namespace PhotoGalleryApp.Models
         public NotifyCollectionChangedEventHandler? ItemTagsChanged;
 
         /**
-         * Pass on children's PropertyChanged events
+         * Pass on any children's MapItem's CollectionChanged events. So users
+         * can subscribe to individual children's CollectionChanged events
+         * without having to maintain subscriptions when the list changes.
+         */
+        [XmlIgnore]
+        public NotifyCollectionChangedEventHandler? MapItemsChanged;
+
+        /**
+         * Pass on any children's PropertyChanged events. So users can
+         * subscribe to individual children's CollectionChanged events without
+         * having to maintain subscriptions when the list changes.
          */
         [XmlIgnore]
         public PropertyChangedEventHandler? ItemPropertyChanged;
@@ -131,6 +146,11 @@ namespace PhotoGalleryApp.Models
          * Connect these to each child's collection changed events, to pass them on.
          */
         private void MediaTags_CollectionChanged(object? sender, NotifyCollectionChangedEventArgs e) { if (ItemTagsChanged != null) ItemTagsChanged(sender, e); }
+
+        private void MapItems_CollectionChanged(object? sender, NotifyCollectionChangedEventArgs e) { if (MapItemsChanged != null) MapItemsChanged(sender, e); }
+
+
+
 
         #region Maintained Lists
 
@@ -142,6 +162,17 @@ namespace PhotoGalleryApp.Models
         /// </summary>
         public RangeObservableCollection<string> Tags { get { return _tagCollection.Items; } }
         private MaintainedParentCollection<ICollectable, string> _tagCollection;
+
+
+        /// <summary>
+        /// A collection of all the MapItems present in the collection
+        /// (compiled from the MapItems of each image). MapItems are not added
+        /// here, they are added to the media within the gallery, and those
+        /// changes are reflected here.
+        /// </summary>
+        public RangeObservableCollection<MapItem> MapItems { get { return _mapItemCollection.Items; } }
+        private MaintainedParentCollection<ICollectable, MapItem> _mapItemCollection;
+
 
         #region Maintained Parent Collection Functions
         /**
@@ -169,6 +200,35 @@ namespace PhotoGalleryApp.Models
 
         private string _tags_GetPropertyName(ICollectable c) {
             throw new ArgumentException("MediaCollection GetPropertyName() was given a collection. Maybe IsItemCollection() is wrong?"); }
+
+        private bool _mapItems_IsItemCollection(ICollectable c) { return c is Event; }
+
+        private ObservableCollection<MapItem> _mapItems_GetItemCollection(ICollectable c)
+        {
+            if(c is Event)
+                return ((Event)c).Collection.MapItems;
+
+            throw new ArgumentException("MediaCollection GetItemCollection() was given not a collection. Maybe IsItemCollection() is wrong?");
+        }
+
+        private MapItem _mapItems_GetItem(ICollectable c)
+        {
+            if (c is Media)
+                return ((Media)c).MapItem;
+
+            throw new ArgumentException("MediaCollection GetItem() was given a collection. Maybe IsItemCollection() is wrong?");
+        }
+
+        private string _mapItems_GetPropertyName(ICollectable c)
+        {
+            if (c is Media)
+            {
+                Media m = (Media)c;
+                return nameof(m.MapItem);
+            }
+
+            throw new ArgumentException("MediaCollection GetPropertyName() was given a collection. Maybe IsItemCollection() is wrong?");
+        }
 
         #endregion Maintained Parent Collection Functions
 
@@ -239,7 +299,6 @@ namespace PhotoGalleryApp.Models
             }
         }
 
-
         /**
          * Adds a media item to the collection. 
          */
@@ -249,8 +308,6 @@ namespace PhotoGalleryApp.Models
             {
                 Media m = (Media)item;
                 m.TagsChanged += MediaTags_CollectionChanged;
-
-                MediaTagsChanged_Add(m.Tags);
 
                 if (_startTimestamp == null || m.Timestamp < StartTimestamp)
                     StartTimestamp = m.Timestamp;
@@ -263,7 +320,7 @@ namespace PhotoGalleryApp.Models
 
                 // Uncomment if a MediaCollection's tag list should contain tags from nested events
                 ev.Collection.ItemTagsChanged += MediaTags_CollectionChanged;
-                MediaTagsChanged_Add(ev.Collection.Tags);
+                ev.Collection.MapItemsChanged += MapItems_CollectionChanged;
 
                 if(StartTimestamp == null || ev.StartTimestamp < StartTimestamp)
                     StartTimestamp = ev.StartTimestamp;
@@ -292,8 +349,6 @@ namespace PhotoGalleryApp.Models
                 Media m = (Media)item;
                 m.TagsChanged -= MediaTags_CollectionChanged;
 
-                MediaTagsChanged_Remove(((Media)m).Tags);
-
                 if (m.Timestamp.Equals(StartTimestamp) || m.Timestamp.Equals(EndTimestamp))
                     ResetTimeRange();
             }
@@ -302,8 +357,9 @@ namespace PhotoGalleryApp.Models
                 Event ev = (Event)item;
 
                 ev.Collection.ItemTagsChanged -= MediaTags_CollectionChanged;
+                ev.Collection.MapItemsChanged -= MapItems_CollectionChanged;
+
                 // Uncomment if a MediaCollection's tag list should contain tags from nested events
-                MediaTagsChanged_Remove(((Event)item).Collection.Tags);
 
                 if (ev.StartTimestamp.Equals(StartTimestamp) || ev.EndTimestamp.Equals(EndTimestamp))
                     ResetTimeRange();
@@ -314,136 +370,6 @@ namespace PhotoGalleryApp.Models
             // Do this after above, so the time range is reset by the time CollectionChanged notifications go out
             // RemoveItem is used internally by functions such as Remove, so overriding here is enough
             base.RemoveItem(index);
-        }
-
-        
-        /**
-         * Recursively add a CollectionChanged listener to all items in this collection, and all
-         * items in any collections (Events) that may be nested in this collection.
-         */
-        public void AddTagsChangedListener(NotifyCollectionChangedEventHandler handler)
-        {
-            foreach(ICollectable i in Items)
-            {
-                if(i is Media)
-                    ((Media)i).TagsChanged += handler;
-                // Uncomment if a MediaCollection's tag list should contain tags from nested events
-                else
-                    ((Event)i).Collection.AddTagsChangedListener(handler);
-                
-            }
-        }
-
-
-
-        /**
-         * ObservableCollection event handler: When a media items's tags update, need to refresh the list of tags in the collection 
-         */
-        private void MediaTags_CollectionChanged(object? sender, NotifyCollectionChangedEventArgs e)
-        {
-            switch(e.Action)
-            {
-                case NotifyCollectionChangedAction.Add:
-                    if (e.NewItems == null)
-                        throw new ArgumentException("Adding tags to child of MediaCollection, but NewItems is null");
-
-                    MediaTagsChanged_Add(e.NewItems);
-                    break;
-
-                case NotifyCollectionChangedAction.Remove:
-                    if (e.OldItems == null)
-                        throw new ArgumentException("Removing tags from a child of MediaCollection, but OldItems is null");
-
-                    MediaTagsChanged_Remove(e.OldItems);
-                    break;
-
-                case NotifyCollectionChangedAction.Replace:
-                    if (e.NewItems == null || e.OldItems == null)
-                        throw new ArgumentException("Replacing tags from a child of MediaCollection, but OldItems or NewItems is null");
-
-                    MediaTagsChanged_Add(e.NewItems);
-                    MediaTagsChanged_Remove(e.OldItems);
-                    break;
-
-                case NotifyCollectionChangedAction.Reset:
-                    MediaTagsChanged_Reset();
-                    break;
-            }
-
-
-            if (ItemTagsChanged != null)
-                ItemTagsChanged(sender, e);
-
-        }
-
-        private void MediaTagsChanged_Add(IList newItems)
-        {
-            foreach(string tag in newItems)
-            {
-                if (!Tags.Contains(tag))
-                    Tags.Add(tag);
-            }
-        }
-
-        private void MediaTagsChanged_Remove(IList oldI)
-        {
-            List<string> oldItems = oldI.Cast<string>().ToList();
-
-            foreach(ICollectable item in this)
-            {
-                for (int i = 0; i < oldItems.Count; i++)
-                {
-                    if(item is Media)
-                    {
-                        if (((Media)item).Tags.Contains(oldItems[i]))
-                        {
-                            oldItems.RemoveAt(i--);
-                            continue;
-                        }
-                    }
-                    // Uncomment if a MediaCollection's tag list should contain tags from nested events
-                    else
-                    {
-                        if (((Event)item).Collection.Tags.Contains(oldItems[i]))
-                            oldItems.RemoveAt(i--);
-                    }
-                }
-            }
-
-            foreach(string tag in oldItems)
-            {
-                Tags.Remove(tag);
-            }
-        }
-
-        private void MediaTagsChanged_Reset()
-        {
-            List<string> newTags = new List<string>();
-
-            foreach(ICollectable c in this)
-            {
-                if(c is Media)
-                {
-                    foreach (string tag in ((Media)c).Tags)
-                    {
-                        if (!newTags.Contains(tag))
-                            newTags.Add(tag);
-                    }
-                }
-                // Uncomment if a MediaCollection's tag list should contain tags from nested events
-                else
-                {
-                    foreach(string tag in ((Event)c).Collection.Tags) 
-                    { 
-                        if (!newTags.Contains(tag))
-                            newTags.Add(tag);
-                    }
-                }
-            }
-
-            // Replace the list & send out one "reset" notification. It's likely more efficient than
-            // sending out a "reset" when calling Clear() and then sending out an "add" for each tag
-            Tags.ReplaceItems(newTags);
         }
 
         #endregion Methods

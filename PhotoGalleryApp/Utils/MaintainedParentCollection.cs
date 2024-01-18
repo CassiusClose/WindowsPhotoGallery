@@ -337,7 +337,7 @@ namespace PhotoGalleryApp.Utils
                 {
                     ItemType? childItem = _getItem(child);
                     if (childItem != null && !Items.Contains(childItem))
-                        Items.Add(childItem);
+                        newItems.Add(childItem);
                 }
             }
 

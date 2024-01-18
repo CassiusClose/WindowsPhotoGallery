@@ -187,6 +187,21 @@ namespace PhotoGalleryApp.Models
         }
 
 
+
+        private MapItem? _mapItem = null;
+        /// <summary>
+        /// The item on the map (either a location or a path) this media is associated with
+        /// </summary>
+        public MapItem? MapItem
+        {
+            get { return _mapItem; }
+            set { 
+                _mapItem = value;
+                OnPropertyChanged();
+            }
+        }
+
+
         /// <summary>
         /// Returns whether the class holds an media item or a collection of items. This returns false.
         /// </summary>

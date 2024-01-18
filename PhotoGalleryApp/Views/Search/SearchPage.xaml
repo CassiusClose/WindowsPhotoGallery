@@ -18,6 +18,8 @@
 
         <local_search:TimeRangeSelector DataContext="{Binding TimeRangeFilter}"/>
 
+        <local_search:MapItemSelector DataContext="{Binding MapItemFilter}"/>
+
     </StackPanel>
 
 </UserControl>

@@ -14,19 +14,11 @@ namespace PhotoGalleryApp.Models
     public class MapLocation : MapItem
     {
         // Parameterless constructor for XML deserialization
-        private MapLocation() { }
-        
-        public MapLocation(string name, Location coordinates)
+        private MapLocation() : base("") { }
+
+        public MapLocation(string name, Location coordinates) : base(name)
         {
-            _name = name;
             _coordinates = coordinates;
-        }
-
-
-        private string _name;
-        public string Name { 
-            get { return _name; } 
-            set { _name = value; }
         }
 
 

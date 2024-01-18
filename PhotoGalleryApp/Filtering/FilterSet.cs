@@ -94,6 +94,7 @@ namespace PhotoGalleryApp.Filtering
                     FilterCriteria crit = (FilterCriteria)obj;
                     crit.FilterCriteriaLoosened += Criteria_FilterLoosened;
                     crit.FilterCriteriaTightened += Criteria_FilterTightened;
+                    crit.FilterCriteriaChanged += Criteria_FilterChanged;
                     crit.FilteredPropertyChanged += Criteria_FilteredPropertyChanged;
                     _criteria.Add(crit);
                     return crit;
@@ -171,6 +172,12 @@ namespace PhotoGalleryApp.Filtering
         {
             if (FilterCriteriaTightened != null)
                 FilterCriteriaTightened();
+        }
+
+        public void Criteria_FilterChanged()
+        {
+            if (FilterCriteriaChanged != null)
+                FilterCriteriaChanged();
         }
 
         public void Criteria_FilteredPropertyChanged(ICollectable c)

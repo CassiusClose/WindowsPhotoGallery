@@ -1,4 +1,5 @@
 ﻿using PhotoGalleryApp.Models;
+using PhotoGalleryApp.Utils;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -19,7 +20,7 @@ namespace PhotoGalleryApp.Filtering
     /// 
     /// Make sure to implement Cleanup() if you need to remove any external change handlers you created in the subclass.
     /// </summary>
-    public abstract class FilterCriteria
+    public abstract class FilterCriteria : NotifyPropertyChanged
     {
         public FilterCriteria(MediaCollection mediaCollection)
         {

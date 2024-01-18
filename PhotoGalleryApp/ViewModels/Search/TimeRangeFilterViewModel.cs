@@ -17,9 +17,31 @@ namespace PhotoGalleryApp.ViewModels.Search
         public TimeRangeFilterViewModel(TimeRangeFilter filter)
         {
             _filter = filter;
+            _filter.PropertyChanged += _filter_PropertyChanged;
         }
 
+        public override void Cleanup()
+        {
+            _filter.PropertyChanged -= _filter_PropertyChanged;
+        }
+
+
+
         private TimeRangeFilter _filter;
+
+        /**
+         * If the filter changes, notify the PropertyChanged listeners
+         */
+        private void _filter_PropertyChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs e)
+        {
+            if(e.PropertyName == nameof(_filter.StartTime))
+                OnPropertyChanged(nameof(StartTimestamp));
+
+            if (e.PropertyName == nameof(_filter.EndTime))
+                OnPropertyChanged(nameof(EndTimestamp));
+        }
+
+
 
         public PrecisionDateTime? StartTimestamp
         {
@@ -39,12 +61,6 @@ namespace PhotoGalleryApp.ViewModels.Search
                 _filter.EndTime = value;
                 OnPropertyChanged();
             }
-        }
-
-
-        public override void Cleanup()
-        {
-            throw new NotImplementedException();
         }
     }
 }
