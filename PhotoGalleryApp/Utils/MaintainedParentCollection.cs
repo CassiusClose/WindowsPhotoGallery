@@ -235,7 +235,7 @@ namespace PhotoGalleryApp.Utils
                 throw new ArgumentException("PropertyChanged in MaintainedParentCollection must be of CollType");
 
             // No way to tell what the old value was, so just reset the list
-            if(e.PropertyName == _getItemPropertyName((CollType)sender))
+            if(!_isItemCollection((CollType)sender) && e.PropertyName == _getItemPropertyName((CollType)sender))
                 ChildCollectionChanged_Reset();
         }
 

@@ -20,11 +20,20 @@ namespace PhotoGalleryApp.ViewModels
         /// <returns></returns>
         public abstract MapItem GetModel();
 
+
+        /// <summary>
+        /// Returns the Type of the UserControl that is the Preview for this
+        /// item. Subclasses should set this to not-null if previews are
+        /// enabled.
+        /// </summary>
+        public Type? PreviewType { get; protected set; }
+
+
         protected bool _editMode;
         /// <summary>
         /// Whether the MapItem is able to be edited
         /// </summary>
-        public bool EditMode
+        public virtual bool EditMode
         {
             get { return _editMode; }
             set
@@ -42,7 +51,7 @@ namespace PhotoGalleryApp.ViewModels
         /// <summary>
         /// Whether the MapItem's preview box should be open
         /// </summary>
-        public bool PreviewOpen
+        public virtual bool PreviewOpen
         {
             get { return _previewOpen; }
             set
@@ -51,5 +60,8 @@ namespace PhotoGalleryApp.ViewModels
                 OnPropertyChanged();
             }
         }
+
+
+        public string Name { get { return GetModel().Name; } }
     }
 }

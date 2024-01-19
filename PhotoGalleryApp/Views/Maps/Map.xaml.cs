@@ -38,14 +38,10 @@ namespace PhotoGalleryApp.Views.Maps
         public Map()
         {
             InitializeComponent();
+
             MapView.CredentialsProvider = new ApplicationIdCredentialsProvider(Keys.BingAPIKey);
 
-            MapView.Loaded += MapView_Loaded;
-        }
-
-        private void MapView_Loaded(object sender, RoutedEventArgs e)
-        {
-
+            SetBinding(ItemsSourceProperty, "MapItems");
         }
 
         private void UserControl_Loaded(object sender, RoutedEventArgs e)
@@ -120,13 +116,13 @@ namespace PhotoGalleryApp.Views.Maps
                 // If control doesn't exist, create it
                 if(!_items.TryGetValue(vm, out o))
                 {
-                    if(vm is MapLocationViewModel)
+                    if(vm.GetModel() is PhotoGalleryApp.Models.MapLocation)
                     {
                         o = new MapLocation { DataContext = vm };
                         MapView.Children.Add(o);
                         _items.Add(vm, o);
                     }
-                    else if (vm is MapPathViewModel)
+                    else if (vm.GetModel() is PhotoGalleryApp.Models.MapPath)
                     {
                         o = new MapPath() { DataContext = vm };
                         MapView.Children.Add(o);

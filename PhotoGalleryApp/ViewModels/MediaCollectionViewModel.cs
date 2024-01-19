@@ -47,6 +47,7 @@ namespace PhotoGalleryApp.ViewModels
             _changeThumbnailHeightCommand = new RelayCommand(ChangeThumbnailHeight);
             _createEventCommand = new RelayCommand(CreateNewEvent);
             _addSelectedToEventCommand = new RelayCommand(AddSelectedToEvent);
+            _addSelectedToMapCommand = new RelayCommand(AddSelectedToMap);
 
 
             // Init media lists
@@ -250,7 +251,7 @@ namespace PhotoGalleryApp.ViewModels
         {
             // Open popup, retrieve results
             //TODO Better way to access the gallery?
-            EventSelectionPopupViewModel vm = new EventSelectionPopupViewModel(_nav, ((MainWindow)System.Windows.Application.Current.MainWindow).Session.Gallery.Collection);
+            EventSelectionPopupViewModel vm = new EventSelectionPopupViewModel(_nav, MainWindow.GetCurrentSession().Gallery.Collection);
             EventSelectionPopupReturnArgs args = (EventSelectionPopupReturnArgs)_nav.OpenPopup(vm);
 
             // If user cancelled, do nothing
@@ -321,6 +322,42 @@ namespace PhotoGalleryApp.ViewModels
         }
 
         #endregion Events
+
+
+
+        #region Map
+
+
+        private RelayCommand _addSelectedToMapCommand;
+        public ICommand AddSelectedToMapCommand => _addSelectedToMapCommand;
+
+        /**
+         * If the user chooses a MapItem, set all the selected items' MapItem
+         * fields to the chosen one. Note that because a Media item can only be
+         * associated with one place, this will override any previously
+         * selected MapItems.
+         */
+        public void AddSelectedToMap()
+        {
+            PickMapItemPopupViewModel popup = new PickMapItemPopupViewModel(_nav);
+            PickMapItemPopupReturnArgs args = (PickMapItemPopupReturnArgs)_nav.OpenPopup(popup);
+
+            if(args.PopupAccepted && args.ChosenMapItem != null)
+            {
+                IList<ICollectableViewModel> list = GetCurrentlySelectedItems();
+                foreach(ICollectableViewModel vm in list)
+                {
+                    if(vm.GetModel() is Media)
+                    {
+                        Media m = (Media)vm.GetModel();
+                        m.MapItem = args.ChosenMapItem;
+                    }
+                }
+            }
+        }
+
+
+        #endregion Map
 
 
 

@@ -12,17 +12,24 @@
 
     <UserControl.Resources>
         <conv:NotConverter x:Key="NotConverter"/>
+        <conv:BoolToVisibilityConverter x:Key="VisConverter"/>
+
+        <Style x:Key="ToolbarStyle" TargetType="StackPanel">
+            <Setter Property="Visibility" Value="{Binding DisplayToolbar, Converter={StaticResource VisConverter}}"/>
+        </Style> 
     </UserControl.Resources>
+
 
     <Grid x:Name="ControlContainer" VerticalAlignment="Stretch">
         <Grid.RowDefinitions>
             <RowDefinition Height="30"/>
-            <RowDefinition/>
+            <RowDefinition Height="*"/>
         </Grid.RowDefinitions>
 
         <StackPanel
             Orientation="Horizontal"
             Grid.Row="0"
+            Style="{StaticResource ToolbarStyle}"
             >
             <Label
                 Grid.Row="0" 

@@ -468,11 +468,20 @@ namespace PhotoGalleryApp.Views.Maps
         {
             if(_preview == null)
             {
-                _preview = new MapPathPreview();
+                MapItemViewModel vm = (MapItemViewModel)DataContext;
+
+                // Get the specified type for the Preview box, and instanciate it
+                Type? PreviewType = vm.PreviewType;
+                if (PreviewType == null)
+                    return;
+
+                _preview = (UserControl?)Activator.CreateInstance(PreviewType);
+                if (_preview == null)
+                    return;
+
                 _preview.DataContext = DataContext;
                 Children.Add(_preview);
 
-                // Place it slightly above the first point
                 if(Locations != null && Locations.Count > 0)
                 {
                     SetPositionOffset(_preview, new Point(-_preview.Width / 2, -_preview.Height - 20));
@@ -543,7 +552,7 @@ namespace PhotoGalleryApp.Views.Maps
                 {
                     MapViewModel vm = (MapViewModel)map.DataContext;
                     _lastPathClickPos = e.GetPosition(_mapContainer);
-                    vm.TogglePreview(DataContext);
+                    vm.MapItemClick(DataContext);
                 }
             }
 

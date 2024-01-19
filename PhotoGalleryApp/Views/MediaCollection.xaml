@@ -254,6 +254,10 @@
                     Command="{Binding AddSelectedToEventCommand}" IsEnabled="{Binding MediaSelected}"
                     />
 
+            <Button Content="Add Selected to Map"
+                    Command="{Binding AddSelectedToMapCommand}" IsEnabled="{Binding MediaSelected}"
+                    />
+
             <Button Command="{Binding ChangeThumbnailHeightCommand}">Change Thumbnail Height</Button>
 
             <ToggleButton IsChecked="{Binding ShouldExpandEvents}">Expand Events</ToggleButton>

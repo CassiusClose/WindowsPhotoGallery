@@ -19,6 +19,8 @@ namespace PhotoGalleryApp.ViewModels
         {
             _openPageCommand = new RelayCommand(OpenPage);
 
+            PreviewType = typeof(PhotoGalleryApp.Views.Maps.MapLocationPreview);
+
             _nav = nav;
             _location = location;
         }
@@ -40,8 +42,6 @@ namespace PhotoGalleryApp.ViewModels
             }
         }
 
-
-        public string Name { get { return _location.Name; } }
 
 
         public override MapItem GetModel()

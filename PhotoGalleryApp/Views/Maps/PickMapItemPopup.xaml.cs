@@ -1,5 +1,4 @@
-﻿using PhotoGalleryApp.Views.Maps;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -17,11 +16,11 @@ using System.Windows.Shapes;
 namespace PhotoGalleryApp.Views.Maps
 {
     /// <summary>
-    /// Interaction logic for MapPathPreview.xaml
+    /// Interaction logic for PickMapItemPopup.xaml
     /// </summary>
-    public partial class MapPathPreview : MapItemPreviewView
+    public partial class PickMapItemPopup : UserControl
     {
-        public MapPathPreview()
+        public PickMapItemPopup()
         {
             InitializeComponent();
         }

@@ -27,15 +27,25 @@
         <DataTemplate DataType="{x:Type vms:PopupViewModel}">
             <local:MessagePopup DataContext="{Binding}"/>
         </DataTemplate>
+        <DataTemplate DataType="{x:Type vms:PickMapItemPopupViewModel}">
+            <maps:PickMapItemPopup DataContext="{Binding}"/>
+        </DataTemplate>
     </Window.Resources>
     
-    <StackPanel>
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="30"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="50"/>
+        </Grid.RowDefinitions>
+
         <Label
+            Grid.Row="0"
             Content="{Binding ValidationErrorText}"
             Foreground="Red"
             />
-        <ContentControl Content="{Binding}"/>
-        <StackPanel Orientation="Horizontal">
+        <ContentControl Grid.Row="1" Content="{Binding}"/>
+        <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Center">
             <Button 
                 Content="Cancel" 
                 Command="{Binding ClosePopupCommand}"
@@ -47,5 +57,5 @@
                 CommandParameter="{StaticResource TrueValue}"
                 />
         </StackPanel>
-    </StackPanel>
+    </Grid>
 </Window>

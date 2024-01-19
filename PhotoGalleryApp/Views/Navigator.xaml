@@ -23,7 +23,7 @@
         </DataTemplate>
 
         <DataTemplate DataType="{x:Type vms:MapViewModel}">
-            <local_maps:Map ItemsSource="{Binding MapItems}"/>
+            <local_maps:Map/>
         </DataTemplate>
 
         <DataTemplate DataType="{x:Type vms:EventsViewModel}">

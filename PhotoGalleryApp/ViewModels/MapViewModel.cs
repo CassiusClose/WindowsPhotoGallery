@@ -17,9 +17,13 @@ namespace PhotoGalleryApp.ViewModels
 {
     public class MapViewModel : ViewModelBase
     {
-        public MapViewModel(NavigatorViewModel nav, PhotoGalleryApp.Models.Map map)
+        public MapViewModel(NavigatorViewModel nav, PhotoGalleryApp.Models.Map map, bool disableEditMode=false, bool disablePreviews=false, bool displayToolbar=true)
         {
             _nav = nav;
+            _disableEditMode = disableEditMode;
+            _disablePreviews = disablePreviews;
+            _displayToolbar = displayToolbar;
+
             _map = map;
             _map.CollectionChanged += MapItems_CollectionChanged;
 
@@ -41,6 +45,7 @@ namespace PhotoGalleryApp.ViewModels
         }
 
 
+        #region Fields and Properties
 
         private NavigatorViewModel _nav;
 
@@ -52,10 +57,59 @@ namespace PhotoGalleryApp.ViewModels
 
 
 
+        private bool _displayToolbar = true;
+        /// <summary>
+        /// Whether the toolbar above the map should be displayed
+        /// </summary>
+        public bool DisplayToolbar
+        {
+            get { return _displayToolbar; }
+        }
 
-        #region Methods
 
-        private MapItemViewModel? CreateMapItemViewModel(MapItem item)
+        #endregion Fields and Properties
+
+
+
+        #region Create MapItem View Model
+
+        /**
+         * When creating a MapItemViewModel, call this, and it will handle what
+         * method to actually call
+         */
+        private MapItemViewModel CreateMapItemViewModel(MapItem item)
+        {
+            // If the user provides an override, call that instead of the default
+            if(MapItemViewModelGenerator != null)
+                return MapItemViewModelGenerator(item);
+
+            return CreateMapItemViewModelDefault(item);
+        }
+
+
+        /// <summary>
+        /// Creates and returns a MapItemViewModel around the given MapItem.
+        /// </summary>
+        public delegate MapItemViewModel? CreateMapItemViewModelDelegate(MapItem item);
+        private CreateMapItemViewModelDelegate? MapItemViewModelGenerator = null;
+
+
+        /// <summary>
+        /// Outside users can specify their own generator function to create
+        /// custom MapItemViewModels. If the function is null, the default
+        /// generator will be use
+        /// </summary>
+        /// <param name="func"></param>
+        public void SetMapItemViewModelGenerator(CreateMapItemViewModelDelegate? func)
+        {
+            MapItemViewModelGenerator = func;
+        }
+
+
+        /**
+         * The default generator creates MapPathViewModels and MapLocationViewModels
+         */
+        private MapItemViewModel? CreateMapItemViewModelDefault(MapItem item)
         {
             if(item is MapPath)
                 return new MapPathViewModel(_nav, (MapPath)item);
@@ -66,8 +120,8 @@ namespace PhotoGalleryApp.ViewModels
             return null;
         }
 
+        #endregion Create MapItem View Model
 
-        #endregion Methods
 
 
 
@@ -148,8 +202,40 @@ namespace PhotoGalleryApp.ViewModels
         #endregion Add/Delete Commands
 
 
+        #region MapItem Click
+
+        public delegate void MapItemClicked(MapItemViewModel vm);
+        /// <summary>
+        /// Called when the user clicks on MapItem
+        /// </summary>
+        public MapItemClicked? MapItemClickEvent = null;
+
+
+        /**
+         * Toggle the preview box of the item if enabled, and call the event
+         */
+        public void MapItemClick(object parameter)
+        {
+            if (parameter is not MapItemViewModel)
+                throw new ArgumentException("TogglePreview() needs a MapItemViewModel");
+
+            MapItemViewModel vm = (MapItemViewModel)parameter;
+
+            if (!_disablePreviews)
+                TogglePreview(vm);
+
+            if (MapItemClickEvent != null)
+                MapItemClickEvent(vm);
+        }
+
+        #endregion MapItem Click
+
+
 
         #region Preview Boxes
+
+        // Whether to show the previews or not
+        private bool _disablePreviews;
 
 
         /**
@@ -169,13 +255,8 @@ namespace PhotoGalleryApp.ViewModels
          * Open or close the preview box for the given MapItemViewModel. If
          * EditMode is enabled, then the preview will not open.
          */
-        public void TogglePreview(object parameter)
+        public void TogglePreview(MapItemViewModel vm)
         {
-            if (parameter is not MapItemViewModel)
-                throw new ArgumentException("TogglePreview() needs a MapItemViewModel");
-
-            MapItemViewModel vm = (MapItemViewModel)parameter;
-
             if(EditMode)
             {
                 vm.PreviewOpen = false;
@@ -198,6 +279,14 @@ namespace PhotoGalleryApp.ViewModels
 
         #region Item Editing
 
+        /**
+         * Disables putting an item into EditMode. Note that if the
+         * MapItemViewModel sets its own EditMode, this cannot prevent that.
+         * But if it follows the expected architecture where the MapViewModel
+         * sets EditMode of its children, then this will work.
+         */
+        private bool _disableEditMode = false;
+
 
         private MapItemViewModel? _editableMapItem = null;
         /**
@@ -211,6 +300,9 @@ namespace PhotoGalleryApp.ViewModels
             set
             {
                 if (value == _editableMapItem)
+                    return;
+
+                if(_disableEditMode)
                     return;
 
                 if (_editableMapItem != null)
@@ -350,6 +442,7 @@ namespace PhotoGalleryApp.ViewModels
             foreach (MapItem item in newItems)
                 _mapItems.Add(CreateMapItemViewModel(item));
         }
+
         private void MapItems_Remove(IList oldItems)
         {
             foreach(MapItem item in oldItems)

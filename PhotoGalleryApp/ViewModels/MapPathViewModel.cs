@@ -1,5 +1,6 @@
 ﻿using Microsoft.Maps.MapControl.WPF;
 using PhotoGalleryApp.Models;
+using PhotoGalleryApp.Views;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -21,6 +22,8 @@ namespace PhotoGalleryApp.ViewModels
         {
             _openPageCommand = new RelayCommand(OpenPage);
 
+            PreviewType = typeof(PhotoGalleryApp.Views.Maps.MapPathPreview);
+
             _nav = nav;
             _path = path;
 
@@ -36,8 +39,6 @@ namespace PhotoGalleryApp.ViewModels
 
         public LocationCollection Points { get { return _path.Points; } }
 
-
-        public string Name { get { return _path.Name; } }
 
 
 
