@@ -64,7 +64,7 @@ namespace PhotoGalleryApp.ViewModels
 
             // Load all the media in the collection 
             ReadyToLoadMedia = true;
-            LoadAllMedia();
+            LoadVisibleMediaThenAll();
         }
 
         public override void Cleanup()
@@ -177,11 +177,11 @@ namespace PhotoGalleryApp.ViewModels
 
         public void DisableImageLoad()
         {
-            _disableLoadMediaViewCC = false;
+            _disableLoadMediaViewCC = true;
         }
         public void EnableImageLoad(bool reload = true)
         {
-            _disableLoadMediaViewCC = true;
+            _disableLoadMediaViewCC = false;
             if (reload)
                 LoadVisibleMediaThenAll();
         }
