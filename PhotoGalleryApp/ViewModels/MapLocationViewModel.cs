@@ -34,10 +34,10 @@ namespace PhotoGalleryApp.ViewModels
 
         public Location Location
         {
-            get { return _location.Coordinates; }
+            get { return _location.Location; }
             set
             {
-                _location.Coordinates = value;
+                _location.Location = value;
                 OnPropertyChanged();
             }
         }

@@ -7,6 +7,7 @@ using System.Diagnostics;
 using System.DirectoryServices.ActiveDirectory;
 using System.IO;
 using System.Linq;
+using System.Runtime.Serialization;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Media.Imaging;
@@ -16,6 +17,9 @@ namespace PhotoGalleryApp.Models
     /// <summary>
     /// A Media object that refers to an image file.
     /// </summary>
+    [KnownType(typeof(ICollectable))]
+    [KnownType(typeof(Media))]
+    [DataContract]
     public class Image : Media
     {
         #region Constructors
@@ -33,10 +37,6 @@ namespace PhotoGalleryApp.Models
         /// <param name="tags">A list of tags that the image should have.</param>
         public Image(string path, ObservableCollection<string> tags) : base(path, tags) { }
 
-        /**
-         * Needed by XmlSerializer
-         */
-        protected Image() : base() { }
 
         #endregion Constructors
 

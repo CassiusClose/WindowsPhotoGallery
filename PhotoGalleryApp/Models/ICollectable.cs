@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.Serialization;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -12,6 +13,10 @@ namespace PhotoGalleryApp.Models
     /// A MediaCollection can contain an event, which has its own MediaCollection. So you can have nested
     /// MediaCollections.
     /// </summary>
+    [KnownType(typeof(Image))]
+    [KnownType(typeof(Video))]
+    [KnownType(typeof(Event))]
+    [DataContract]
     public abstract class ICollectable : NotifyPropertyChanged
     {
         /// <summary>

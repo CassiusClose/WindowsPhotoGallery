@@ -6,10 +6,10 @@ using System.Collections.Specialized;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Runtime.Serialization;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Media.Imaging;
-using System.Xml.Serialization;
 
 namespace PhotoGalleryApp.Models
 {
@@ -19,8 +19,7 @@ namespace PhotoGalleryApp.Models
     /**
      * List possible subclasses of the abstract class for the serializer
      */
-    [XmlInclude(typeof(Image))]
-    [XmlInclude(typeof(Video))]
+    [DataContract]
     public abstract class Media : ICollectable
     {
         #region Constructors
@@ -51,11 +50,6 @@ namespace PhotoGalleryApp.Models
         public Media(string path) : this(path, null) { }
         
         
-        /**
-         * Needed by XmlSerializer
-         */
-        protected Media() : this(null, null) { }
-
         #endregion Constructors
 
 
@@ -66,6 +60,7 @@ namespace PhotoGalleryApp.Models
         /// <summary>
         /// The filepath of the piece of media.
         /// </summary>
+        [DataMember]
         public string Filepath 
         {
             get { return _filepath; }
@@ -125,7 +120,6 @@ namespace PhotoGalleryApp.Models
         /// <summary>
         /// How much the image should be rotated.
         /// </summary>
-        [XmlIgnoreAttribute]
         public Rotation Rotation { get; set; }
 
 
@@ -170,14 +164,14 @@ namespace PhotoGalleryApp.Models
         /// <summary>
         /// A collection of tags associated with the image, used for easier sorting & filtering of images.
         /// </summary>
-        public ObservableCollection<string> Tags { get; }
+        [DataMember]
+        public ObservableCollection<string> Tags { get; private set; }
 
         /**
          * Attaching directly to Tags.CollectionChanged from the outside gives no sense of what
          * Media object's tags have changed. So for the sake of efficient updates, create this
          * update event which uses this Media object as the sender.
          */
-        [XmlIgnore]
         public NotifyCollectionChangedEventHandler TagsChanged;
 
         private void Tags_CollectionChanged(object sender, NotifyCollectionChangedEventArgs e)
@@ -192,6 +186,7 @@ namespace PhotoGalleryApp.Models
         /// <summary>
         /// The item on the map (either a location or a path) this media is associated with
         /// </summary>
+        [DataMember]
         public MapItem? MapItem
         {
             get { return _mapItem; }

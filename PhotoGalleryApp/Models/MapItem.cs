@@ -2,11 +2,15 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.Serialization;
 using System.Text;
 using System.Threading.Tasks;
 
 namespace PhotoGalleryApp.Models
 {
+    [KnownType(typeof(MapLocation))]
+    [KnownType(typeof(MapPath))]
+    [DataContract(IsReference = true)]
     public abstract class MapItem : NotifyPropertyChanged
     {
         public MapItem(string name)
@@ -15,6 +19,7 @@ namespace PhotoGalleryApp.Models
         }
 
         protected string _name;
+        [DataMember]
         public string Name { 
             get { return _name; } 
             set { 

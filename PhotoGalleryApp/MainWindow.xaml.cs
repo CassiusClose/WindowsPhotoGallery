@@ -18,7 +18,6 @@ using System.Windows.Shapes;
 using System.Collections.ObjectModel;
 using System.IO;
 using System.Diagnostics;
-using System.Xml.Serialization;
 
 namespace PhotoGalleryApp
 {

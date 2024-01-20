@@ -4,6 +4,7 @@ using System.Collections.Specialized;
 using System.ComponentModel;
 using System.Linq;
 using System.Runtime.CompilerServices;
+using System.Runtime.Serialization;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -12,6 +13,7 @@ namespace PhotoGalleryApp.Utils
     /// <summary>
     /// Implementation of INotifyPropertyChanged
     /// </summary>
+    [DataContract(IsReference = true)]
     public class NotifyPropertyChanged : INotifyPropertyChanged
     {
         public event PropertyChangedEventHandler? PropertyChanged;

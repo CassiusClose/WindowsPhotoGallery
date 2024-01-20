@@ -29,7 +29,7 @@ namespace PhotoGalleryApp.ViewModels
     ///     - MediaOpened, when the user clicks on a media item.
     ///     - MediaSelectedChanged, when the selection status of at least one media item changes.
     /// </summary>
-    class MediaCollectionViewModel : ViewModelBase
+    public class MediaCollectionViewModel : ViewModelBase
     {
         /// <summary>
         /// Creates a new viewmodel associated with the given MediaCollection. 

@@ -9,15 +9,16 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Runtime.CompilerServices;
+using System.Runtime.Serialization;
 using System.Text;
 using System.Threading.Tasks;
-using System.Xml.Serialization;
 
 namespace PhotoGalleryApp.Models
 {
     /// <summary>
     /// A collection of Media objects. 
     /// </summary>
+    [CollectionDataContract]
     public class MediaCollection : ObservableCollection<ICollectable>
     {
         #region Constructors
@@ -122,7 +123,6 @@ namespace PhotoGalleryApp.Models
          * subscribe to individual children's CollectionChanged events without
          * having to maintain subscriptions when the list changes.
          */
-        [XmlIgnore]
         public NotifyCollectionChangedEventHandler? ItemTagsChanged;
 
         /**
@@ -130,7 +130,6 @@ namespace PhotoGalleryApp.Models
          * can subscribe to individual children's CollectionChanged events
          * without having to maintain subscriptions when the list changes.
          */
-        [XmlIgnore]
         public NotifyCollectionChangedEventHandler? MapItemsChanged;
 
         /**
@@ -138,7 +137,6 @@ namespace PhotoGalleryApp.Models
          * subscribe to individual children's CollectionChanged events without
          * having to maintain subscriptions when the list changes.
          */
-        [XmlIgnore]
         public PropertyChangedEventHandler? ItemPropertyChanged;
 
 

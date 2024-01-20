@@ -3,9 +3,9 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.IO;
 using System.Linq;
+using System.Runtime.Serialization;
 using System.Text;
 using System.Threading.Tasks;
-using System.Xml.Serialization;
 
 namespace PhotoGalleryApp.Models
 {
@@ -14,9 +14,7 @@ namespace PhotoGalleryApp.Models
     /// </summary>
     // This class stores MediaCollection, which is a collection of an abstract type, so have to
     // include all possible subclasses to serialize.
-    [XmlInclude(typeof(Image))]
-    [XmlInclude(typeof(Video))]
-    [XmlInclude(typeof(Event))]
+    [DataContract]
     public class Gallery
     {
         public Gallery() : this("Gallery", null) { }
@@ -37,6 +35,7 @@ namespace PhotoGalleryApp.Models
         /// The display name of the gallery. 
         /// </summary>
         //TODO Does this really have a place? Should be some user identifier maybe if there are multiple users?
+        [DataMember]
         public string Name
         {
             get { return _name; }
@@ -47,6 +46,7 @@ namespace PhotoGalleryApp.Models
         /// <summary>
         /// A collection of all the media in the gallery
         /// </summary>
+        [DataMember]
         public MediaCollection Collection { 
             get { return _media; } 
             set { _media = value; }

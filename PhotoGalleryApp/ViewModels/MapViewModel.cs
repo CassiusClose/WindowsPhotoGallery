@@ -181,7 +181,7 @@ namespace PhotoGalleryApp.ViewModels
                 if (args.LoadFromFile)
                 {
                     LocationCollection coll = PathFileFormats.LoadFromTxtFile(args.Filename);
-                    path.Points = coll;
+                    path.Locations = coll;
                 }
 
                 _map.Add(path);

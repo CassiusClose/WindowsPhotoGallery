@@ -9,9 +9,9 @@ using System.Diagnostics;
 using System.Linq;
 using System.Printing;
 using System.Runtime.CompilerServices;
+using System.Runtime.Serialization;
 using System.Text;
 using System.Threading.Tasks;
-using System.Xml.Serialization;
 
 namespace PhotoGalleryApp.Models
 {
@@ -19,11 +19,10 @@ namespace PhotoGalleryApp.Models
     /// Represents a singular event that happened and has media associated with it. Should have a range of time
     /// associated with it in the future.
     /// </summary>
+    [KnownType(typeof(ICollectable))]
+    [DataContract]
     public class Event : ICollectable
     {
-        /* Need this for the XML Deserialization */
-        public Event() : this("Event") { }
-
         /// <summary>
         /// Creates a new Event object.
         /// </summary>
@@ -44,6 +43,7 @@ namespace PhotoGalleryApp.Models
         /// <summary>
         /// The media associated with the event
         /// </summary>
+        [DataMember]
         public MediaCollection Collection { 
             get { return _collection; }
             set { _collection = value; }
@@ -54,6 +54,7 @@ namespace PhotoGalleryApp.Models
         /// <summary>
         /// The display name of the event
         /// </summary>
+        [DataMember]
         public string Name { 
             get { return _name; } 
             set { 
@@ -69,6 +70,7 @@ namespace PhotoGalleryApp.Models
         /// The thumbnail to represent the event when viewed as a small tile. If null, there is
         /// no selected thumbnail.
         /// </summary>
+        [DataMember]
         public Media? Thumbnail
         {
             get { return _thumbnail; }

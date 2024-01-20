@@ -5,6 +5,7 @@ using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Runtime.Serialization;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -13,6 +14,9 @@ namespace PhotoGalleryApp.Models
     /// <summary>
     /// A Media object that refers to a video file and holds a Media object for its thumbnail
     /// </summary>
+    [KnownType(typeof(ICollectable))]
+    [KnownType(typeof(Media))]
+    [DataContract]
     public class Video : Media
     {
         // The relative directory that video thumbnails should be stored in
@@ -33,11 +37,6 @@ namespace PhotoGalleryApp.Models
         /// <param name="path">The filepath of the image.</param>
         /// <param name="tags">A list of tags that the image should have.</param>
         public Video(string path, ObservableCollection<string> tags) : base(path, tags) { }
-
-        /**
-         * Needed by XmlSerializer
-         */
-        protected Video() : base() { }
 
         #endregion Constructors
 

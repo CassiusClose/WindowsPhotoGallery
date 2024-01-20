@@ -37,7 +37,7 @@ namespace PhotoGalleryApp.ViewModels
         private MapPath _path;
 
 
-        public LocationCollection Points { get { return _path.Points; } }
+        public LocationCollection Points { get { return _path.Locations; } }
 
 
 

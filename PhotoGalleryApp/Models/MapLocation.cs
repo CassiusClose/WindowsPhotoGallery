@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.Serialization;
 using System.Text;
 using System.Threading.Tasks;
 using Microsoft.Maps.MapControl.WPF;
@@ -11,21 +12,28 @@ namespace PhotoGalleryApp.Models
     /// <summary>
     /// Information about a single location on the map
     /// </summary>
+    [DataContract]
     public class MapLocation : MapItem
     {
-        // Parameterless constructor for XML deserialization
-        private MapLocation() : base("") { }
-
         public MapLocation(string name, Location coordinates) : base(name)
         {
-            _coordinates = coordinates;
+            _location = coordinates;
         }
 
 
-        private Location _coordinates;
-        public Location Coordinates { 
-            get { return _coordinates; }
-            set { _coordinates = value; }
+        private Location _location;
+        public Location Location { 
+            get { return _location; }
+            set { _location = value; }
+        }
+
+
+        // Store specific properties from Location so only those are serialized
+        [DataMember(Name = nameof(Location))]
+        private LocationSerializable _locationSerializable
+        {
+            get { return new LocationSerializable(Location); }
+            set { this.Location = value.GetLocation(); }
         }
     }
 }

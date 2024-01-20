@@ -3,20 +3,18 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Runtime.Serialization;
 using System.Text;
 using System.Threading.Tasks;
-using System.Xml.Serialization;
 
 namespace PhotoGalleryApp.Models
 {
     /// <summary>
     /// Stores all data for one user. This includes all media and map items.
     /// </summary>
+    [DataContract]
     public class UserSession
     {
-        // Parameterless constructor for the XML Deserializer
-        private UserSession() {}
-
         /**
          * sessionFile: The filepath at which to save the session data
          */
@@ -28,12 +26,14 @@ namespace PhotoGalleryApp.Models
         }
 
 
-        [XmlIgnore]
         private string _sessionFile;
 
 
-        public Gallery Gallery;
+        [DataMember(Order = 0)]
         public Map Map;
+
+        [DataMember(Order = 1)]
+        public Gallery Gallery;
 
 
         /// <summary>
@@ -41,10 +41,10 @@ namespace PhotoGalleryApp.Models
         /// </summary>
         public void SaveSession()
         {
-            XmlSerializer serializer = new XmlSerializer(typeof(UserSession));
-            TextWriter writer = new StreamWriter(_sessionFile);
-            serializer.Serialize(writer, this);
-            writer.Close();
+            FileStream fs = new FileStream(_sessionFile, FileMode.OpenOrCreate);
+            DataContractSerializer serializer = new DataContractSerializer(typeof(UserSession));
+            serializer.WriteObject(fs, this);
+            fs.Close();
         }
 
 
@@ -57,30 +57,18 @@ namespace PhotoGalleryApp.Models
         /// <returns>The session stored in the given file, or a new session if the file does not exist.</returns>
         public static UserSession LoadSession(string sessionFile)
         {
-            XmlSerializer serializer = new XmlSerializer(typeof(UserSession));
-            FileStream fs;
-            try
+            if(!File.Exists(sessionFile))
             {
-                fs = new FileStream(sessionFile, FileMode.Open);
-            }
-            catch(FileNotFoundException)
-            {
-                Trace.WriteLine("No session file found. Creating new one");
-                UserSession s = new UserSession(sessionFile);
-                return s;
+                return new UserSession(sessionFile);
             }
 
-            UserSession? session = (UserSession?)serializer.Deserialize(fs);
-            //TODO Throw errors? If file exists, change filename so that corrupted one isn't overwritten
-            if(session == null)
-            {
-                Trace.WriteLine("ERROR IN DESERIALIZATION");
-                System.Windows.Application.Current.Shutdown();
-                return new UserSession();
-            }
+            FileStream fs = new FileStream(sessionFile, FileMode.Open);
+            DataContractSerializer serializer = new DataContractSerializer(typeof(UserSession));
+            UserSession? session = (UserSession?)serializer.ReadObject(fs);
+            if (session == null)
+                throw new Exception("Couldn't deserialize");
 
             session._sessionFile = sessionFile;
-
             return session;
         }
     }
