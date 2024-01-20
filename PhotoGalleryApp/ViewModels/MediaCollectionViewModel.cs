@@ -190,7 +190,7 @@ namespace PhotoGalleryApp.ViewModels
         /* When the view changes, deselect any items not longer in the view */
         private void View_CollectionChanged(object? sender, NotifyCollectionChangedEventArgs e)
         {
-            if(!_disableLoadMediaViewCC)
+            if(_disableLoadMediaViewCC)
                 LoadVisibleMediaThenAll();
 
             switch(e.Action)
