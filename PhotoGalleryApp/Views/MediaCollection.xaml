@@ -55,6 +55,18 @@
                         >
                         <Label Content="{Binding Name}"/>
                     </Border>
+                    
+                    <!-- Display a selection button on top of the image -->
+                    <ToggleButton 
+                        Grid.ZIndex="1" 
+                        Width="50" Height="50" 
+                        HorizontalAlignment="Left" VerticalAlignment="Top" 
+                        Command="{Binding Path=DataContext.SelectMediaCommand, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType={x:Type local:MediaCollection}}}" 
+                        CommandParameter="{Binding}"
+                        IsChecked="{Binding Path=IsSelected, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType={x:Type ListBoxItem}}}"
+                        Visibility="{Binding PreviewVisibility, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType={x:Type local:MediaCollection}}}"
+                        >Sel
+                    </ToggleButton>
                 </Grid>
             </Border>
         </DataTemplate>

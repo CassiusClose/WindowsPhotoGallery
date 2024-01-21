@@ -97,6 +97,56 @@ namespace PhotoGalleryApp.Models
 
 
 
+        /**
+         * Selects the given MapItem on all of the children of this event
+         */
+        public void AddMapItemToAll(MapItem i)
+        {
+            foreach(ICollectable item in Collection)
+            {
+                if(item is Media)
+                    ((Media)item).MapItem = i;
+                else if (item is Event)
+                    ((Event)item).AddMapItemToAll(i);
+            }
+        }
+
+        
+        /**
+         * Adds the given tag to all of the children of this event
+         */
+        public void AddTagToAll(string tag)
+        {
+            foreach(ICollectable item in Collection)
+            {
+                if (item is Media)
+                {
+                    Media m = (Media)item;
+                    if (!m.Tags.Contains(tag))
+                        m.Tags.Add(tag);
+                }
+                else if(item is Event)
+                    ((Event)item).AddTagToAll(tag);
+            }
+        }
+
+
+        /**
+         * Removes the given tag from all of the children of this event
+         */
+        public void RemoveTagFromAll(string tag)
+        {
+            foreach(ICollectable item in Collection)
+            {
+                if (item is Media)
+                    ((Media)item).Tags.Remove(tag);
+                else if(item is Event)
+                    ((Event)item).RemoveTagFromAll(tag);
+            }
+        }
+
+
+
         /// <summary>
         /// Returns whether the class holds an media item or a collection of items. This returns true.
         /// </summary>

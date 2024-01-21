@@ -190,7 +190,7 @@ namespace PhotoGalleryApp.ViewModels
         /* When the view changes, deselect any items not longer in the view */
         private void View_CollectionChanged(object? sender, NotifyCollectionChangedEventArgs e)
         {
-            if(_disableLoadMediaViewCC)
+            if(!_disableLoadMediaViewCC)
                 LoadVisibleMediaThenAll();
 
             switch(e.Action)
@@ -351,6 +351,11 @@ namespace PhotoGalleryApp.ViewModels
                     {
                         Media m = (Media)vm.GetModel();
                         m.MapItem = args.ChosenMapItem;
+                    }
+                    else if(vm.GetModel() is Event)
+                    {
+                        Event e = (Event)vm.GetModel();
+                        e.AddMapItemToAll(args.ChosenMapItem);
                     }
                 }
             }
@@ -536,14 +541,10 @@ namespace PhotoGalleryApp.ViewModels
                     if(vm is MediaViewModel)
                     { 
                         if (!((MediaViewModel)vm).Media.Tags.Contains(tag)) 
-                        {
                             ((MediaViewModel)vm).Media.Tags.Add(tag);
-                        }
                     }
-                    else
-                    {
-                        Trace.WriteLine("Error: Events shouldn't be selectable");
-                    }
+                    else if(vm is EventTileViewModel)
+                        ((EventTileViewModel)vm).Event.AddTagToAll(tag);
                 }
             }
         }
@@ -564,9 +565,9 @@ namespace PhotoGalleryApp.ViewModels
                 foreach (ICollectableViewModel vm in vms)
                 {
                     if (vm is MediaViewModel && ((MediaViewModel)vm).Media.Tags.Contains(tag))
-                    {
                         ((MediaViewModel)vm).Media.Tags.Remove(tag);
-                    }
+                    else if(vm is EventTileViewModel)
+                        ((EventTileViewModel)vm).Event.RemoveTagFromAll(tag);
                 }
             }
         }
