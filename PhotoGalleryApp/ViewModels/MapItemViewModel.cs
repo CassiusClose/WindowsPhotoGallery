@@ -62,6 +62,13 @@ namespace PhotoGalleryApp.ViewModels
         }
 
 
-        public string Name { get { return GetModel().Name; } }
+        public string Name { 
+            get { return GetModel().Name; } 
+            set
+            {
+                GetModel().Name = value;
+                OnPropertyChanged();
+            }
+        }
     }
 }

@@ -59,8 +59,7 @@ namespace PhotoGalleryApp.Views.Maps
 
             BindingOperations.SetBinding(this, LocationsProperty, new Binding("Points"));
 
-            BindingOperations.SetBinding(this, SelectionStartIndProperty, new Binding("SelectionStartInd"));
-            BindingOperations.SetBinding(this, SelectionEndIndProperty, new Binding("SelectionEndInd"));
+            BindingOperations.SetBinding(this, SelectionRangeProperty, new Binding("SelectionRange"));
         }
 
         protected override UIElement GetMainMapItem()
@@ -70,10 +69,10 @@ namespace PhotoGalleryApp.Views.Maps
 
 
 
-        #region Selection Indices Properties
+        #region Selection Range Property
 
-        public static readonly DependencyProperty SelectionStartIndProperty = DependencyProperty.Register("SelectionStartInd", typeof(int), typeof(MapPath),
-            new PropertyMetadata(SelectionStartIndPropertyChanged));
+        public static readonly DependencyProperty SelectionRangeProperty = DependencyProperty.Register("SelectionRange", typeof(System.Drawing.Point), typeof(MapPath),
+            new PropertyMetadata(SelectionRangePropertyChanged));
 
         /// <summary>
         /// The user can select one or multiple points on this path. The points
@@ -82,51 +81,24 @@ namespace PhotoGalleryApp.Views.Maps
         /// inclusive and the end index is exclusive. If nothing is selected,
         /// the indices are -1.
         /// </summary>
-        public int SelectionStartInd
+        public System.Drawing.Point SelectionRange
         {
-            get { return (int)GetValue(SelectionStartIndProperty); }
+            get { return (System.Drawing.Point)GetValue(SelectionRangeProperty); }
             set { 
-                SetValue(SelectionStartIndProperty, value);
+                SetValue(SelectionRangeProperty, value);
                 if (EditMode)
                     RebuildSelection();
             }
         }
 
-        public static void SelectionStartIndPropertyChanged(DependencyObject sender, DependencyPropertyChangedEventArgs e)
+        public static void SelectionRangePropertyChanged(DependencyObject sender, DependencyPropertyChangedEventArgs e)
         {
             MapPath m = (MapPath)sender;
             if(m.EditMode)
                 m.RebuildSelection();
         }
 
-        public static readonly DependencyProperty SelectionEndIndProperty = DependencyProperty.Register("SelectionEndInd", typeof(int), typeof(MapPath),
-            new PropertyMetadata(SelectionEndIndPropertyChanged));
-
-        /// <summary>
-        /// The user can select one or multiple points on this path. The points
-        /// will always be consecutive on the path. This set of points is
-        /// represented by a starting and ending index. The starting index  is
-        /// inclusive and the end index is exclusive. If nothing is selected,
-        /// the indices are -1.
-        /// </summary>
-        public int SelectionEndInd
-        {
-            get { return (int)GetValue(SelectionEndIndProperty); }
-            set { 
-                SetValue(SelectionEndIndProperty, value);
-                if(EditMode)
-                    RebuildSelection();
-            }
-        }
-
-        public static void SelectionEndIndPropertyChanged(DependencyObject sender, DependencyPropertyChangedEventArgs e)
-        {
-            MapPath m = (MapPath)sender;
-            if(m.EditMode)
-                m.RebuildSelection();
-        }
-
-        #endregion Selection Indices Properties
+        #endregion Selection Range Property
 
 
 
@@ -209,21 +181,21 @@ namespace PhotoGalleryApp.Views.Maps
                     if(_selectionLine != null)
                     {
                         // If changed items start before the selection
-                        if(e.OldStartingIndex < SelectionStartInd)
+                        if(e.OldStartingIndex < SelectionRange.X)
                         {
                             // If changed items extend into the selection
-                            if(endIndex > SelectionStartInd)
+                            if(endIndex > SelectionRange.X)
                             {
                                 int i = 0;
-                                for (int j = SelectionStartInd; j < endIndex; j++, i++)
+                                for (int j = SelectionRange.X; j < endIndex; j++, i++)
                                     _selectionLine.Locations[i] = Locations[j];
                             }
                         }
                         // If changed items start in the selection
-                        else if(e.OldStartingIndex >= SelectionStartInd && e.OldStartingIndex < SelectionEndInd)
+                        else if(e.OldStartingIndex >= SelectionRange.X && e.OldStartingIndex < SelectionRange.Y)
                         {
-                            int end = Math.Min(SelectionEndInd, endIndex);
-                            int i = e.OldStartingIndex - SelectionStartInd;
+                            int end = Math.Min(SelectionRange.Y, endIndex);
+                            int i = e.OldStartingIndex - SelectionRange.X;
                             for(int j = e.OldStartingIndex; j < end; j++, i++)
                                 _selectionLine.Locations[i] = Locations[j];
                         }
@@ -269,7 +241,7 @@ namespace PhotoGalleryApp.Views.Maps
         private void CreateSelectionPin()
         {
             _selectionPin = new Pushpin();
-            _selectionPin.Location = Locations[SelectionStartInd];
+            _selectionPin.Location = Locations[SelectionRange.X];
             _selectionPin.MouseDown += SelectionPin_MouseDown;
 
             MapItemClickDragBehavior b = new MapItemClickDragBehavior(_mapContainer);
@@ -291,6 +263,7 @@ namespace PhotoGalleryApp.Views.Maps
 
         private void CreateSelectionLine()
         {
+            Trace.WriteLine("Sel line");
             _selectionLine = new MapPolyline();
             _selectionLine.Stroke = new SolidColorBrush(Colors.Blue);
             _selectionLine.StrokeThickness = 6;
@@ -302,7 +275,7 @@ namespace PhotoGalleryApp.Views.Maps
             b.MouseLeftButtonClick += Selection_Click;
             Microsoft.Xaml.Behaviors.Interaction.GetBehaviors(_selectionLine).Add(b);
 
-            for(int i = SelectionStartInd; i < SelectionEndInd; i++)
+            for(int i = SelectionRange.X; i < SelectionRange.Y; i++)
             {
                 _selectionLine.Locations.Add(Locations[i]);
             }
@@ -361,10 +334,10 @@ namespace PhotoGalleryApp.Views.Maps
             if(_selectionLine != null)
                 RemoveSelectionLine();
 
-            if (SelectionStartInd == -1 || SelectionEndInd == -1)
+            if (SelectionRange.X == -1 || SelectionRange.Y == -1)
                 return;
 
-            if(SelectionEndInd - SelectionStartInd == 1)
+            if(SelectionRange.Y - SelectionRange.X == 1)
                 CreateSelectionPin();
             else
                 CreateSelectionLine();

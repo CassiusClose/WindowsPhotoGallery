@@ -54,6 +54,17 @@
                 IsEnabled="{Binding EditMode}"
                 />
 
+            <Button
+                Content="Split Track At Selected"
+                Command="{Binding SplitTrackAtSelectedCommand}"
+                IsEnabled="{Binding PathSinglePointSelection}"
+                />
+
+            <Button
+                Content="New Track From Selected"
+                Command="{Binding NewTrackFromSelectedCommand}"
+                IsEnabled="{Binding PathMultiplePointsSelection}"
+                />
 
         </StackPanel>
         <Grid Grid.Row="1">

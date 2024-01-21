@@ -46,34 +46,28 @@ namespace PhotoGalleryApp.ViewModels
 
         #region Selected Points
 
-        private int _selStart = -1;
+        private Point _selectionRange = new Point(-1, -1);
         /// <summary>
         /// The user can select a consecutive range of points on the path. This
         /// range is marked by an inclusive start index and an exclusive end
-        /// index. If nothing is selected, the indices are -1.
+        /// index. If nothing is selected, the indices are -1. X is the start
+        /// index and Y is the end index.
         /// </summary>
-        public int SelectionStartInd { 
-            get { return _selStart; } 
+        /**
+         * When setting selection range, don't just set one index. It's better
+         * to create a whole new point, so that the setter here gets called. If
+         * you do just change one index, you must call the OnPropertyChanged()
+         * methods called in the setter below.
+         */
+        public Point SelectionRange 
+        { 
+            get { return _selectionRange; }
             set
             {
-                _selStart = value;
+                _selectionRange = value;
                 OnPropertyChanged();
-            }
-        }
-
-
-        private int _selEnd = -1;
-        /// <summary>
-        /// The user can select a consecutive range of points on the path. This
-        /// range is marked by an inclusive start index and an exclusive end
-        /// index. If nothing is selected, the indices are -1.
-        /// </summary>
-        public int SelectionEndInd { 
-            get { return _selEnd; } 
-            set
-            {
-                _selEnd = value;
-                OnPropertyChanged();
+                OnPropertyChanged(nameof(IsSelection));
+                OnPropertyChanged(nameof(SinglePointSelected));
             }
         }
 
@@ -81,10 +75,9 @@ namespace PhotoGalleryApp.ViewModels
         /**
          * Deselect everything
          */
-        private void DeselectPoints()
+        public void ClearSelection()
         {
-            SelectionStartInd = -1;
-            SelectionEndInd = -1;
+            SelectionRange = new Point(-1, -1);
         }
 
         /**
@@ -98,20 +91,15 @@ namespace PhotoGalleryApp.ViewModels
                     if (e.NewItems == null || e.NewItems.Count == 0)
                         break;
 
-                    if (SelectionStartInd == -1 || SelectionEndInd == -1)
+                    if (SelectionRange.X == -1 || SelectionRange.Y == -1)
                         break;
 
                     // Move selection range to account for new items
                     int numAdded = e.NewItems.Count;
-                    if(e.NewStartingIndex <= SelectionStartInd)
-                    {
-                        SelectionStartInd += numAdded;
-                        SelectionEndInd += numAdded;
-                    }
-                    else if(e.NewStartingIndex > SelectionStartInd && e.NewStartingIndex < SelectionEndInd)
-                    {
-                        SelectionEndInd += numAdded;
-                    }
+                    if(e.NewStartingIndex <= SelectionRange.X)
+                        SelectionRange = new Point(SelectionRange.X + numAdded, SelectionRange.Y + numAdded);
+                    else if(e.NewStartingIndex > SelectionRange.X && e.NewStartingIndex < SelectionRange.Y)
+                        SelectionRange = new Point(SelectionRange.X, SelectionRange.Y + numAdded);
 
                     break;
 
@@ -119,49 +107,67 @@ namespace PhotoGalleryApp.ViewModels
                     if (e.OldItems == null || e.OldItems.Count == 0)
                         break;
 
-                    if (SelectionStartInd == -1 || SelectionEndInd == -1)
+                    if (SelectionRange.X == -1 || SelectionRange.Y == -1)
                         break;
 
                     //Move selection range (& maybe shrink it) to account for removed items
                     int numRemoved = e.OldItems.Count;
                     int endIndex = e.OldStartingIndex + numRemoved;
 
-                    if(e.OldStartingIndex < SelectionStartInd)
+                    if(e.OldStartingIndex < SelectionRange.X)
                     {
-                        if(endIndex > SelectionStartInd)
-                        {
-                            SelectionStartInd = endIndex;
-                            SelectionEndInd -= numRemoved;
-                        }
+                        if(endIndex > SelectionRange.Y)
+                            SelectionRange = new Point(endIndex, SelectionRange.Y - numRemoved);
                         else
-                        {
-                            SelectionStartInd -= numRemoved;
-                            SelectionEndInd -= numRemoved;
-                        }
+                            SelectionRange = new Point(SelectionRange.X - numRemoved, SelectionRange.Y - numRemoved);
                     }
-                    else if(e.OldStartingIndex >= SelectionStartInd && e.OldStartingIndex < SelectionEndInd)
+                    else if(e.OldStartingIndex >= SelectionRange.X && e.OldStartingIndex < SelectionRange.Y)
                     {
-                        if(endIndex < SelectionEndInd)
-                            SelectionEndInd -= numRemoved;
+                        if(endIndex < SelectionRange.Y)
+                            SelectionRange = new Point(SelectionRange.X, SelectionRange.Y - numRemoved);
                         else
-                            SelectionEndInd = e.OldStartingIndex;
+                            SelectionRange = new Point(SelectionRange.X, e.OldStartingIndex); 
                         
                     }
 
                     // If nothing is left to select, reset selection to nonen
-                    if(SelectionEndInd <= SelectionStartInd)
+                    if(SelectionRange.Y <= SelectionRange.X)
                     {
-                        SelectionStartInd = -1;
-                        SelectionEndInd = -1;
+                        ClearSelection();
                     }
                     break;
 
                 case System.Collections.Specialized.NotifyCollectionChangedAction.Reset:
-                    DeselectPoints();
+                    ClearSelection();
                     break;
             }
 
         }
+
+        /// <summary>
+        /// Returns whether there is a selection or not
+        /// </summary>
+        public bool IsSelection
+        {
+            get { return (SelectionRange.X != -1 && SelectionRange.Y != -1); }
+        }
+
+        /// <summary>
+        /// Returns true if there is only one point selected
+        /// </summary>
+        public bool SinglePointSelected
+        {
+            get {
+                if (!IsSelection)
+                    return false;
+
+                if (SelectionRange.Y - SelectionRange.X == 1)
+                    return true;
+
+                return false;
+            }
+        }
+
 
         #endregion Selected Points
 
@@ -189,7 +195,7 @@ namespace PhotoGalleryApp.ViewModels
          */
         public void MoveSelection(double latdiff, double longdiff)
         {
-            for(int i = SelectionStartInd; i < SelectionEndInd; i++)
+            for(int i = SelectionRange.X; i < SelectionRange.Y; i++)
             {
                 Points[i] = new Location(Points[i].Latitude + latdiff, Points[i].Longitude + longdiff);
             }
@@ -217,8 +223,8 @@ namespace PhotoGalleryApp.ViewModels
          */
         public void RemoveSelection()
         {
-            while (SelectionStartInd < SelectionEndInd)
-                Points.RemoveAt(SelectionStartInd);
+            while (SelectionRange.X < SelectionRange.Y)
+                Points.RemoveAt(SelectionRange.X);
         }
 
 
@@ -293,19 +299,23 @@ namespace PhotoGalleryApp.ViewModels
 
 
             // If this is the first point, select it
-            if(SelectionStartInd == -1)
+            if(SelectionRange.X == -1)
             {
-                SelectionStartInd = ind;
-                SelectionEndInd = ind + 1;
+                SelectionRange = new Point(ind, ind + 1);
             }
             // If other points are already selected, extend the range to include this new point
             else
             {
-                if (ind < SelectionStartInd)
-                    SelectionStartInd = ind;
+                int newStart = SelectionRange.X;
+                int newEnd = SelectionRange.Y;
 
-                if (ind+1 > SelectionEndInd)
-                    SelectionEndInd = ind + 1;
+                if (ind < SelectionRange.X)
+                    newStart = ind;
+
+                if (ind+1 > SelectionRange.Y)
+                    newEnd = ind + 1;
+
+                SelectionRange = new Point(newStart, newEnd);
             }
         }
 
@@ -317,7 +327,7 @@ namespace PhotoGalleryApp.ViewModels
         {
             if(EditMode)
             {
-                DeselectPoints();
+                ClearSelection();
             }
         }
 
@@ -343,7 +353,7 @@ namespace PhotoGalleryApp.ViewModels
         {
             // Don't save the selection when leaving edit mode
             if(!EditMode)
-                DeselectPoints();
+                ClearSelection();
         }
 
 

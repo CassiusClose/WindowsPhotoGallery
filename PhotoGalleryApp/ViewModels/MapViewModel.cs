@@ -17,7 +17,7 @@ namespace PhotoGalleryApp.ViewModels
 {
     public class MapViewModel : ViewModelBase
     {
-        public MapViewModel(NavigatorViewModel nav, PhotoGalleryApp.Models.Map map, bool disableEditMode=false, bool disablePreviews=false, bool displayToolbar=true)
+        public MapViewModel(NavigatorViewModel nav, PhotoGalleryApp.Models.Map map, bool disableEditMode = false, bool disablePreviews = false, bool displayToolbar = true)
         {
             _nav = nav;
             _disableEditMode = disableEditMode;
@@ -32,6 +32,8 @@ namespace PhotoGalleryApp.ViewModels
             _finishEditingCommand = new RelayCommand(FinishEditing);
             _deleteItemCommand = new RelayCommand(DeleteMapItem);
             _editItemCommand = new RelayCommand(EditMapItem);
+            _newTrackFromSelectedCommand = new RelayCommand(NewTrackFromSelected);
+            _splitTrackAtSelectedCommand = new RelayCommand(SplitTrackAtSelected);
 
 
             _mapItems = new ObservableCollection<MapItemViewModel>();
@@ -39,7 +41,7 @@ namespace PhotoGalleryApp.ViewModels
             MapItems_Reset();
         }
 
-        public override void Cleanup() 
+        public override void Cleanup()
         {
             _map.CollectionChanged -= MapItems_CollectionChanged;
         }
@@ -80,7 +82,7 @@ namespace PhotoGalleryApp.ViewModels
         private MapItemViewModel CreateMapItemViewModel(MapItem item)
         {
             // If the user provides an override, call that instead of the default
-            if(MapItemViewModelGenerator != null)
+            if (MapItemViewModelGenerator != null)
                 return MapItemViewModelGenerator(item);
 
             return CreateMapItemViewModelDefault(item);
@@ -111,7 +113,7 @@ namespace PhotoGalleryApp.ViewModels
          */
         private MapItemViewModel? CreateMapItemViewModelDefault(MapItem item)
         {
-            if(item is MapPath)
+            if (item is MapPath)
                 return new MapPathViewModel(_nav, (MapPath)item);
 
             if (item is MapLocation)
@@ -141,7 +143,7 @@ namespace PhotoGalleryApp.ViewModels
             CreateLocationPopupReturnArgs args = (CreateLocationPopupReturnArgs)_nav.OpenPopup(popup);
 
             // If not cancelled, then create the location
-            if(args.PopupAccepted)
+            if (args.PopupAccepted)
             {
                 MapLocation loc = new MapLocation(args.Name, args.Location);
                 _map.Add(loc);
@@ -187,8 +189,8 @@ namespace PhotoGalleryApp.ViewModels
                 _map.Add(path);
 
                 // Only put into edit mode if the user didn't provide path data
-                if (!args.LoadFromFile) 
-                { 
+                if (!args.LoadFromFile)
+                {
                     foreach (MapItemViewModel vm in _mapItems)
                     {
                         if (vm.GetModel() == path)
@@ -241,11 +243,11 @@ namespace PhotoGalleryApp.ViewModels
         /**
          * Close all preview boxes
          */
-        private void CloseAllPreviews(MapItemViewModel? exception=null)
+        private void CloseAllPreviews(MapItemViewModel? exception = null)
         {
             foreach (MapItemViewModel vm in _mapItems)
             {
-                if(exception == null || !ReferenceEquals(exception, vm))
+                if (exception == null || !ReferenceEquals(exception, vm))
                     vm.PreviewOpen = false;
             }
         }
@@ -257,17 +259,17 @@ namespace PhotoGalleryApp.ViewModels
          */
         public void TogglePreview(MapItemViewModel vm)
         {
-            if(EditMode)
+            if (EditMode)
             {
                 vm.PreviewOpen = false;
             }
             else
             {
-                foreach(MapItemViewModel o in _mapItems)
+                foreach (MapItemViewModel o in _mapItems)
                 {
                     if (ReferenceEquals(vm, o))
                         o.PreviewOpen = !o.PreviewOpen;
-                    else if(o.PreviewOpen)
+                    else if (o.PreviewOpen)
                         o.PreviewOpen = false;
                 }
             }
@@ -302,25 +304,30 @@ namespace PhotoGalleryApp.ViewModels
                 if (value == _editableMapItem)
                     return;
 
-                if(_disableEditMode)
+                if (_disableEditMode)
                     return;
 
                 if (_editableMapItem != null)
+                {
+                    _editableMapItem.PropertyChanged -= _editableMapItem_PropertyChanged;
                     _editableMapItem.EditMode = false;
+                }
 
                 _editableMapItem = value;
 
                 if (_editableMapItem != null)
                 {
                     _editableMapItem.EditMode = true;
+                    _editableMapItem.PropertyChanged += _editableMapItem_PropertyChanged;
                     CloseAllPreviews();
                 }
 
                 OnPropertyChanged();
                 OnPropertyChanged(nameof(EditMode));
+                OnPropertyChanged(nameof(PathSinglePointSelection));
+                OnPropertyChanged(nameof(PathMultiplePointsSelection));
             }
         }
-
 
 
         /**
@@ -358,7 +365,7 @@ namespace PhotoGalleryApp.ViewModels
         private void FinishEditing()
         {
             // If the user is editing a path
-            if(EditableMapItem is MapPathViewModel)
+            if (EditableMapItem is MapPathViewModel)
             {
                 MapPathViewModel vm = (MapPathViewModel)EditableMapItem;
                 // If the path has no points, then prompt user to either delete
@@ -381,6 +388,136 @@ namespace PhotoGalleryApp.ViewModels
             {
                 EditableMapItem = null;
             }
+        }
+
+
+
+        /**
+         * When the MapPath item being edited changes what points are selected,
+         * update properties here
+         */
+        private void _editableMapItem_PropertyChanged(object? sender, PropertyChangedEventArgs e)
+        {
+            if(sender is MapPathViewModel)
+            {
+                if(e.PropertyName == nameof(MapPathViewModel.SelectionRange))
+                {
+                    OnPropertyChanged(nameof(PathSinglePointSelection));
+                    OnPropertyChanged(nameof(PathMultiplePointsSelection));
+                }
+            }
+        }
+
+
+        /// <summary>
+        /// Returns true if a MapPath item is being edited and a single point
+        /// is selected
+        /// </summary>
+        public bool PathSinglePointSelection
+        {
+            get
+            {
+                if (EditableMapItem is not MapPathViewModel)
+                    return false;
+
+                return ((MapPathViewModel)EditableMapItem).SinglePointSelected;
+            }
+        }
+
+        /// <summary>
+        /// Returns true if a MapPath item is being edited and multiple points
+        /// are selected
+        /// </summary>
+        public bool PathMultiplePointsSelection
+        {
+            get
+            {
+                if (EditableMapItem is not MapPathViewModel)
+                    return false;
+
+                MapPathViewModel vm = (MapPathViewModel)EditableMapItem;
+                return vm.IsSelection && !vm.SinglePointSelected;
+            }
+        }
+
+
+        private RelayCommand _splitTrackAtSelectedCommand;
+        public ICommand SplitTrackAtSelectedCommand => _splitTrackAtSelectedCommand;
+
+        /**
+         * Split the currently-edited path into two paths that both include the
+         * selected point. Renames the paths.
+         */
+        public void SplitTrackAtSelected()
+        {
+            if (EditableMapItem is not MapPathViewModel)
+                throw new ArgumentException();
+
+            MapPathViewModel vm = (MapPathViewModel)EditableMapItem;
+
+            MapPath newPath = new MapPath(((MapPath)vm.GetModel()).Name + " (2)");
+
+            for(int i = vm.SelectionRange.X; i < vm.Points.Count; i++) 
+            {
+                newPath.Locations.Add(vm.Points[i]);
+            }
+
+            for(int i = vm.SelectionRange.X+1; i < vm.Points.Count; i++)
+            {
+                vm.Points.RemoveAt(i--);
+            }
+
+            _map.Add(newPath);
+
+            vm.Name = vm.Name + " (1)";
+            vm.ClearSelection();
+        }
+
+
+        private RelayCommand _newTrackFromSelectedCommand;
+        public ICommand NewTrackFromSelectedCommand => _newTrackFromSelectedCommand;
+
+        /**
+         * Split the currently-selected path into multiple paths, so that the
+         * currently selected set of points is its own track. Points on either
+         * end of the path will put in their own path. Renames the paths.
+         */
+        public void NewTrackFromSelected()
+        {
+            if (EditableMapItem is not MapPathViewModel)
+                throw new ArgumentException();
+
+            MapPathViewModel vm = (MapPathViewModel)EditableMapItem;
+
+            int nameInd = 1;
+
+            if(vm.SelectionRange.X > 0)
+            {
+                MapPath beforePath = new MapPath(vm.Name + " (" + nameInd++ + ")");
+                for(int i = 0; i < vm.SelectionRange.X+1; i++)
+                    beforePath.Locations.Add(vm.Points[i]);
+
+                _map.Add(beforePath);
+            }
+
+            while(vm.SelectionRange.X != 0)
+                vm.Points.RemoveAt(0);
+
+            if(vm.SelectionRange.Y < vm.Points.Count)
+            {
+                MapPath afterPath = new MapPath(vm.Name + " (" + (nameInd+1) + ")");
+                for(int i = vm.SelectionRange.Y-1; i < vm.Points.Count; i++)
+                    afterPath.Locations.Add(vm.Points[i]);
+
+                _map.Add(afterPath);
+            }
+
+            for(int i = vm.SelectionRange.Y; i < vm.Points.Count; i++)
+                vm.Points.RemoveAt(i--);
+
+            vm.Name += " (" + nameInd + ")";
+
+            vm.ClearSelection();
         }
 
 
