@@ -49,6 +49,10 @@ namespace PhotoGalleryApp.Views.Maps
             Interaction.GetBehaviors(GetMainMapItem()).Add(b);
         }
 
+        /**
+         * Removes all components from any MapLayers
+         */
+        public abstract void RemoveAll();
 
 
         /**

@@ -54,6 +54,24 @@ namespace PhotoGalleryApp.Views.Maps
         }
 
 
+        /**
+         * Removes all components from any MapLayers
+         */
+        public override void RemoveAll()
+        {
+            if (_preview != null)
+                ClosePreview();
+            if (_nearbyPin != null)
+                RemoveNearbyPin();
+            if (_selectionLine != null)
+                RemoveSelectionLine();
+            if (_selectionPin != null)
+                RemoveSelectionPin();
+            LineLayer.Children.Remove(PathLine);
+        }
+
+
+
 
         #region Path Line
 

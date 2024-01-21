@@ -33,6 +33,17 @@ namespace PhotoGalleryApp.Views.Maps
         }
 
 
+        /**
+         * Removes all components from any MapLayers
+         */
+        public override void RemoveAll()
+        {
+            if (_preview != null)
+                ClosePreview();
+            PinLayer.Children.Remove(Pin);
+        }
+
+
         #region Location Pin
 
         private Pushpin Pin;

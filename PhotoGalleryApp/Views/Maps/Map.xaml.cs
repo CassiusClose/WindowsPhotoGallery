@@ -133,6 +133,7 @@ namespace PhotoGalleryApp.Views.Maps
             {
                 if (!ItemsSource.Contains(vm))
                 {
+                    _items[vm].RemoveAll();
                     _items.Remove(vm);
                 }
             }
