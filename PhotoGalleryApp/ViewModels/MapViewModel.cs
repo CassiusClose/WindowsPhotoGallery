@@ -162,7 +162,7 @@ namespace PhotoGalleryApp.ViewModels
             if (parameter is not MapItemViewModel)
                 throw new ArgumentException("Argument to Delete Map Item command must be MapObjectViewModel");
 
-            _mapItems.Remove((MapItemViewModel)parameter);
+            _map.Remove(((MapItemViewModel)parameter).GetModel());
         }
 
 

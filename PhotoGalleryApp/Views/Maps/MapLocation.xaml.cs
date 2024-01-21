@@ -113,6 +113,17 @@ namespace PhotoGalleryApp.Views.Maps
             }
         }
 
+        protected override void EditModeChanged() 
+        {
+            // Show the Location pin above all other pins
+            if (EditMode)
+            {
+                PinLayer.Children.Remove(Pin);
+                PinLayer.Children.Add(Pin);
+            }
+        }
+
+
         /**
          * In edit mode, dragging the pin moves the location around
          */

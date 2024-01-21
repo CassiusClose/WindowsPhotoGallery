@@ -496,6 +496,14 @@ namespace PhotoGalleryApp.Views.Maps
         protected override void EditModeChanged()
         {
             base.EditModeChanged();
+            
+            // Show the path line above all other lines
+            if(EditMode)
+            {
+                LineLayer.Children.Remove(PathLine);
+                LineLayer.Children.Add(PathLine);
+            }
+
 
             // If leaving edit mode, remove all edit-mode related components
             if (!EditMode)
