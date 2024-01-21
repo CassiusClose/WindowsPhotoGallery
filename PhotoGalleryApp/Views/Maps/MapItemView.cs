@@ -17,48 +17,57 @@ using PhotoGalleryApp.Views.Behavior;
 namespace PhotoGalleryApp.Views.Maps
 {
     /// <summary>
-    /// Abstract code-behind for an item that can be placed on the map (paths, locations). Each item
-    /// has an edit mode, where its details can be changed (pushpins moved around, etc.), and a preview
-    /// popup box that can be opened by clicking on the item.
+    /// Abstract code-behind for an item that can be placed on the map (paths,
+    /// locations). This control is never actually added to the graphical tree,
+    /// it just hooks into the Map view and adds items to its layers.
+    /// 
+    /// Users must call Init() for this control to work.
+    /// 
+    /// Each item has an edit mode, where its details can be
+    /// changed (pushpins moved around, etc.), and a preview popup box that can
+    /// be opened by clicking on the item.
     /// </summary>
-    public abstract partial class MapItemView : Microsoft.Maps.MapControl.WPF.MapLayer
+    public abstract partial class MapItemView : UserControl
     {
-        public MapItemView()
+        public MapItemView() { }
+
+        public virtual void Init(Map map, MapItemViewModel context)
         {
-            Loaded += MapObject_Loaded;
-        }
+            DataContext = context;
 
-        protected virtual void MapObject_Loaded(object sender, RoutedEventArgs e)
-        {
-            Map? map = ViewAncestor.FindAncestor<Map>(this);
-            if (map == null)
-                throw new Exception("MapPath must have a Map parent");
-
-            _mapContainer = map.MapView;
-            map.MouseLeftButtonClick += Map_Click;
-
+            _map = map;
+            _map.MouseLeftButtonClick += Map_Click;
 
             BindingOperations.SetBinding(this, EditModeProperty, new Binding("EditMode"));
             BindingOperations.SetBinding(this, PreviewOpenProperty, new Binding("PreviewOpen"));
 
-            // Background being a color (even transparent) will prevent clicks from getting to the Map itself. So to capture clicks
-            // on the map, hook into the MouseLeftButtonClick in the Map view class.
-            Background = null;
+            Init_MainMapItem();
 
-            MapItemClickDragBehavior b = new MapItemClickDragBehavior(_mapContainer);
+            MapItemClickDragBehavior b = new MapItemClickDragBehavior(_map.MapView);
             b.MouseLeftButtonClick += MainMapItem_Click;
             b.MouseDrag += MainMapItem_Drag;
             Interaction.GetBehaviors(GetMainMapItem()).Add(b);
         }
 
+
+
         /**
          * The main map item is the control which represents the object. For a Location, this is the pushpin. For a path,
          * it's the polyline.
          */
+        protected abstract void Init_MainMapItem();
         protected abstract UIElement GetMainMapItem();
 
+        
 
-        protected Microsoft.Maps.MapControl.WPF.Map _mapContainer;
+        protected Map _map;
+
+        /**
+         * MapLayers from the parent map
+         */
+        protected MapLayer PreviewLayer { get { return _map.PreviewLayer; } }
+        protected MapLayer LineLayer { get { return _map.LineLayer; } }
+        protected MapLayer PinLayer { get { return _map.PinLayer; } }
 
 
         #region Edit Mode Property
@@ -128,7 +137,7 @@ namespace PhotoGalleryApp.Views.Maps
         {
             if (_preview != null)
             {
-                Children.Remove(_preview);
+                PreviewLayer.Children.Remove(_preview);
                 _preview = null;
             }
         }

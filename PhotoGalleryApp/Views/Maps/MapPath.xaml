@@ -8,10 +8,4 @@
              mc:Ignorable="d" 
              d:DesignHeight="450" d:DesignWidth="800"
              >
-    <maps:MapPolyline 
-        x:Name="PathLine"
-        Locations="{Binding Points}"
-        Stroke="Red"
-        StrokeThickness="5"
-        />
 </local:MapItemView>

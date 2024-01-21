@@ -9,9 +9,4 @@
              d:DesignHeight="450" d:DesignWidth="800"
              >
 
-    <maps:Pushpin
-        x:Name="Pin"
-        Location="{Binding Location, Mode=TwoWay}"
-        />
-
 </local:MapItemView>

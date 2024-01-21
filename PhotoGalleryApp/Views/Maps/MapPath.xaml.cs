@@ -10,6 +10,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Collections.Specialized;
+using System.ComponentModel;
 using System.Diagnostics;
 using System.Linq;
 using System.Text;
@@ -39,18 +40,9 @@ namespace PhotoGalleryApp.Views.Maps
         }
 
 
-        protected override void MapObject_Loaded(object sender, RoutedEventArgs e)
+        public override void Init(Map map, MapItemViewModel context)
         {
-            base.MapObject_Loaded(sender, e);
-
-
-            // Hook map container events, because the only way to capture mouse
-            // movement across the whole canvas is to make this MapLayer's
-            // background not-null, and that would prevent mouse events from
-            // reaching other layers.
-            Map? map = ViewAncestor.FindAncestor<Map>(this);
-            if (map == null)
-                throw new Exception("MapPath must have a Map parent");
+            base.Init(map, context);
 
             map.MouseMove += Map_MouseMove;
             map.MouseUp += Map_MouseUp;
@@ -58,14 +50,30 @@ namespace PhotoGalleryApp.Views.Maps
             map.PreviewMouseDoubleClick += Map_DoubleClick;
 
             BindingOperations.SetBinding(this, LocationsProperty, new Binding("Points"));
-
             BindingOperations.SetBinding(this, SelectionRangeProperty, new Binding("SelectionRange"));
+        }
+
+
+
+        #region Path Line
+
+        private MapPolyline PathLine;
+
+
+        protected override void Init_MainMapItem()
+        {
+            PathLine = new MapPolyline();
+            PathLine.Stroke = new SolidColorBrush(Colors.Red);
+            PathLine.StrokeThickness = 5;
+            LineLayer.Children.Add(PathLine);
         }
 
         protected override UIElement GetMainMapItem()
         {
             return PathLine;
         }
+
+        #endregion Path Line
 
 
 
@@ -116,6 +124,7 @@ namespace PhotoGalleryApp.Views.Maps
             get { return (LocationCollection)GetValue(LocationsProperty); }
             set {
                 SetValue(LocationsProperty, value);
+                PathLine.Locations = value;
                 if (EditMode)
                     RebuildSelection();
             }
@@ -130,6 +139,8 @@ namespace PhotoGalleryApp.Views.Maps
 
             if(e.NewValue != null && e.NewValue is LocationCollection)
                 ((LocationCollection)e.NewValue).CollectionChanged += control.Locations_CollectionChanged;
+
+            control.PathLine.Locations = control.Locations;
 
             if (control.EditMode)
                 control.RebuildSelection();
@@ -244,33 +255,32 @@ namespace PhotoGalleryApp.Views.Maps
             _selectionPin.Location = Locations[SelectionRange.X];
             _selectionPin.MouseDown += SelectionPin_MouseDown;
 
-            MapItemClickDragBehavior b = new MapItemClickDragBehavior(_mapContainer);
+            MapItemClickDragBehavior b = new MapItemClickDragBehavior(_map.MapView);
             b.MouseDrag += Selection_MouseDrag;
             b.MouseLeftButtonClick += Selection_Click;
             Microsoft.Xaml.Behaviors.Interaction.GetBehaviors(_selectionPin).Add(b);
 
-            Children.Add(_selectionPin);
+            PinLayer.Children.Add(_selectionPin);
         }
 
         private void RemoveSelectionPin()
         {
             if(_selectionPin != null)
             {
-                Children.Remove(_selectionPin);
+                PinLayer.Children.Remove(_selectionPin);
                 _selectionPin = null;
             }
         }
 
         private void CreateSelectionLine()
         {
-            Trace.WriteLine("Sel line");
             _selectionLine = new MapPolyline();
             _selectionLine.Stroke = new SolidColorBrush(Colors.Blue);
             _selectionLine.StrokeThickness = 6;
             _selectionLine.Locations = new LocationCollection();
             _selectionLine.MouseDown += SelectionLine_MouseDown;
 
-            MapItemClickDragBehavior b = new MapItemClickDragBehavior(_mapContainer);
+            MapItemClickDragBehavior b = new MapItemClickDragBehavior(_map.MapView);
             b.MouseDrag += Selection_MouseDrag;
             b.MouseLeftButtonClick += Selection_Click;
             Microsoft.Xaml.Behaviors.Interaction.GetBehaviors(_selectionLine).Add(b);
@@ -279,14 +289,14 @@ namespace PhotoGalleryApp.Views.Maps
             {
                 _selectionLine.Locations.Add(Locations[i]);
             }
-            Children.Add(_selectionLine);
+            LineLayer.Children.Add(_selectionLine);
         }
 
         private void RemoveSelectionLine()
         {
             if(_selectionLine != null)
             {
-                Children.Remove(_selectionLine);
+                LineLayer.Children.Remove(_selectionLine);
                 _selectionLine = null;
             }
         }
@@ -370,17 +380,17 @@ namespace PhotoGalleryApp.Views.Maps
             _nearbyPin = new Pushpin();
             _nearbyPin.Location = l;
             _nearbyPin.MouseDown += NearbyPin_MouseDown;
-            MapItemClickDragBehavior b = new MapItemClickDragBehavior(_mapContainer);
+            MapItemClickDragBehavior b = new MapItemClickDragBehavior(_map.MapView);
             b.MouseDrag += NearbyPin_MouseDrag;
             Microsoft.Xaml.Behaviors.Interaction.GetBehaviors(_nearbyPin).Add(b);
-            Children.Add(_nearbyPin);
+            PinLayer.Children.Add(_nearbyPin);
         }
 
         private void RemoveNearbyPin()
         {
             if(_nearbyPin != null)
             {
-                Children.Remove(_nearbyPin);
+                PinLayer.Children.Remove(_nearbyPin);
                 _nearbyPin = null;
             }
         }
@@ -410,7 +420,7 @@ namespace PhotoGalleryApp.Views.Maps
             if (_nearbyPin != null)
                 RemoveNearbyPin();
 
-            Location? vert = MapUtils.GetClosestVertexOnPath(Locations, clickLoc, _mapContainer);
+            Location? vert = MapUtils.GetClosestVertexOnPath(Locations, clickLoc, _map.MapView);
             if (vert == null)
                 return;
 
@@ -423,7 +433,7 @@ namespace PhotoGalleryApp.Views.Maps
             }
 
             // If the point is close enough, show the nearby pin
-            double dist = MapUtils.Dist(clickLoc, _mapContainer.LocationToViewportPoint(vert));
+            double dist = MapUtils.Dist(clickLoc, _map.MapView.LocationToViewportPoint(vert));
             if (dist < 20)
             {
                 if (_selectionPin == null || _selectionPin.Location != vert)
@@ -453,14 +463,14 @@ namespace PhotoGalleryApp.Views.Maps
                     return;
 
                 _preview.DataContext = DataContext;
-                Children.Add(_preview);
+                PreviewLayer.Children.Add(_preview);
 
                 if(Locations != null && Locations.Count > 0)
                 {
-                    SetPositionOffset(_preview, new Point(-_preview.Width / 2, -_preview.Height - 20));
+                    MapLayer.SetPositionOffset(_preview, new Point(-_preview.Width / 2, -_preview.Height - 20));
 
-                    Location previewLoc = MapUtils.GetClosestLocationOnPath(Locations, _lastPathClickPos, _mapContainer);
-                    SetPosition(_preview, previewLoc);
+                    Location previewLoc = MapUtils.GetClosestLocationOnPath(Locations, _lastPathClickPos, _map.MapView);
+                    MapLayer.SetPosition(_preview, previewLoc);
                 }
             }
         }
@@ -503,30 +513,27 @@ namespace PhotoGalleryApp.Views.Maps
             if(_nearbyPin != null)
             {
                 ((MapPathViewModel)DataContext).SelectPoint(_nearbyPin.Location);
-
-                Children.Remove(_nearbyPin);
-                _nearbyPin = null;
+                RemoveNearbyPin();
             }
             // If in edit mode, clicking on the path will insert a point on the path
             else if(EditMode)
             {
                 if(_nearbyPin == null)
                 {
-                    ((MapPathViewModel)DataContext).InsertPointAt(_mapContainer.ViewportPointToLocation(e.GetPosition(_mapContainer)), false);
-                    RebuildNearbyPin(e.GetPosition(_mapContainer));
+                    ((MapPathViewModel)DataContext).ClearSelection();
+                    Location l = _map.MapView.ViewportPointToLocation(e.GetPosition(_map.MapView));
+                    ((MapPathViewModel)DataContext).InsertPointAt(l, false);
+                    ((MapPathViewModel)DataContext).SelectPoint(l);
+                    RebuildNearbyPin(e.GetPosition(_map.MapView));
                 }
             }
             // If not in edit mode, clicking on the path will open the preview box
             else
             {
                 // Tell the MapViewModel to open the preview box
-                Map? map = ViewAncestor.FindAncestor<Map>(this);
-                if(map != null)
-                {
-                    MapViewModel vm = (MapViewModel)map.DataContext;
-                    _lastPathClickPos = e.GetPosition(_mapContainer);
-                    vm.MapItemClick(DataContext);
-                }
+                MapViewModel vm = (MapViewModel)_map.DataContext;
+                _lastPathClickPos = e.GetPosition(_map.MapView);
+                vm.MapItemClick(DataContext);
             }
 
 
@@ -557,7 +564,7 @@ namespace PhotoGalleryApp.Views.Maps
             if (_selectionPin != null && _selectionPin.IsMouseOver)
                 return;
 
-            ((MapPathViewModel)DataContext).InsertPointAt(_mapContainer.ViewportPointToLocation(e.GetPosition(_mapContainer)), true);
+            ((MapPathViewModel)DataContext).InsertPointAt(_map.MapView.ViewportPointToLocation(e.GetPosition(_map.MapView)), true);
         }
 
 
@@ -576,7 +583,7 @@ namespace PhotoGalleryApp.Views.Maps
             // will not be shown. So as soon as the click ends, reshow the
             // Nearby Pin. Don't wait until the user moves the mouse.
             if(_nearbyPinClick || _selectionPinClick || _selectionLineClick)
-                RebuildNearbyPin(e.GetPosition(_mapContainer));
+                RebuildNearbyPin(e.GetPosition(_map.MapView));
 
             _nearbyPinClick = false;
             _selectionPinClick = false;
@@ -600,19 +607,19 @@ namespace PhotoGalleryApp.Views.Maps
             // For some reason, MouseMove gets called even when the mouse is not moving
             // when the mouse is hovering over a pushpin. So don't do the handling if
             // the mouse isn't actually moving
-            Point pos = e.GetPosition(_mapContainer);
+            Point pos = e.GetPosition(_map.MapView);
             if (pos == _lastMousePos)
                 return;
 
             // Don't show the Nearby Pin if any of the pins/paths are been clicked or dragged
             if (_selectionLineClick == false && _selectionPinClick == false && _nearbyPinClick == false && EditMode)
             {
-                RebuildNearbyPin(e.GetPosition(_mapContainer));
+                RebuildNearbyPin(e.GetPosition(_map.MapView));
             }
             else if (_nearbyPinClick == false)
                 RemoveNearbyPin();
 
-            _lastMousePos = e.GetPosition(_mapContainer);
+            _lastMousePos = e.GetPosition(_map.MapView);
         }
 
 

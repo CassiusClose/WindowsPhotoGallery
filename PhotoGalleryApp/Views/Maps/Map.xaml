@@ -78,7 +78,13 @@
                 x:Name="MapView"
                 Mode="Aerial"
                 PreviewMouseDoubleClick="MapView_PreviewMouseDoubleClick"
-                />
+                >
+
+                <!-- Order determines what is show above what -->
+                <m:MapLayer x:Name="LineLayer"/>
+                <m:MapLayer x:Name="PinLayer"/>
+                <m:MapLayer x:Name="PreviewLayer"/>
+            </m:Map>
         </Grid>
     </Grid>
 </UserControl>

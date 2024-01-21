@@ -32,10 +32,52 @@ namespace PhotoGalleryApp.Views.Maps
             InitializeComponent();
         }
 
+
+        #region Location Pin
+
+        private Pushpin Pin;
+
+        protected override void Init_MainMapItem()
+        {
+            Pin = new Pushpin();
+            PinLayer.Children.Add(Pin);
+
+            SetBinding(LocationProperty, new Binding("Location"));
+        }
+
         protected override UIElement GetMainMapItem()
         {
             return Pin;
         }
+
+        #endregion Location Pin
+
+
+        #region Locations Property
+
+        public static readonly DependencyProperty LocationProperty = DependencyProperty.Register("Location", typeof(Location), typeof(MapLocation),
+            new PropertyMetadata(LocationPropertyChanged));
+ 
+
+        /// <summary>
+        /// An ordered collection of Locations that make up the path
+        /// </summary>
+        public Location Location
+        {
+            get { return (Location)GetValue(LocationProperty); }
+            set {
+                SetValue(LocationProperty, value);
+                Pin.Location = value;
+            }
+        }
+
+        private static void LocationPropertyChanged(DependencyObject sender, DependencyPropertyChangedEventArgs e)
+        {
+            MapLocation control = (MapLocation)sender;
+            control.Pin.Location = control.Location;
+        }
+
+        #endregion Locations Property
 
 
         protected override void OpenPreview()
@@ -54,9 +96,9 @@ namespace PhotoGalleryApp.Views.Maps
                     return;
 
                 _preview.DataContext = DataContext;
-                Children.Add(_preview);
-                SetPositionOffset(_preview, new Point(-_preview.Width / 2, -_preview.Height - 50));
-                SetPosition(_preview, Pin.Location);
+                PreviewLayer.Children.Add(_preview);
+                MapLayer.SetPositionOffset(_preview, new Point(-_preview.Width / 2, -_preview.Height - 50));
+                MapLayer.SetPosition(_preview, Pin.Location);
             }
         }
 
@@ -66,7 +108,7 @@ namespace PhotoGalleryApp.Views.Maps
         protected override void MainMapItem_Drag(object sender, MouseDragEventArgs e)
         {
             if(EditMode)
-                Pin.Location = new Location(Pin.Location.Latitude + e.LatitudeDifference, Pin.Location.Longitude + e.LongitudeDifference);
+                Location = new Location(Pin.Location.Latitude + e.LatitudeDifference, Pin.Location.Longitude + e.LongitudeDifference);
         }
 
 
@@ -75,12 +117,8 @@ namespace PhotoGalleryApp.Views.Maps
          */
         protected override void MainMapItem_Click(object sender, MouseEventArgs e)
         {
-            Map? map = ViewAncestor.FindAncestor<Map>(this);
-            if(map != null)
-            {
-                MapViewModel vm = (MapViewModel)map.DataContext;
-                vm.MapItemClick(DataContext);
-            }
+            MapViewModel vm = (MapViewModel)_map.DataContext;
+            vm.MapItemClick(DataContext);
 
             e.Handled = true;
         }

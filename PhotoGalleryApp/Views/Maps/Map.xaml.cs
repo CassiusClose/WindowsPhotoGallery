@@ -62,9 +62,6 @@ namespace PhotoGalleryApp.Views.Maps
             MapView.Children.Remove(mapPolyline);
         }
 
-
-
-
         public static readonly DependencyProperty ItemsSourceProperty = DependencyProperty.Register("ItemsSource", typeof(ICollectionView), typeof(Map),
             new FrameworkPropertyMetadata
             {
@@ -118,16 +115,15 @@ namespace PhotoGalleryApp.Views.Maps
                 {
                     if(vm.GetModel() is PhotoGalleryApp.Models.MapLocation)
                     {
-                        o = new MapLocation { DataContext = vm };
-                        MapView.Children.Add(o);
+                        o = new MapLocation();
+                        o.Init(this, vm);
                         _items.Add(vm, o);
                     }
                     else if (vm.GetModel() is PhotoGalleryApp.Models.MapPath)
                     {
-                        o = new MapPath() { DataContext = vm };
-                        MapView.Children.Add(o);
+                        o = new MapPath();
+                        o.Init(this, vm);
                         _items.Add(vm, o);
-
                     }
                 }
             }
@@ -137,7 +133,6 @@ namespace PhotoGalleryApp.Views.Maps
             {
                 if (!ItemsSource.Contains(vm))
                 {
-                    MapView.Children.Remove(_items[vm]);
                     _items.Remove(vm);
                 }
             }
