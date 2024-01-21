@@ -41,7 +41,7 @@ namespace PhotoGalleryApp.Models
         /// </summary>
         public void SaveSession()
         {
-            FileStream fs = new FileStream(_sessionFile, FileMode.OpenOrCreate);
+            FileStream fs = new FileStream(_sessionFile, FileMode.Create);
             DataContractSerializer serializer = new DataContractSerializer(typeof(UserSession));
             serializer.WriteObject(fs, this);
             fs.Close();
