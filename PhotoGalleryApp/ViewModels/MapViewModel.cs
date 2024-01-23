@@ -320,6 +320,21 @@ namespace PhotoGalleryApp.ViewModels
                     _editableMapItem.EditMode = true;
                     _editableMapItem.PropertyChanged += _editableMapItem_PropertyChanged;
                     CloseAllPreviews();
+
+                    // All items should be faded except for the editable one
+                    foreach(MapItemViewModel vm in _mapItems)
+                    {
+                        if (vm == _editableMapItem)
+                            vm.FadedColor = false;
+                        else
+                            vm.FadedColor = true;
+                    }
+                }
+                else
+                {
+                    // Unfade all items
+                    foreach(MapItemViewModel vm in _mapItems)
+                        vm.FadedColor = false;
                 }
 
                 OnPropertyChanged();

@@ -40,6 +40,7 @@ namespace PhotoGalleryApp.Views.Maps
 
             BindingOperations.SetBinding(this, EditModeProperty, new Binding("EditMode"));
             BindingOperations.SetBinding(this, PreviewOpenProperty, new Binding("PreviewOpen"));
+            BindingOperations.SetBinding(this, FadedColorProperty, new Binding("FadedColor"));
 
             Init_MainMapItem();
 
@@ -69,9 +70,46 @@ namespace PhotoGalleryApp.Views.Maps
         /**
          * MapLayers from the parent map
          */
-        protected MapLayer PreviewLayer { get { return _map.PreviewLayer; } }
         protected MapLayer LineLayer { get { return _map.LineLayer; } }
         protected MapLayer PinLayer { get { return _map.PinLayer; } }
+        protected MapLayer SelectedLineLayer { get { return _map.SelectedLineLayer; } }
+        protected MapLayer SelectedPinLayer { get { return _map.SelectedPinLayer; } }
+        protected MapLayer PreviewLayer { get { return _map.PreviewLayer; } }
+
+
+
+
+        #region Faded Color Property
+
+
+        public static readonly DependencyProperty FadedColorProperty = DependencyProperty.Register("FadedColor", typeof(bool), typeof(MapItemView), new PropertyMetadata(FadedColorPropertyChanged));
+
+        /// <summary>
+        /// Whether the MapItem should have a faded or normal color
+        /// </summary>
+        public bool FadedColor
+        {
+            get { return (bool)GetValue(FadedColorProperty); }
+            set { 
+                SetValue(FadedColorProperty, value);
+                FadedColorChanged();
+            }
+        }
+
+        private static void FadedColorPropertyChanged(DependencyObject sender, DependencyPropertyChangedEventArgs e)
+        {
+            if (sender is not MapItemView)
+                return;
+
+            MapItemView m = (MapItemView)sender;
+            m.FadedColorChanged();
+        }
+
+        protected abstract void FadedColorChanged();
+
+
+        #endregion Faded Color Property
+
 
 
         #region Edit Mode Property

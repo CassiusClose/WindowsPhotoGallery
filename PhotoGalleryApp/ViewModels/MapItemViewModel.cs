@@ -1,6 +1,7 @@
 ﻿using PhotoGalleryApp.Models;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -68,6 +69,21 @@ namespace PhotoGalleryApp.ViewModels
             {
                 GetModel().Name = value;
                 OnPropertyChanged();
+            }
+        }
+
+
+        private bool _fadedColor = false;
+        /// <summary>
+        /// Whether the item's color should be faded or not. This will be set
+        /// by MapViewModel when items are put into/removed from edit mode.
+        /// </summary>
+        public bool FadedColor
+        {
+            get { return _fadedColor; }
+            set {
+                _fadedColor = value; 
+                OnPropertyChanged(); 
             }
         }
     }

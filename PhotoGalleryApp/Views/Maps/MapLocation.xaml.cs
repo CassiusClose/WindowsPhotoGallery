@@ -41,6 +41,7 @@ namespace PhotoGalleryApp.Views.Maps
             if (_preview != null)
                 ClosePreview();
             PinLayer.Children.Remove(Pin);
+            SelectedPinLayer.Children.Remove(Pin);
         }
 
 
@@ -51,6 +52,7 @@ namespace PhotoGalleryApp.Views.Maps
         protected override void Init_MainMapItem()
         {
             Pin = new Pushpin();
+            Pin.Background = OriginalColorBrush;
             PinLayer.Children.Add(Pin);
 
             SetBinding(LocationProperty, new Binding("Location"));
@@ -91,6 +93,26 @@ namespace PhotoGalleryApp.Views.Maps
         #endregion Locations Property
 
 
+
+
+        #region Colors
+
+        public SolidColorBrush OriginalColorBrush = new SolidColorBrush(Colors.MediumPurple);
+        public SolidColorBrush FadedColorBrush = new SolidColorBrush(Colors.Purple);
+
+        protected override void FadedColorChanged()
+        {
+            if (FadedColor)
+                Pin.Background = FadedColorBrush;
+            else
+                Pin.Background = OriginalColorBrush;
+        }
+
+        #endregion Colors
+
+
+
+
         protected override void OpenPreview()
         {
             if(_preview == null)
@@ -119,6 +141,11 @@ namespace PhotoGalleryApp.Views.Maps
             if (EditMode)
             {
                 PinLayer.Children.Remove(Pin);
+                SelectedPinLayer.Children.Add(Pin);
+            }
+            else
+            {
+                SelectedPinLayer.Children.Remove(Pin);
                 PinLayer.Children.Add(Pin);
             }
         }

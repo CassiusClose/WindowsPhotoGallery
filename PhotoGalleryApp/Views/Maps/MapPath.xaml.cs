@@ -68,6 +68,7 @@ namespace PhotoGalleryApp.Views.Maps
             if (_selectionPin != null)
                 RemoveSelectionPin();
             LineLayer.Children.Remove(PathLine);
+            SelectedLineLayer.Children.Remove(PathLine);
         }
 
 
@@ -81,8 +82,8 @@ namespace PhotoGalleryApp.Views.Maps
         protected override void Init_MainMapItem()
         {
             PathLine = new MapPolyline();
-            PathLine.Stroke = new SolidColorBrush(Colors.Red);
             PathLine.StrokeThickness = 5;
+            PathLine.Stroke = OriginalColorBrush;
             LineLayer.Children.Add(PathLine);
         }
 
@@ -92,6 +93,8 @@ namespace PhotoGalleryApp.Views.Maps
         }
 
         #endregion Path Line
+
+
 
 
 
@@ -278,14 +281,14 @@ namespace PhotoGalleryApp.Views.Maps
             b.MouseLeftButtonClick += Selection_Click;
             Microsoft.Xaml.Behaviors.Interaction.GetBehaviors(_selectionPin).Add(b);
 
-            PinLayer.Children.Add(_selectionPin);
+            SelectedPinLayer.Children.Add(_selectionPin);
         }
 
         private void RemoveSelectionPin()
         {
             if(_selectionPin != null)
             {
-                PinLayer.Children.Remove(_selectionPin);
+                SelectedPinLayer.Children.Remove(_selectionPin);
                 _selectionPin = null;
             }
         }
@@ -307,14 +310,14 @@ namespace PhotoGalleryApp.Views.Maps
             {
                 _selectionLine.Locations.Add(Locations[i]);
             }
-            LineLayer.Children.Add(_selectionLine);
+            SelectedLineLayer.Children.Add(_selectionLine);
         }
 
         private void RemoveSelectionLine()
         {
             if(_selectionLine != null)
             {
-                LineLayer.Children.Remove(_selectionLine);
+                SelectedLineLayer.Children.Remove(_selectionLine);
                 _selectionLine = null;
             }
         }
@@ -401,14 +404,14 @@ namespace PhotoGalleryApp.Views.Maps
             MapItemClickDragBehavior b = new MapItemClickDragBehavior(_map.MapView);
             b.MouseDrag += NearbyPin_MouseDrag;
             Microsoft.Xaml.Behaviors.Interaction.GetBehaviors(_nearbyPin).Add(b);
-            PinLayer.Children.Add(_nearbyPin);
+            SelectedPinLayer.Children.Add(_nearbyPin);
         }
 
         private void RemoveNearbyPin()
         {
             if(_nearbyPin != null)
             {
-                PinLayer.Children.Remove(_nearbyPin);
+                SelectedPinLayer.Children.Remove(_nearbyPin);
                 _nearbyPin = null;
             }
         }
@@ -463,6 +466,24 @@ namespace PhotoGalleryApp.Views.Maps
 
 
 
+
+        #region Colors
+
+        public SolidColorBrush OriginalColorBrush = new SolidColorBrush(Colors.Red);
+        public SolidColorBrush FadedColorBrush = new SolidColorBrush(Colors.DarkRed);
+
+        protected override void FadedColorChanged()
+        {
+            if (FadedColor)
+                PathLine.Stroke = FadedColorBrush;
+            else
+                PathLine.Stroke = OriginalColorBrush;
+        }
+
+        #endregion Colors
+
+
+
         #region Methods
 
         protected override void OpenPreview()
@@ -501,16 +522,18 @@ namespace PhotoGalleryApp.Views.Maps
             if(EditMode)
             {
                 LineLayer.Children.Remove(PathLine);
-                LineLayer.Children.Add(PathLine);
+                SelectedLineLayer.Children.Add(PathLine);
             }
 
-
             // If leaving edit mode, remove all edit-mode related components
-            if (!EditMode)
+            else
             {
                 RemoveSelectionLine();
                 RemoveSelectionPin();
                 RemoveNearbyPin();
+
+                SelectedLineLayer.Children.Remove(PathLine);
+                LineLayer.Children.Add(PathLine);
             }
         }
 
