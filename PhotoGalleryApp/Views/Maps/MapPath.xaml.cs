@@ -67,8 +67,8 @@ namespace PhotoGalleryApp.Views.Maps
                 RemoveSelectionLine();
             if (_selectionPin != null)
                 RemoveSelectionPin();
-            LineLayer.Children.Remove(PathLine);
-            SelectedLineLayer.Children.Remove(PathLine);
+            _map.LineLayer_Remove(PathLine);
+            _map.SelectedLineLayer_Remove(PathLine);
         }
 
 
@@ -84,7 +84,7 @@ namespace PhotoGalleryApp.Views.Maps
             PathLine = new MapPolyline();
             PathLine.StrokeThickness = 5;
             PathLine.Stroke = OriginalColorBrush;
-            LineLayer.Children.Add(PathLine);
+            _map.LineLayer_Add(PathLine);
         }
 
         protected override UIElement GetMainMapItem()
@@ -194,7 +194,7 @@ namespace PhotoGalleryApp.Views.Maps
                     {
                         for (int i = 0; i < e.OldItems.Count; i++)
                             if (_nearbyPin.Location == (Location)e.OldItems[i])
-                                _nearbyPin.Location = (Location)e.NewItems[i];
+                                SetNearbyPinLocation((Location)e.NewItems[i]);
                     }
 
                     // If the point marked by the Selection Pin changes, move the Selection Pin with it
@@ -202,7 +202,7 @@ namespace PhotoGalleryApp.Views.Maps
                     {
                         for (int i = 0; i < e.OldItems.Count; i++)
                             if (_selectionPin.Location == (Location)e.OldItems[i])
-                                _selectionPin.Location = (Location)e.NewItems[i];
+                                SetSelectionPinLocation((Location)e.NewItems[i]);
                     }
 
                     // If any of the points changed are on the Selection Line,
@@ -281,17 +281,31 @@ namespace PhotoGalleryApp.Views.Maps
             b.MouseLeftButtonClick += Selection_Click;
             Microsoft.Xaml.Behaviors.Interaction.GetBehaviors(_selectionPin).Add(b);
 
-            SelectedPinLayer.Children.Add(_selectionPin);
+            _map.SelectedPinLayer_Add(_selectionPin);
         }
 
         private void RemoveSelectionPin()
         {
             if(_selectionPin != null)
             {
-                SelectedPinLayer.Children.Remove(_selectionPin);
+                _map.SelectedPinLayer_Remove(_selectionPin);
                 _selectionPin = null;
             }
         }
+
+        /**
+         * Sets the Selection Pin's location, which includes notifying the parent
+         * Map, so a redraw is triggered
+         */
+        private void SetSelectionPinLocation(Location l)
+        {
+            if(_selectionPin != null)
+            {
+                _selectionPin.Location = l;
+                _map.SelectedPinLayer_Update(_selectionPin);
+            }
+        }
+
 
         private void CreateSelectionLine()
         {
@@ -310,14 +324,14 @@ namespace PhotoGalleryApp.Views.Maps
             {
                 _selectionLine.Locations.Add(Locations[i]);
             }
-            SelectedLineLayer.Children.Add(_selectionLine);
+            _map.SelectedLineLayer_Add(_selectionLine);
         }
 
         private void RemoveSelectionLine()
         {
             if(_selectionLine != null)
             {
-                SelectedLineLayer.Children.Remove(_selectionLine);
+                _map.SelectedLineLayer_Remove(_selectionLine);
                 _selectionLine = null;
             }
         }
@@ -404,15 +418,28 @@ namespace PhotoGalleryApp.Views.Maps
             MapItemClickDragBehavior b = new MapItemClickDragBehavior(_map.MapView);
             b.MouseDrag += NearbyPin_MouseDrag;
             Microsoft.Xaml.Behaviors.Interaction.GetBehaviors(_nearbyPin).Add(b);
-            SelectedPinLayer.Children.Add(_nearbyPin);
+            _map.SelectedPinLayer_Add(_nearbyPin);
         }
 
         private void RemoveNearbyPin()
         {
             if(_nearbyPin != null)
             {
-                SelectedPinLayer.Children.Remove(_nearbyPin);
+                _map.SelectedPinLayer_Remove(_nearbyPin);
                 _nearbyPin = null;
+            }
+        }
+
+        /**
+         * Sets the Nearby Pin's location, which includes notifying the parent
+         * Map, so a redraw is triggered
+         */
+        private void SetNearbyPinLocation(Location l)
+        {
+            if(_nearbyPin != null)
+            {
+                _nearbyPin.Location = l;
+                _map.SelectedPinLayer_Update(_nearbyPin);
             }
         }
 
@@ -502,7 +529,7 @@ namespace PhotoGalleryApp.Views.Maps
                     return;
 
                 _preview.DataContext = DataContext;
-                PreviewLayer.Children.Add(_preview);
+                _map.PreviewLayer_Add(_preview);
 
                 if(Locations != null && Locations.Count > 0)
                 {
@@ -521,8 +548,8 @@ namespace PhotoGalleryApp.Views.Maps
             // Show the path line above all other lines
             if(EditMode)
             {
-                LineLayer.Children.Remove(PathLine);
-                SelectedLineLayer.Children.Add(PathLine);
+                _map.LineLayer_Remove(PathLine);
+                _map.SelectedLineLayer_Add(PathLine);
             }
 
             // If leaving edit mode, remove all edit-mode related components
@@ -532,8 +559,8 @@ namespace PhotoGalleryApp.Views.Maps
                 RemoveSelectionPin();
                 RemoveNearbyPin();
 
-                SelectedLineLayer.Children.Remove(PathLine);
-                LineLayer.Children.Add(PathLine);
+                _map.SelectedLineLayer_Remove(PathLine);
+                _map.LineLayer_Add(PathLine);
             }
         }
 

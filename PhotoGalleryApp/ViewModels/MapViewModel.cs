@@ -1,5 +1,6 @@
 ﻿using Microsoft.Maps.MapControl.WPF;
 using PhotoGalleryApp.Models;
+using PhotoGalleryApp.Utils;
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -25,7 +26,6 @@ namespace PhotoGalleryApp.ViewModels
             _displayToolbar = displayToolbar;
 
             _map = map;
-            _map.CollectionChanged += MapItems_CollectionChanged;
 
             _addLocationCommand = new RelayCommand(AddLocation);
             _addPathCommand = new RelayCommand(AddPath);
@@ -35,16 +35,15 @@ namespace PhotoGalleryApp.ViewModels
             _newTrackFromSelectedCommand = new RelayCommand(NewTrackFromSelected);
             _splitTrackAtSelectedCommand = new RelayCommand(SplitTrackAtSelected);
 
-
-            _mapItems = new ObservableCollection<MapItemViewModel>();
-            MapItems = CollectionViewSource.GetDefaultView(_mapItems);
-            MapItems_Reset();
+            _mapItems = new ModelVMView<MapItem, MapItemViewModel>(_map, CreateMapItemViewModel, _getMapItemModel);
         }
 
         public override void Cleanup()
         {
-            _map.CollectionChanged -= MapItems_CollectionChanged;
+            _mapItems.Cleanup();
         }
+
+
 
 
         #region Fields and Properties
@@ -54,8 +53,13 @@ namespace PhotoGalleryApp.ViewModels
         private PhotoGalleryApp.Models.Map _map;
 
 
-        private ObservableCollection<MapItemViewModel> _mapItems;
-        public ICollectionView MapItems { get; }
+        // Maintains a list of ViewModels
+        private ModelVMView<MapItem, MapItemViewModel> _mapItems;
+
+        // Expose the View list
+        public ObservableCollection<MapItemViewModel> MapItems { 
+            get { return _mapItems.View; }
+        }
 
 
 
@@ -121,6 +125,8 @@ namespace PhotoGalleryApp.ViewModels
 
             return null;
         }
+
+        private MapItem _getMapItemModel(MapItemViewModel vm) { return vm.GetModel(); }
 
         #endregion Create MapItem View Model
 
@@ -191,7 +197,7 @@ namespace PhotoGalleryApp.ViewModels
                 // Only put into edit mode if the user didn't provide path data
                 if (!args.LoadFromFile)
                 {
-                    foreach (MapItemViewModel vm in _mapItems)
+                    foreach (MapItemViewModel vm in MapItems)
                     {
                         if (vm.GetModel() == path)
                             EditableMapItem = vm;
@@ -245,7 +251,7 @@ namespace PhotoGalleryApp.ViewModels
          */
         private void CloseAllPreviews(MapItemViewModel? exception = null)
         {
-            foreach (MapItemViewModel vm in _mapItems)
+            foreach (MapItemViewModel vm in MapItems)
             {
                 if (exception == null || !ReferenceEquals(exception, vm))
                     vm.PreviewOpen = false;
@@ -265,7 +271,7 @@ namespace PhotoGalleryApp.ViewModels
             }
             else
             {
-                foreach (MapItemViewModel o in _mapItems)
+                foreach (MapItemViewModel o in MapItems)
                 {
                     if (ReferenceEquals(vm, o))
                         o.PreviewOpen = !o.PreviewOpen;
@@ -322,7 +328,7 @@ namespace PhotoGalleryApp.ViewModels
                     CloseAllPreviews();
 
                     // All items should be faded except for the editable one
-                    foreach(MapItemViewModel vm in _mapItems)
+                    foreach(MapItemViewModel vm in MapItems)
                     {
                         if (vm == _editableMapItem)
                             vm.FadedColor = false;
@@ -333,7 +339,7 @@ namespace PhotoGalleryApp.ViewModels
                 else
                 {
                     // Unfade all items
-                    foreach(MapItemViewModel vm in _mapItems)
+                    foreach(MapItemViewModel vm in MapItems)
                         vm.FadedColor = false;
                 }
 
@@ -546,79 +552,8 @@ namespace PhotoGalleryApp.ViewModels
          */
         public void MapClickEvent()
         {
-            foreach (MapItemViewModel vm in _mapItems)
+            foreach (MapItemViewModel vm in MapItems)
                 vm.PreviewOpen = false;
         }
-
-
-
-        #region MapItems Collection Changed
-
-        private void MapItems_CollectionChanged(object? sender, System.Collections.Specialized.NotifyCollectionChangedEventArgs e)
-        {
-            switch(e.Action)
-            {
-                case System.Collections.Specialized.NotifyCollectionChangedAction.Add:
-                    if (e.NewItems == null)
-                        throw new ArgumentException("MapViewModel Items - tried to add items, but NewItems was null.");
-
-                    MapItems_Add(e.NewItems);
-                    break;
-
-
-                case System.Collections.Specialized.NotifyCollectionChangedAction.Remove:
-                    if (e.OldItems == null)
-                        throw new ArgumentException("MapViewModel Items - tried to remove items, but OldItems was null.");
-
-                    MapItems_Remove(e.OldItems);
-                    break;
-
-                case System.Collections.Specialized.NotifyCollectionChangedAction.Replace:
-                    if (e.NewItems == null)
-                        throw new ArgumentException("MapViewModel Items - tried to add items, but NewItems was null.");
-                    if (e.OldItems == null)
-                        throw new ArgumentException("MapViewModel Items - tried to remove items, but OldItems was null.");
-
-                    MapItems_Add(e.NewItems);
-                    MapItems_Remove(e.OldItems);
-                    break;
-
-                default:
-                    MapItems_Reset();
-                    break;
-            }
-        }
-
-        private void MapItems_Add(IList newItems)
-        {
-            foreach (MapItem item in newItems)
-                _mapItems.Add(CreateMapItemViewModel(item));
-        }
-
-        private void MapItems_Remove(IList oldItems)
-        {
-            foreach(MapItem item in oldItems)
-            {
-                for(int i = 0; i < _mapItems.Count; i++)
-                {
-                    if (_mapItems[i].GetModel() == item)
-                    {
-                        _mapItems.RemoveAt(i);
-                        break;
-                    }
-                }
-            }
-        }
-
-        private void MapItems_Reset()
-        {
-            _mapItems.Clear();
-            foreach (MapItem item in _map)
-                _mapItems.Add(CreateMapItemViewModel(item));
-        }
-
-        #endregion MapItems Collection Changed
-
-
     }
 }

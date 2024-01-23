@@ -80,12 +80,13 @@
                 PreviewMouseDoubleClick="MapView_PreviewMouseDoubleClick"
                 >
 
+
                 <!-- Order determines what is show above what -->
-                <m:MapLayer x:Name="LineLayer"/>
-                <m:MapLayer x:Name="PinLayer"/>
-                <m:MapLayer x:Name="SelectedLineLayer"/>
-                <m:MapLayer x:Name="SelectedPinLayer"/>
-                <m:MapLayer x:Name="PreviewLayer"/>
+                <m:MapItemsControl x:Name="LineLayer"/>
+                <m:MapItemsControl x:Name="PinLayer"/>
+                <m:MapItemsControl x:Name="SelectedLineLayer"/>
+                <m:MapItemsControl x:Name="SelectedPinLayer"/>
+                <m:MapItemsControl x:Name="PreviewLayer"/>
             </m:Map>
         </Grid>
     </Grid>

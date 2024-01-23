@@ -60,9 +60,18 @@ namespace PhotoGalleryApp.Views.Maps
             MapPolyline mapPolyline = new MapPolyline();
             MapView.Children.Add(mapPolyline);
             MapView.Children.Remove(mapPolyline);
+
+            // Connect map layers to the code-behind collections
+            PinLayer.ItemsSource = _pins;
+            LineLayer.ItemsSource = _lines;
+            SelectedLineLayer.ItemsSource = _selectedLines;
+            SelectedPinLayer.ItemsSource = _selectedPins;
+            PreviewLayer.ItemsSource = _previews;
         }
 
-        public static readonly DependencyProperty ItemsSourceProperty = DependencyProperty.Register("ItemsSource", typeof(ICollectionView), typeof(Map),
+
+
+        public static readonly DependencyProperty ItemsSourceProperty = DependencyProperty.Register("ItemsSource", typeof(ObservableCollection<MapItemViewModel>), typeof(Map),
             new FrameworkPropertyMetadata
             {
                 PropertyChangedCallback = ItemsSourceChanged
@@ -72,9 +81,9 @@ namespace PhotoGalleryApp.Views.Maps
         /// <summary>
         /// Items to display on the map (paths & locations). These are MapItemViewModel objects.
         /// </summary>
-        public ICollectionView ItemsSource
+        public ObservableCollection<MapItemViewModel> ItemsSource
         {
-            get { return (ICollectionView)GetValue(ItemsSourceProperty); }
+            get { return (ObservableCollection<MapItemViewModel>)GetValue(ItemsSourceProperty); }
             set { SetValue(ItemsSourceProperty, value); }
         }
 
@@ -84,6 +93,8 @@ namespace PhotoGalleryApp.Views.Maps
         private Dictionary<MapItemViewModel, MapItemView> _items = new Dictionary<MapItemViewModel, MapItemView>();
 
 
+
+        #region ItemsSource Changed
 
         private static void ItemsSourceChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
         {
@@ -139,7 +150,112 @@ namespace PhotoGalleryApp.Views.Maps
             }
         }
 
+        #endregion ItemsSource Changed
 
+
+
+
+
+        #region Map Layer Collections/Functions
+
+        /**
+         * Each collection is attached to a MapItemsControl's ItemSource. This
+         * lets the code-behind control what goes into each layer, and,
+         * importantly, the order of the items, which determines what is drawn
+         * above what.
+         */
+        private ObservableCollection<UIElement> _pins = new ObservableCollection<UIElement>();
+        private ObservableCollection<UIElement> _lines = new ObservableCollection<UIElement>();
+        private ObservableCollection<UIElement> _selectedPins = new ObservableCollection<UIElement>();
+        private ObservableCollection<UIElement> _selectedLines = new ObservableCollection<UIElement>();
+        private ObservableCollection<UIElement> _previews = new ObservableCollection<UIElement>();
+
+
+        /** 
+         * Compares Pushpins by Latitude, so southern Pushpins are shown above
+         * northern ones
+         */
+        private int PushpinCompare(UIElement a, UIElement b)
+        {
+            if (a is not Pushpin || b is not Pushpin)
+                return 1;
+
+            Pushpin p1 = (Pushpin)a;
+            Pushpin p2 = (Pushpin)b;
+
+            if (p1.Location.Latitude > p2.Location.Latitude)
+                return -1;
+
+            if (p1.Location.Latitude < p2.Location.Latitude)
+                return 1;
+
+            return 0;
+        }
+
+
+
+        public void LineLayer_Add(UIElement item) { AddMapItemToLayer(_lines, item, null); }
+        public void LineLayer_Remove(UIElement item) { _lines.Remove(item); }
+
+        public void PinLayer_Add(UIElement item) { AddMapItemToLayer(_pins, item, PushpinCompare); }
+        public void PinLayer_Remove(UIElement item) { _pins.Remove(item); }
+        public void PinLayer_Update(UIElement item) { UpdateMapItemInLayer(_pins, item); }
+
+        public void SelectedLineLayer_Add(UIElement item) { AddMapItemToLayer(_selectedLines, item, null); }
+        public void SelectedLineLayer_Remove(UIElement item) { _selectedLines.Remove(item); }
+
+        public void SelectedPinLayer_Add(UIElement item) { AddMapItemToLayer(_selectedPins, item, PushpinCompare); }
+        public void SelectedPinLayer_Remove(UIElement item) { _selectedPins.Remove(item); }
+        public void SelectedPinLayer_Update(UIElement item) { UpdateMapItemInLayer(_selectedPins, item); }
+
+        public void PreviewLayer_Add(UIElement item) { AddMapItemToLayer(_previews, item, null); }
+        public void PreviewLayer_Remove(UIElement item) { _previews.Remove(item); }
+
+
+        /**
+         * Adds the given UIElement to the given collection, using the given
+         * sorting criteria
+         */
+        private void AddMapItemToLayer(ObservableCollection<UIElement> list, UIElement item, Comparison<UIElement>? comparison)
+        {
+            if(comparison == null)
+            {
+                list.Add(item);
+                return;
+            }
+
+            for(int i = 0; i < list.Count; i++)
+            {
+                if(comparison(item, list[i]) <= 0)
+                {
+                    list.Insert(i, item);
+                    return;
+                }
+            }
+            list.Add(item);
+        }
+
+        /**
+         * Triggers a UI update for the given UIElement in the given
+         * collection. This is used for Pushpins, who do not redraw the Map on
+         * Location changed, when they're part of a MapItemsControl.
+         */
+        public void UpdateMapItemInLayer(ObservableCollection<UIElement> list, UIElement item)
+        {
+            int i = list.IndexOf(item);
+            if (i != -1)
+            {
+                list[i] = null;
+                list[i] = item;
+            }
+        }
+
+
+        #endregion Map Layer Collections/Functions
+
+
+
+        #region Clicks
 
 
         /**
@@ -170,5 +286,7 @@ namespace PhotoGalleryApp.Views.Maps
         {
             e.Handled = true;
         }
+        
+        #endregion Clicks
     }
 }

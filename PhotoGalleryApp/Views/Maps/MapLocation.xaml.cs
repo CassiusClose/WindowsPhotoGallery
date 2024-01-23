@@ -40,8 +40,8 @@ namespace PhotoGalleryApp.Views.Maps
         {
             if (_preview != null)
                 ClosePreview();
-            PinLayer.Children.Remove(Pin);
-            SelectedPinLayer.Children.Remove(Pin);
+            _map.PinLayer_Remove(Pin);
+            _map.SelectedPinLayer_Remove(Pin);
         }
 
 
@@ -53,9 +53,10 @@ namespace PhotoGalleryApp.Views.Maps
         {
             Pin = new Pushpin();
             Pin.Background = OriginalColorBrush;
-            PinLayer.Children.Add(Pin);
 
             SetBinding(LocationProperty, new Binding("Location"));
+
+            _map.PinLayer_Add(Pin);
         }
 
         protected override UIElement GetMainMapItem()
@@ -81,6 +82,10 @@ namespace PhotoGalleryApp.Views.Maps
             set {
                 SetValue(LocationProperty, value);
                 Pin.Location = value;
+                if(EditMode)
+                    _map.SelectedPinLayer_Update(Pin);
+                else
+                    _map.PinLayer_Update(Pin);
             }
         }
 
@@ -129,7 +134,7 @@ namespace PhotoGalleryApp.Views.Maps
                     return;
 
                 _preview.DataContext = DataContext;
-                PreviewLayer.Children.Add(_preview);
+                _map.PreviewLayer_Add(_preview);
                 MapLayer.SetPositionOffset(_preview, new Point(-_preview.Width / 2, -_preview.Height - 50));
                 MapLayer.SetPosition(_preview, Pin.Location);
             }
@@ -140,13 +145,13 @@ namespace PhotoGalleryApp.Views.Maps
             // Show the Location pin above all other pins
             if (EditMode)
             {
-                PinLayer.Children.Remove(Pin);
-                SelectedPinLayer.Children.Add(Pin);
+                _map.PinLayer_Remove(Pin);
+                _map.SelectedPinLayer_Add(Pin);
             }
             else
             {
-                SelectedPinLayer.Children.Remove(Pin);
-                PinLayer.Children.Add(Pin);
+                _map.SelectedPinLayer_Remove(Pin);
+                _map.PinLayer_Add(Pin);
             }
         }
 

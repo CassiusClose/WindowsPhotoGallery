@@ -38,11 +38,12 @@ namespace PhotoGalleryApp.Views.Maps
             _map = map;
             _map.MouseLeftButtonClick += Map_Click;
 
+            // Put this before bindings, because they can depend on MainMapItem properties
+            Init_MainMapItem();
+
             BindingOperations.SetBinding(this, EditModeProperty, new Binding("EditMode"));
             BindingOperations.SetBinding(this, PreviewOpenProperty, new Binding("PreviewOpen"));
             BindingOperations.SetBinding(this, FadedColorProperty, new Binding("FadedColor"));
-
-            Init_MainMapItem();
 
             MapItemClickDragBehavior b = new MapItemClickDragBehavior(_map.MapView);
             b.MouseLeftButtonClick += MainMapItem_Click;
@@ -66,17 +67,6 @@ namespace PhotoGalleryApp.Views.Maps
         
 
         protected Map _map;
-
-        /**
-         * MapLayers from the parent map
-         */
-        protected MapLayer LineLayer { get { return _map.LineLayer; } }
-        protected MapLayer PinLayer { get { return _map.PinLayer; } }
-        protected MapLayer SelectedLineLayer { get { return _map.SelectedLineLayer; } }
-        protected MapLayer SelectedPinLayer { get { return _map.SelectedPinLayer; } }
-        protected MapLayer PreviewLayer { get { return _map.PreviewLayer; } }
-
-
 
 
         #region Faded Color Property
@@ -179,7 +169,7 @@ namespace PhotoGalleryApp.Views.Maps
         {
             if (_preview != null)
             {
-                PreviewLayer.Children.Remove(_preview);
+                _map.PreviewLayer_Remove(_preview);
                 _preview = null;
             }
         }
