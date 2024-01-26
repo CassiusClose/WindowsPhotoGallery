@@ -75,5 +75,10 @@ namespace PhotoGalleryApp
         {
             return ((MainWindow)System.Windows.Application.Current.MainWindow).Session;
         }
+
+        public static NavigatorViewModel GetNavigator()
+        {
+            return ((MainWindow)System.Windows.Application.Current.MainWindow)._nav;
+        }
     }
 }

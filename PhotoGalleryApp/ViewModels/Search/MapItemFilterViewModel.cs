@@ -1,6 +1,7 @@
 ﻿using PhotoGalleryApp.Filtering;
 using PhotoGalleryApp.Models;
 using PhotoGalleryApp.Utils;
+using PhotoGalleryApp.Views.Maps;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -21,6 +22,7 @@ namespace PhotoGalleryApp.ViewModels.Search
         public MapItemFilterViewModel(MapItemFilter filter)
         {
             _clearMapItemCommand = new RelayCommand(ClearMapItem);
+            _chooseMapItemCommand = new RelayCommand(ChooseMapItemForFilter);
 
             _filter = filter;
             _filter.PropertyChanged += _filter_PropertyChanged;
@@ -102,22 +104,18 @@ namespace PhotoGalleryApp.ViewModels.Search
         }
 
 
-        /*
-         * Sets the filter MapItem. Works based on name, so there can't be two
-         * MapItems with the same name.
-         */
-        public void ChooseMapItemForFilter(object sender, Views.ItemChosenEventArgs e)
+
+        private RelayCommand _chooseMapItemCommand;
+        public ICommand ChooseMapItemCommand => _chooseMapItemCommand;
+
+        public void ChooseMapItemForFilter()
         {
-            string locName = e.Item;
-            Map map = MainWindow.GetCurrentSession().Map;
-            foreach(MapItem i in map)
-            {
-                //TODO ID some better way than by name?
-                if (i.Name == locName)
-                {
-                    _filter.MapItemCriteria = i;
-                }
-            }
+            NavigatorViewModel nav = MainWindow.GetNavigator();
+            PickMapItemPopupViewModel popup = new PickMapItemPopupViewModel(nav);
+            PickMapItemPopupReturnArgs args = (PickMapItemPopupReturnArgs)nav.OpenPopup(popup);
+
+            if(args.PopupAccepted)
+                _filter.MapItemCriteria = args.ChosenMapItem;
         }
     }
 }

@@ -22,17 +22,9 @@
     
     
     <StackPanel Orientation="Horizontal">
-        <local:ChooserDropDown 
-            ItemsSource="{Binding MapItemNames}"
-            ButtonText="Choose Map Item"
-            >
-            <ei:Interaction.Triggers>
-                <ei:EventTrigger EventName="ItemSelected">
-                    <ei:CallMethodAction TargetObject="{Binding}" MethodName="ChooseMapItemForFilter"/>
-                </ei:EventTrigger>
-            </ei:Interaction.Triggers>
-        </local:ChooserDropDown>
-
+        <Button 
+            Content="Choose Map Item"
+            Command="{Binding ChooseMapItemCommand}"/>
         <Button
             Content="{Binding SelectedItemName}"
             Command="{Binding ClearMapItemCommand}"
