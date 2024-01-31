@@ -10,6 +10,7 @@ using System.Security.Permissions;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Input;
+using System.Windows.Media;
 
 namespace PhotoGalleryApp.ViewModels
 {
@@ -281,7 +282,6 @@ namespace PhotoGalleryApp.ViewModels
 
 
 
-
         #region Clicks
 
         public void SelectPoint(Location l)
@@ -333,6 +333,31 @@ namespace PhotoGalleryApp.ViewModels
 
 
         #endregion Clicks
+
+
+        private double? _strokeThickness = null;
+        /// <summary>
+        /// If null, then the default stroke thickness will be used. If not
+        /// null, then this will be used as the stroke thickness of the path.
+        /// </summary>
+        public double? OverrideStrokeThickness
+        {
+            get { return _strokeThickness; }
+            set { _strokeThickness = value; OnPropertyChanged(); }
+        }
+
+
+        private System.Windows.Media.Color? _pathColor = null;
+        /// <summary>
+        /// If null, then the default stroke color will be used. If not
+        /// null, then this will be used as the stroke color of the path.
+        /// </summary>
+        public System.Windows.Media.Color? OverridePathColor
+        {
+            get { return _pathColor; }
+            set { _pathColor = value; OnPropertyChanged(); }
+        }
+
 
 
 

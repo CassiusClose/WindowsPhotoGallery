@@ -51,6 +51,8 @@ namespace PhotoGalleryApp.Views.Maps
 
             BindingOperations.SetBinding(this, LocationsProperty, new Binding("Points"));
             BindingOperations.SetBinding(this, SelectionRangeProperty, new Binding("SelectionRange"));
+            BindingOperations.SetBinding(this, OverrideStrokeThicknessProperty, new Binding("OverrideStrokeThickness"));
+            BindingOperations.SetBinding(this, OverridePathColorProperty, new Binding("OverridePathColor"));
         }
 
 
@@ -82,8 +84,8 @@ namespace PhotoGalleryApp.Views.Maps
         protected override void Init_MainMapItem()
         {
             PathLine = new MapPolyline();
-            PathLine.StrokeThickness = 5;
-            PathLine.Stroke = OriginalColorBrush;
+            StrokeThicknessChanged();
+            PathColorChanged();
             _map.LineLayer_Add(PathLine);
         }
 
@@ -494,10 +496,72 @@ namespace PhotoGalleryApp.Views.Maps
 
 
 
-        #region Colors
+        #region Path Style
 
+
+        public static readonly DependencyProperty OverrideStrokeThicknessProperty = DependencyProperty.Register("OverrideStrokeThickness", typeof(double?), typeof(MapPath),
+            new PropertyMetadata(null, StrokeThicknessPropertyChanged));
+
+        /// <summary>
+        /// If null, then the default thickness will be used. If not, use this.
+        /// </summary>
+        public double? OverrideStrokeThickness 
+        {
+            get { return (double?)GetValue(OverrideStrokeThicknessProperty); }
+            set { SetValue(OverrideStrokeThicknessProperty, value); }
+        }
+
+        private static void StrokeThicknessPropertyChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
+        {
+            MapPath path = (MapPath)d;
+            path.StrokeThicknessChanged();
+        }
+
+        private void StrokeThicknessChanged()
+        {
+            if (OverrideStrokeThickness != null)
+                PathLine.StrokeThickness = (double)OverrideStrokeThickness;
+            else
+                PathLine.StrokeThickness = _defaultThickness;
+        }
+
+        private int _defaultThickness = 5;
+
+
+
+
+        public static readonly DependencyProperty OverridePathColorProperty = DependencyProperty.Register("OverridePathColor", typeof(Color?), typeof(MapPath),
+            new PropertyMetadata(null, PathColorPropertyChanged));
+
+        /// <summary>
+        /// If null, then the default color will be used. If not, use this.
+        /// </summary>
+        public Color? PathColor
+        {
+            get { return (Color?)GetValue(OverridePathColorProperty); }
+            set { SetValue(OverridePathColorProperty, value); }
+        }
+
+        private static void PathColorPropertyChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
+        {
+            MapPath path = (MapPath)d;
+            path.PathColorChanged();
+        }
+
+        private void PathColorChanged()
+        {
+            if (PathColor != null)
+                OriginalColorBrush = new SolidColorBrush((Color)PathColor);
+            else
+                OriginalColorBrush = new SolidColorBrush(DefaultColor);
+
+            PathLine.Stroke = OriginalColorBrush;
+        }
+
+        public Color DefaultColor = Colors.Red;
         public SolidColorBrush OriginalColorBrush = new SolidColorBrush(Colors.Red);
         public SolidColorBrush FadedColorBrush = new SolidColorBrush(Colors.DarkRed);
+
 
         protected override void FadedColorChanged()
         {
@@ -507,7 +571,8 @@ namespace PhotoGalleryApp.Views.Maps
                 PathLine.Stroke = OriginalColorBrush;
         }
 
-        #endregion Colors
+        #endregion Path Style
+
 
 
 

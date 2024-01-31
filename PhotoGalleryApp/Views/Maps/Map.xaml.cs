@@ -154,6 +154,29 @@ namespace PhotoGalleryApp.Views.Maps
 
 
 
+        /**
+         * Prompt the user to pick a file that contains path data.
+         */
+        private void LoadFile(object sender, RoutedEventArgs e)
+        {
+            Microsoft.Win32.OpenFileDialog dialog = new Microsoft.Win32.OpenFileDialog();
+            dialog.DefaultExt = ".txt";
+            dialog.Filter = "Text documents (.txt)|*.txt";
+            dialog.Multiselect = false;
+
+            bool? result = dialog.ShowDialog();
+
+            // If the user picked a file
+            if(result != null && result == true)
+            {
+                string filename = dialog.FileName;
+
+                MapViewModel vm = (MapViewModel)DataContext;
+                vm.LoadPathsFromFile(filename);
+            }
+        }
+
+
 
 
         #region Map Layer Collections/Functions

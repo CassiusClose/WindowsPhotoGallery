@@ -13,30 +13,43 @@
 
     <Window.Resources>
         <DataTemplate DataType="{x:Type vms:EventSelectionPopupViewModel}">
-            <local:EventSelectionPopup DataContext="{Binding}"/>
+            <local:EventSelectionPopup/>
         </DataTemplate>
         <DataTemplate DataType="{x:Type vms:TextEntryPopupViewModel}">
-            <local:TextEntryPopup DataContext="{Binding}"/>
-        </DataTemplate>
-        <DataTemplate DataType="{x:Type vms:CreatePathPopupViewModel}">
-            <maps:CreatePathPopup DataContext="{Binding}"/>
+            <local:TextEntryPopup/>
         </DataTemplate>
         <DataTemplate DataType="{x:Type vms:CreateLocationPopupViewModel}">
-            <maps:CreateLocationPopup DataContext="{Binding}"/>
+            <maps:CreateLocationPopup/>
         </DataTemplate>
         <DataTemplate DataType="{x:Type vms:PopupViewModel}">
-            <local:MessagePopup DataContext="{Binding}"/>
+            <local:MessagePopup/>
         </DataTemplate>
         <DataTemplate DataType="{x:Type vms:PickMapItemPopupViewModel}">
-            <maps:PickMapItemPopup DataContext="{Binding}"/>
+            <maps:PickMapItemPopup/>
         </DataTemplate>
+        <DataTemplate DataType="{x:Type vms:LoadPathsFileResultsPopupViewModel}">
+            <maps:LoadPathsFileResultsPopup/>
+        </DataTemplate>
+        <DataTemplate DataType="{x:Type vms:PreviewMapPopupViewModel}">
+            <maps:PreviewMapPopup/>
+        </DataTemplate>
+
+
+        <Style x:Key="AcceptRowStyle" TargetType="RowDefinition">
+            <Setter Property="Height" Value="50"/>
+            <Style.Triggers>
+                <DataTrigger Binding="{Binding ShowAcceptButtons}" Value="{StaticResource FalseValue}">
+                    <Setter Property="Height" Value="0"/>
+                </DataTrigger>
+            </Style.Triggers>
+        </Style>
     </Window.Resources>
     
     <Grid>
         <Grid.RowDefinitions>
-            <RowDefinition Height="30"/>
+            <RowDefinition Height="20"/>
             <RowDefinition Height="*"/>
-            <RowDefinition Height="50"/>
+            <RowDefinition Style="{StaticResource AcceptRowStyle}"/>
         </Grid.RowDefinitions>
 
         <Label

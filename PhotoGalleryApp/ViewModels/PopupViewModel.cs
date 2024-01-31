@@ -13,9 +13,13 @@ namespace PhotoGalleryApp.ViewModels
     /// </summary>
     public abstract class PopupViewModel : ViewModelBase
     {
-        public PopupViewModel() 
+        public PopupViewModel() : this(true) { }
+
+        public PopupViewModel(bool showAcceptButtons)
         {
             _closePopupCommand = new RelayCommand(ClosePopup);
+
+            ShowAcceptButtons = showAcceptButtons;
         }
 
 
@@ -56,6 +60,18 @@ namespace PhotoGalleryApp.ViewModels
 
 
 
+        private bool _showAcceptButtons = true;
+        /// <summary>
+        /// Whether to show the accept & 
+        /// </summary>
+        public bool ShowAcceptButtons
+        {
+            get { return _showAcceptButtons; }
+            set { _showAcceptButtons = value; OnPropertyChanged(); }
+        }
+
+
+
         private RelayCommand _closePopupCommand;
         public ICommand ClosePopupCommand => _closePopupCommand;
 
@@ -71,6 +87,9 @@ namespace PhotoGalleryApp.ViewModels
                 throw new ArgumentException("Close Popup accepts a bool argument");
 
             bool acc = (bool)parameter;
+
+            if (acc && !ShowAcceptButtons)
+                return;
 
             if (acc && !ValidateData())
                 return;

@@ -47,6 +47,11 @@
                 Command="{Binding AddPathCommand}"
                 IsEnabled="{Binding EditMode, Converter={StaticResource NotConverter}}"
                 />
+            <Button
+                Content="Load Path From File"
+                Click="LoadFile"
+                IsEnabled="{Binding EditMode, Converter={StaticResource NotConverter}}"
+                />
 
             <Button
                 Content="Finish Editing"

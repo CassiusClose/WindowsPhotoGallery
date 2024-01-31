@@ -1,6 +1,7 @@
 ﻿using Microsoft.Maps.MapControl.WPF;
 using PhotoGalleryApp.Models;
 using PhotoGalleryApp.Utils;
+using PhotoGalleryApp.Views;
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -178,29 +179,70 @@ namespace PhotoGalleryApp.ViewModels
         private void AddPath(object parameter)
         {
             // Show the user the popup to create a path
-            CreatePathPopupViewModel popup = new CreatePathPopupViewModel();
-            CreatePathPopupReturnArgs args = (CreatePathPopupReturnArgs)_nav.OpenPopup(popup);
+            TextEntryPopupViewModel popup = new TextEntryPopupViewModel();
+            TextEntryPopupReturnArgs args = (TextEntryPopupReturnArgs)_nav.OpenPopup(popup);
 
             // If not cancelled, then create the path
             if (args.PopupAccepted)
             {
-                MapPath path = new MapPath(args.Name);
-
-                if (args.LoadFromFile)
-                {
-                    LocationCollection coll = PathFileFormats.LoadFromTxtFile(args.Filename);
-                    path.Locations = coll;
-                }
-
+                MapPath path = new MapPath(args.Text);
                 _map.Add(path);
 
-                // Only put into edit mode if the user didn't provide path data
-                if (!args.LoadFromFile)
+                foreach (MapItemViewModel vm in MapItems)
                 {
-                    foreach (MapItemViewModel vm in MapItems)
+                    if (vm.GetModel() == path)
+                        EditableMapItem = vm;
+                }
+            }
+        }
+
+
+
+
+        /**
+         * Attempts to load path data from the file at the given path. If the
+         * parsing is successful, this will open a popup where the user can
+         * edit details of each track.
+         */
+        public void LoadPathsFromFile(string filename)
+        {
+            List<MapPath> paths = PathFileFormats.LoadFromTxtFile(filename);
+
+            LoadPathsFileResultsPopupViewModel popup = new LoadPathsFileResultsPopupViewModel(paths);
+            LoadPathsFileResultsPopupReturnArgs args = (LoadPathsFileResultsPopupReturnArgs)_nav.OpenPopup(popup);
+            if(args.PopupAccepted)
+            {
+                foreach (PathFileResultsPathViewModel vm in args.Paths)
+                {
+                    if(vm.AddToMap)
                     {
-                        if (vm.GetModel() == path)
-                            EditableMapItem = vm;
+                        // If the path overlaps with another path, different ways to handle it
+                        switch (vm.ReplaceSelection)
+                        {
+                            case PathFileResultsPathViewModel.ReplaceChoices.AddNormally:
+                                _map.Add(vm.Path);
+                                break;
+
+                            case PathFileResultsPathViewModel.ReplaceChoices.ReplaceOverlap:
+                                if (vm.OverlapPath != null)
+                                    _map.Remove(vm.OverlapPath);
+                                else
+                                    throw new ArgumentException();
+                                _map.Add(vm.Path);
+                                break;
+
+                            case PathFileResultsPathViewModel.ReplaceChoices.MergeOverlap:
+                                MapPath p;
+                                if (vm.OverlapPath != null)
+                                {
+                                    p = MapPath.MergeOverlappingPaths(vm.Path, vm.OverlapPath, vm.Name);
+                                    _map.Remove(vm.OverlapPath);
+                                }
+                                else
+                                    throw new ArgumentException();
+                                _map.Add(p);
+                                break;
+                        }
                     }
                 }
             }
@@ -208,6 +250,7 @@ namespace PhotoGalleryApp.ViewModels
 
 
         #endregion Add/Delete Commands
+
 
 
         #region MapItem Click
