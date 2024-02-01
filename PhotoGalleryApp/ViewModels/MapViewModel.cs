@@ -236,6 +236,24 @@ namespace PhotoGalleryApp.ViewModels
                                 if (vm.OverlapPath != null)
                                 {
                                     p = MapPath.MergeOverlappingPaths(vm.Path, vm.OverlapPath, vm.Name);
+
+                                    /**
+                                     * Transfer Media belonging to orignal path to the new merged path.
+                                     */
+                                    if(MainWindow.GetCurrentSession().Map == _map)
+                                    {
+                                        foreach(ICollectable coll in MainWindow.GetCurrentSession().Gallery.Collection)
+                                        {
+                                            if (coll is not Media)
+                                                continue;
+
+                                            Media m = (Media)coll;
+                                            if (m.MapItem == vm.OverlapPath)
+                                                m.MapItem = p;
+                                        }
+
+                                    }
+
                                     _map.Remove(vm.OverlapPath);
                                 }
                                 else
