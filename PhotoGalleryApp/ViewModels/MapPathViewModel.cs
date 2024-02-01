@@ -369,7 +369,7 @@ namespace PhotoGalleryApp.ViewModels
          */
         public void OpenPage()
         {
-            _nav.NewPage(new PathPageViewModel(_nav, _path));
+            _nav.NewPage(new PathPageViewModel(_path));
         }
 
 

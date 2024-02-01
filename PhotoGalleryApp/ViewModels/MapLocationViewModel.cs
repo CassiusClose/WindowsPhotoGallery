@@ -58,7 +58,7 @@ namespace PhotoGalleryApp.ViewModels
          */
         public void OpenPage()
         {
-            _nav.NewPage(new LocationPageViewModel(_nav, _location));
+            _nav.NewPage(new LocationPageViewModel(_location));
         }
     }
 }

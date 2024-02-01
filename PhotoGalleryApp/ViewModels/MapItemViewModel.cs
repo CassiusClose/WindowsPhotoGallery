@@ -86,5 +86,21 @@ namespace PhotoGalleryApp.ViewModels
                 OnPropertyChanged(); 
             }
         }
+
+
+
+
+        /**
+         * Generator to create MapPathViewModels and MapLocationViewModels
+         */
+        public static MapItemViewModel CreateMapItemViewModel(MapItem item)
+        {
+            if (item is MapPath)
+                return new MapPathViewModel(MainWindow.GetNavigator(), (MapPath)item);
+
+            else
+                return new MapLocationViewModel(MainWindow.GetNavigator(), (MapLocation)item);
+        }
+
     }
 }

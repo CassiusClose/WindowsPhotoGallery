@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Security.Permissions;
 using System.Text;
@@ -30,6 +31,9 @@ namespace PhotoGalleryApp.ViewModels
         {
             //Init commands
             _removeTagCommand = new RelayCommand(RemoveTag);
+            _chooseMapItemCommand = new RelayCommand(ChooseMapItem);
+            _openMapItemCommand = new RelayCommand(OpenMapItem);
+            _clearMapItemCommand = new RelayCommand(ClearMapItem);
 
             _media = photo;
             _media.PropertyChanged += Media_PropertyChanged;
@@ -65,20 +69,6 @@ namespace PhotoGalleryApp.ViewModels
         public PrecisionDateTime Timestamp
         {
             get { return _media.Timestamp; }
-        }
-
-
-        /// <summary>
-        /// The name of the Media's MapItem, or "" if null.
-        /// </summary>
-        public string MapItemName
-        {
-            get 
-            {
-                if (_media.MapItem == null)
-                    return "";
-                return _media.MapItem.Name; 
-            }
         }
 
 
@@ -122,6 +112,27 @@ namespace PhotoGalleryApp.ViewModels
 
 
 
+        #region MapItem
+
+        /// <summary>
+        /// The name of the Media's MapItem, or "" if null.
+        /// </summary>
+        public string MapItemName
+        {
+            get 
+            {
+                if (_media.MapItem == null)
+                    return "";
+                return _media.MapItem.Name; 
+            }
+        }
+
+        public bool MapItemExists
+        {
+            get { return _media.MapItem != null; }
+        }
+
+
         /**
          * If MapItem changes, update name property
          */
@@ -135,9 +146,11 @@ namespace PhotoGalleryApp.ViewModels
                 {
                     if(m.MapItem != null)
                     {
+                        //TODO How to remove the listener from the old item
                         m.MapItem.PropertyChanged += MapItem_PropertyChanged;
                     }
                     OnPropertyChanged(nameof(MapItemName));
+                    OnPropertyChanged(nameof(MapItemExists));
                 }
             }
         }
@@ -150,6 +163,26 @@ namespace PhotoGalleryApp.ViewModels
             if (e.PropertyName == nameof(MapItem.Name))
                 OnPropertyChanged(nameof(MapItemName));
         }
+
+
+        private RelayCommand _chooseMapItemCommand;
+        public ICommand ChooseMapItemCommand => _chooseMapItemCommand;
+
+        private void ChooseMapItem()
+        {
+            NavigatorViewModel nav = MainWindow.GetNavigator();
+            PickMapItemPopupViewModel popup = new PickMapItemPopupViewModel(nav);
+            PickMapItemPopupReturnArgs args = (PickMapItemPopupReturnArgs)nav.OpenPopup(popup); 
+            if(args.PopupAccepted)
+            {
+                if (args.ChosenMapItem == null)
+                    throw new ArgumentException();
+
+                _media.MapItem = args.ChosenMapItem;
+            }
+        }
+
+        #endregion MapItem
 
 
 
@@ -188,6 +221,33 @@ namespace PhotoGalleryApp.ViewModels
                 return;
 
             _media.Tags.Remove(tag);
+        }
+
+
+        private RelayCommand _openMapItemCommand;
+        public ICommand OpenMapItemCommand => _openMapItemCommand;
+
+        /**
+         * Open the page for this Media's MapItem.
+         */
+        private void OpenMapItem()
+        {
+            if(_media.MapItem == null)
+                return;
+
+            NavigatorViewModel nav = MainWindow.GetNavigator();
+            MapItemPageViewModel vm = MapItemPageViewModel.CreateMapItemPageViewModel(_media.MapItem);
+
+            MainWindow.GetNavigator().NewPage(vm);
+        }
+
+
+        private RelayCommand _clearMapItemCommand;
+        public ICommand ClearMapItemCommand => _clearMapItemCommand;
+
+        private void ClearMapItem()
+        {
+            _media.MapItem = null;
         }
 
         #endregion Commands

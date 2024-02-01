@@ -40,6 +40,15 @@
             </Setter>
         </Style>
 
+        <Style x:Key="MapItemVisibility" TargetType="Button" >
+            <Setter Property="Visibility" Value="Visible"/>
+            <Style.Triggers>
+                <DataTrigger Binding="{Binding MapItemExists}" Value="{StaticResource FalseValue}">
+                    <Setter Property="Visibility" Value="Hidden"/>
+                </DataTrigger>
+            </Style.Triggers>
+        </Style>
+
     </UserControl.Resources>
 
     <StackPanel>
@@ -64,6 +73,23 @@
         </local:ChooserDropDown>
 
         <Label>Map Item:</Label>
-        <Label Content="{Binding MapItemName}"/>
+        <StackPanel Orientation="Horizontal">
+            <Button 
+                Content="{Binding MapItemName}"
+                Command="{Binding OpenMapItemCommand}"
+                IsEnabled="{Binding MapItemExists}"
+                Width="100"
+                />
+            <Button
+                Content="x"
+                Command="{Binding ClearMapItemCommand}"
+                Style="{StaticResource MapItemVisibility}"
+                >
+            </Button>
+        </StackPanel>
+        <Button 
+            Content="Choose Map Item"
+            Command="{Binding ChooseMapItemCommand}"
+            />
     </StackPanel>
 </UserControl>

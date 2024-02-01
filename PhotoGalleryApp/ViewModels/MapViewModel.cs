@@ -90,15 +90,15 @@ namespace PhotoGalleryApp.ViewModels
             if (MapItemViewModelGenerator != null)
                 return MapItemViewModelGenerator(item);
 
-            return CreateMapItemViewModelDefault(item);
+            return MapItemViewModel.CreateMapItemViewModel(item);
         }
 
 
         /// <summary>
         /// Creates and returns a MapItemViewModel around the given MapItem.
         /// </summary>
-        public delegate MapItemViewModel? CreateMapItemViewModelDelegate(MapItem item);
-        private CreateMapItemViewModelDelegate? MapItemViewModelGenerator = null;
+        public delegate MapItemViewModel CreateMapItemViewModelDelegate(MapItem item);
+        private CreateMapItemViewModelDelegate MapItemViewModelGenerator = null;
 
 
         /// <summary>
@@ -110,21 +110,6 @@ namespace PhotoGalleryApp.ViewModels
         public void SetMapItemViewModelGenerator(CreateMapItemViewModelDelegate? func)
         {
             MapItemViewModelGenerator = func;
-        }
-
-
-        /**
-         * The default generator creates MapPathViewModels and MapLocationViewModels
-         */
-        private MapItemViewModel? CreateMapItemViewModelDefault(MapItem item)
-        {
-            if (item is MapPath)
-                return new MapPathViewModel(_nav, (MapPath)item);
-
-            if (item is MapLocation)
-                return new MapLocationViewModel(_nav, (MapLocation)item);
-
-            return null;
         }
 
         private MapItem _getMapItemModel(MapItemViewModel vm) { return vm.GetModel(); }
