@@ -62,5 +62,8 @@
                 </ei:EventTrigger>
             </ei:Interaction.Triggers>
         </local:ChooserDropDown>
+
+        <Label>Map Item:</Label>
+        <Label Content="{Binding MapItemName}"/>
     </StackPanel>
 </UserControl>

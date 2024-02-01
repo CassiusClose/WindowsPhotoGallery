@@ -32,8 +32,10 @@ namespace PhotoGalleryApp.ViewModels
             _removeTagCommand = new RelayCommand(RemoveTag);
 
             _media = photo;
+            _media.PropertyChanged += Media_PropertyChanged;
             _gallery = gallery;
         }
+
 
         public override void Cleanup() { }
 
@@ -63,6 +65,20 @@ namespace PhotoGalleryApp.ViewModels
         public PrecisionDateTime Timestamp
         {
             get { return _media.Timestamp; }
+        }
+
+
+        /// <summary>
+        /// The name of the Media's MapItem, or "" if null.
+        /// </summary>
+        public string MapItemName
+        {
+            get 
+            {
+                if (_media.MapItem == null)
+                    return "";
+                return _media.MapItem.Name; 
+            }
         }
 
 
@@ -103,6 +119,37 @@ namespace PhotoGalleryApp.ViewModels
         }
 
         #endregion Methods
+
+
+
+        /**
+         * If MapItem changes, update name property
+         */
+        private void Media_PropertyChanged(object? sender, PropertyChangedEventArgs e)
+        {
+            if (sender is Media)
+            {
+                Media m = (Media)sender;
+
+                if(e.PropertyName == nameof(Media.MapItem))
+                {
+                    if(m.MapItem != null)
+                    {
+                        m.MapItem.PropertyChanged += MapItem_PropertyChanged;
+                    }
+                    OnPropertyChanged(nameof(MapItemName));
+                }
+            }
+        }
+
+        /**
+         * If MapItem name changes, update property
+         */
+        private void MapItem_PropertyChanged(object? sender, PropertyChangedEventArgs e)
+        {
+            if (e.PropertyName == nameof(MapItem.Name))
+                OnPropertyChanged(nameof(MapItemName));
+        }
 
 
 

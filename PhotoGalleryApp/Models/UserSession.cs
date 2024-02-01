@@ -29,8 +29,23 @@ namespace PhotoGalleryApp.Models
         private string _sessionFile;
 
 
+        private Map _map;
+
         [DataMember(Order = 0)]
-        public Map Map;
+        public Map Map
+        {
+            get { return _map; }
+            set
+            {
+                if(_map != null)
+                    _map.CollectionChanged -= Map_CollectionChanged;
+
+                _map = value;
+
+                if(_map != null)
+                    _map.CollectionChanged += Map_CollectionChanged;
+            }
+        }
 
         [DataMember(Order = 1)]
         public Gallery Gallery;
@@ -71,5 +86,33 @@ namespace PhotoGalleryApp.Models
             session._sessionFile = sessionFile;
             return session;
         }
+
+
+
+        /**
+         * When a MapItem is removed from the Map, remove it from any Media that might belong to it
+         */
+        private void Map_CollectionChanged(object? sender, System.Collections.Specialized.NotifyCollectionChangedEventArgs e)
+        {
+            if(e.Action == System.Collections.Specialized.NotifyCollectionChangedAction.Remove)
+            {
+                if (e.OldItems == null)
+                    throw new ArgumentException();
+
+                foreach(MapItem item in e.OldItems)
+                {
+                    foreach(ICollectable coll in Gallery.Collection)
+                    {
+                        if(coll is Media)
+                        {
+                            Media m = (Media)coll;
+                            if (m.MapItem == item)
+                                m.MapItem = null;
+                        }
+                    }
+                }
+            }
+        }
+
     }
 }
