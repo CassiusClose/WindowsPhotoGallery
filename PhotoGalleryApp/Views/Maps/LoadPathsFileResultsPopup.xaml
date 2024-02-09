@@ -20,51 +20,54 @@
     </UserControl.Resources>
 
 
-    <StackPanel>
-        <CheckBox IsChecked="{Binding SomeChecked, Mode=OneWay}" Command="{Binding CheckAllCommand}"/>
-        <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
-            <ListBox ItemsSource="{Binding MapPaths}">
-                <ListBox.ItemTemplate>
-                    <DataTemplate>
-                        <StackPanel Orientation="Horizontal">
-                            <CheckBox IsChecked="{Binding AddToMap}"/>
-                            <TextBox 
-                                Text="{Binding Name}"
-                                TextWrapping="NoWrap"
-                                AcceptsReturn="False"
-                                />
-                            <Label>
-                                <Label.Style>
-                                    <Style TargetType="Label">
-                                        <Setter Property="Content" Value=""/>
-                                        <Style.Triggers>
-                                            <DataTrigger Binding="{Binding OverlapFound}" Value="{x:Static vms:PathFileResultsPathViewModel+IsOverlap.FullOverlap}">
-                                                <Setter Property="Content" Value="Full Overlap Found"/>
-                                                <Setter Property="Foreground" Value="Red"/>
-                                            </DataTrigger>
-                                            <DataTrigger Binding="{Binding OverlapFound}" Value="{x:Static vms:PathFileResultsPathViewModel+IsOverlap.PartialOverlap}">
-                                                <Setter Property="Content" Value="Partial Overlap Found"/>
-                                                <Setter Property="Foreground" Value="Red"/>
-                                            </DataTrigger>
-                                        </Style.Triggers>
-                                    </Style>
-                                </Label.Style>
-                            </Label>
-                            <ComboBox 
-                                Style="{StaticResource ReplaceChoicesStyle}"
-                                ItemsSource="{Binding ReplaceChoiceNames}"
-                                DisplayMemberPath="Value"
-                                SelectedValuePath="Key"
-                                SelectedValue="{Binding ReplaceSelection}"
-                                >
-                            </ComboBox>
-                            <Button
-                                Content="Preview"
-                                Command="{Binding PreviewPathCommand}"/>
-                        </StackPanel> 
-                    </DataTemplate>
-                </ListBox.ItemTemplate>
-            </ListBox>
-        </ScrollViewer>
-    </StackPanel>
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition/>
+        </Grid.RowDefinitions>
+
+        <CheckBox Grid.Row="0" IsChecked="{Binding SomeChecked, Mode=OneWay}" Command="{Binding CheckAllCommand}"/>
+        <ListBox Grid.Row="1" ItemsSource="{Binding MapPaths}" ScrollViewer.VerticalScrollBarVisibility="Auto">
+            <ListBox.ItemTemplate>
+                <DataTemplate>
+                    <StackPanel Orientation="Horizontal">
+                        <CheckBox IsChecked="{Binding AddToMap}"/>
+                        <TextBox 
+                            Text="{Binding Name}"
+                            TextWrapping="NoWrap"
+                            AcceptsReturn="False"
+                            />
+                        <Label>
+                            <Label.Style>
+                                <Style TargetType="Label">
+                                    <Setter Property="Content" Value=""/>
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding OverlapFound}" Value="{x:Static vms:PathFileResultsPathViewModel+IsOverlap.FullOverlap}">
+                                            <Setter Property="Content" Value="Full Overlap Found"/>
+                                            <Setter Property="Foreground" Value="Red"/>
+                                        </DataTrigger>
+                                        <DataTrigger Binding="{Binding OverlapFound}" Value="{x:Static vms:PathFileResultsPathViewModel+IsOverlap.PartialOverlap}">
+                                            <Setter Property="Content" Value="Partial Overlap Found"/>
+                                            <Setter Property="Foreground" Value="Red"/>
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </Label.Style>
+                        </Label>
+                        <ComboBox 
+                            Style="{StaticResource ReplaceChoicesStyle}"
+                            ItemsSource="{Binding ReplaceChoiceNames}"
+                            DisplayMemberPath="Value"
+                            SelectedValuePath="Key"
+                            SelectedValue="{Binding ReplaceSelection}"
+                            >
+                        </ComboBox>
+                        <Button
+                            Content="Preview"
+                            Command="{Binding PreviewPathCommand}"/>
+                    </StackPanel> 
+                </DataTemplate>
+            </ListBox.ItemTemplate>
+        </ListBox>
+    </Grid>
 </UserControl>

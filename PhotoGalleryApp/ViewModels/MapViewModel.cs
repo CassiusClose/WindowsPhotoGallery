@@ -193,7 +193,26 @@ namespace PhotoGalleryApp.ViewModels
         {
             List<MapPath> paths = PathFileFormats.LoadFromTxtFile(filename);
 
-            LoadPathsFileResultsPopupViewModel popup = new LoadPathsFileResultsPopupViewModel(paths);
+            // Show a ProgessBar while calculating overlaps of each path
+            ProgressBarPopupViewModel progBar = new ProgressBarPopupViewModel((s, e) =>
+            {
+                if (s is null || e.Argument is null)
+                    throw new ArgumentException();
+
+                BackgroundWorker worker = (BackgroundWorker)s;
+                List<MapPath> paths = (List<MapPath>)e.Argument;
+
+                LoadPathsFileResultsPopupViewModel popup = new LoadPathsFileResultsPopupViewModel(paths, worker);
+
+                e.Result = popup;
+            }, paths);
+            ProgressBarPopupReturnArgs progArgs = (ProgressBarPopupReturnArgs)_nav.OpenPopup(progBar);
+
+            if (progArgs.Result == null)
+                throw new Exception();
+
+            // Show the loaded paths & their options
+            LoadPathsFileResultsPopupViewModel popup = (LoadPathsFileResultsPopupViewModel)progArgs.Result;
             LoadPathsFileResultsPopupReturnArgs args = (LoadPathsFileResultsPopupReturnArgs)_nav.OpenPopup(popup);
             if(args.PopupAccepted)
             {

@@ -92,6 +92,14 @@ namespace PhotoGalleryApp.Models
                 }
             }
 
+
+            // Don't add tracks with one point
+            foreach(int id in tracks.Keys)
+            {
+                if (tracks[id].Locations.Count == 1)
+                    tracks.Remove(id);
+            }
+
             return tracks.Values.ToList<MapPath>();
         }
     }

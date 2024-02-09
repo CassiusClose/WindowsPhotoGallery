@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -15,11 +16,12 @@ namespace PhotoGalleryApp.ViewModels
     {
         public PopupViewModel() : this(true) { }
 
-        public PopupViewModel(bool showAcceptButtons)
+        public PopupViewModel(bool showAcceptButtons, bool allowClose=true)
         {
             _closePopupCommand = new RelayCommand(ClosePopup);
 
             ShowAcceptButtons = showAcceptButtons;
+            AllowClose = allowClose;
         }
 
 
@@ -72,6 +74,19 @@ namespace PhotoGalleryApp.ViewModels
 
 
 
+        private bool _allowClose = true;
+        /// <summary>
+        /// Whether the user should be allowed to close the popup box
+        /// </summary>
+        public bool AllowClose
+        {
+            get { return _allowClose; }
+            set { _allowClose = value; OnPropertyChanged(); }
+        }
+
+
+
+
         private RelayCommand _closePopupCommand;
         public ICommand ClosePopupCommand => _closePopupCommand;
 
@@ -93,6 +108,10 @@ namespace PhotoGalleryApp.ViewModels
 
             if (acc && !ValidateData())
                 return;
+
+            // Enable closing so that the box will actually close
+            if (!AllowClose)
+                AllowClose = true;
 
             Accepted = acc;
             Open = false;
