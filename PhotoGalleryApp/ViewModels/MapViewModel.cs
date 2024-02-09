@@ -74,6 +74,20 @@ namespace PhotoGalleryApp.ViewModels
         }
 
 
+        private double _zoomLevel;
+        /// <summary>
+        /// The zoom level of the map.
+        /// </summary>
+        public double ZoomLevel 
+        {
+            get { return _zoomLevel; }
+            set
+            {
+                _zoomLevel = value;
+                OnPropertyChanged();
+            }
+        }
+
         #endregion Fields and Properties
 
 
@@ -90,7 +104,7 @@ namespace PhotoGalleryApp.ViewModels
             if (MapItemViewModelGenerator != null)
                 return MapItemViewModelGenerator(item);
 
-            return MapItemViewModel.CreateMapItemViewModel(item);
+            return MapItemViewModel.CreateMapItemViewModel(item, this);
         }
 
 
@@ -183,7 +197,6 @@ namespace PhotoGalleryApp.ViewModels
 
 
 
-
         /**
          * Attempts to load path data from the file at the given path. If the
          * parsing is successful, this will open a popup where the user can
@@ -194,18 +207,23 @@ namespace PhotoGalleryApp.ViewModels
             List<MapPath> paths = PathFileFormats.LoadFromTxtFile(filename);
 
             // Show a ProgessBar while calculating overlaps of each path
+            List<object> workArgs = new List<object>();
+            workArgs.Add(paths);
+            workArgs.Add(_map);
             ProgressBarPopupViewModel progBar = new ProgressBarPopupViewModel((s, e) =>
             {
                 if (s is null || e.Argument is null)
                     throw new ArgumentException();
 
                 BackgroundWorker worker = (BackgroundWorker)s;
-                List<MapPath> paths = (List<MapPath>)e.Argument;
+                List<object> args = (List<object>)e.Argument;
+                List<MapPath> paths = (List<MapPath>)args[0];
+                PhotoGalleryApp.Models.Map map = (PhotoGalleryApp.Models.Map)args[1];
 
-                LoadPathsFileResultsPopupViewModel popup = new LoadPathsFileResultsPopupViewModel(paths, worker);
+                LoadPathsFileResultsPopupViewModel popup = new LoadPathsFileResultsPopupViewModel(paths, map, worker);
 
                 e.Result = popup;
-            }, paths);
+            }, workArgs);
             ProgressBarPopupReturnArgs progArgs = (ProgressBarPopupReturnArgs)_nav.OpenPopup(progBar);
 
             if (progArgs.Result == null)

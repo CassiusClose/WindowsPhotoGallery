@@ -1,5 +1,6 @@
 ﻿using Microsoft.Maps.MapControl.WPF;
 using PhotoGalleryApp.Models;
+using PhotoGalleryApp.Utils;
 using PhotoGalleryApp.Views;
 using System;
 using System.Collections.Generic;
@@ -19,30 +20,115 @@ namespace PhotoGalleryApp.ViewModels
     /// </summary>
     public class MapPathViewModel : MapItemViewModel
     {
-        public MapPathViewModel(NavigatorViewModel nav, MapPath path)
+        public MapPathViewModel(NavigatorViewModel nav, MapPath path, MapViewModel map)
         {
             _openPageCommand = new RelayCommand(OpenPage);
 
             PreviewType = typeof(PhotoGalleryApp.Views.Maps.MapPathPreview);
 
             _nav = nav;
+
             _path = path;
+            _path.PropertyChanged += _path_PropertyChanged;
+
+            _map = map;
+            _map.PropertyChanged += _map_PropertyChanged;
 
             Points.CollectionChanged += Points_CollectionChanged;
         }
+
 
         public override void Cleanup() {}
 
 
         private NavigatorViewModel _nav;
         private MapPath _path;
+        private MapViewModel _map;
 
 
-        public LocationCollection Points { get { return _path.Locations; } }
+        // The current zoom level to show the path at. Zoom from 1-21
+        private int _zoomLevel = 1;
+
+        /// <summary>
+        /// The points of the path. These points might be simplified from the
+        /// original path, depending on the zoom level of the map and whether
+        /// the path is being edited.
+        /// </summary>
+        public LocationCollection Points 
+        { 
+            get 
+            {
+                // If editing, show the entire path always
+                if (EditMode)
+                    return _path.LocationsByZoom[_path.LocationsByZoom.Count - 1];
+
+                // If the path isn't visible, load the simplest possible path
+                if (!IsInView)
+                    return _path.LocationsByZoom[0];
+
+                return _path.LocationsByZoom[_zoomLevel-1]; 
+            } 
+        }
 
 
 
+        private bool _isInView;
+        /// <summary>
+        /// Whether the Path is in View in the map or not. This should only be
+        /// set by the view.
+        /// </summary>
+        public bool IsInView
+        {
+            get { return _isInView; }
+            set
+            {
+                _isInView = value;
+                OnPropertyChanged();
+                OnPropertyChanged(nameof(Points));
+            }
+        }
 
+
+        /// <summary>
+        /// Rectangular bounding box that contains the entire path
+        /// </summary>
+        public RectangleD BoundingBox
+        {
+            get { return _path.BoundingBox; }
+        }
+
+
+
+        #region Property Changed
+
+        private void _path_PropertyChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs e)
+        {
+            Trace.WriteLine(e.PropertyName);
+            if(e.PropertyName == nameof(MapPath.BoundingBox))
+            {
+                OnPropertyChanged(nameof(BoundingBox));
+            }
+        }
+
+        private void _map_PropertyChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs e)
+        {
+            if (sender is not MapViewModel)
+                return;
+
+            if (e.PropertyName == nameof(MapViewModel.ZoomLevel))
+            {
+                MapViewModel vm = (MapViewModel)sender;
+                int newLevel = (int)Math.Ceiling(vm.ZoomLevel);
+
+                if(newLevel != _zoomLevel)
+                {
+                    _zoomLevel = newLevel;
+                    OnPropertyChanged(nameof(Points));
+                }
+            }
+        }
+
+        #endregion Property Changed
 
 
         #region Selected Points
@@ -335,6 +421,8 @@ namespace PhotoGalleryApp.ViewModels
         #endregion Clicks
 
 
+        #region Path Style
+
         private double? _strokeThickness = null;
         /// <summary>
         /// If null, then the default stroke thickness will be used. If not
@@ -358,6 +446,7 @@ namespace PhotoGalleryApp.ViewModels
             set { _pathColor = value; OnPropertyChanged(); }
         }
 
+        #endregion Path Style
 
 
 
@@ -376,6 +465,8 @@ namespace PhotoGalleryApp.ViewModels
 
         protected override void EditModeChanged()
         {
+            OnPropertyChanged(nameof(Points));
+
             // Don't save the selection when leaving edit mode
             if(!EditMode)
                 ClearSelection();

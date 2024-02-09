@@ -70,8 +70,8 @@
                 Command="{Binding NewTrackFromSelectedCommand}"
                 IsEnabled="{Binding PathMultiplePointsSelection}"
                 />
-
         </StackPanel>
+
         <Grid Grid.Row="1">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition/>
@@ -83,6 +83,7 @@
                 x:Name="MapView"
                 Mode="Aerial"
                 PreviewMouseDoubleClick="MapView_PreviewMouseDoubleClick"
+                ZoomLevel="{Binding ZoomLevel, Mode=OneWayToSource}"
                 >
 
 

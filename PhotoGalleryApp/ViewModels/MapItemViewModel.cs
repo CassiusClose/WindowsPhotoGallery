@@ -40,8 +40,10 @@ namespace PhotoGalleryApp.ViewModels
             set
             {
                 _editMode = value;
-                OnPropertyChanged();
                 EditModeChanged();
+                // Keep this after EditModeChanged() so that MapPath can switch
+                // paths around before the edit mode pins are created
+                OnPropertyChanged();
             }
         }
 
@@ -93,10 +95,10 @@ namespace PhotoGalleryApp.ViewModels
         /**
          * Generator to create MapPathViewModels and MapLocationViewModels
          */
-        public static MapItemViewModel CreateMapItemViewModel(MapItem item)
+        public static MapItemViewModel CreateMapItemViewModel(MapItem item, MapViewModel map)
         {
             if (item is MapPath)
-                return new MapPathViewModel(MainWindow.GetNavigator(), (MapPath)item);
+                return new MapPathViewModel(MainWindow.GetNavigator(), (MapPath)item, map);
 
             else
                 return new MapLocationViewModel(MainWindow.GetNavigator(), (MapLocation)item);

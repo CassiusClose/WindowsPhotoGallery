@@ -16,17 +16,16 @@ namespace PhotoGalleryApp.ViewModels
     /// </summary>
     public class ProgressBarPopupViewModel : PopupViewModel
     {
-        public ProgressBarPopupViewModel(DoWorkEventHandler workFunction, object? functionArg = null) : base(false, false)
+        public ProgressBarPopupViewModel(DoWorkEventHandler workFunction, List<object>? functionArg = null) : base(false, false)
         {
             worker = new BackgroundWorker();
             worker.WorkerReportsProgress = true;
             worker.ProgressChanged += Worker_ProgressChanged;
             worker.DoWork += workFunction;
             worker.RunWorkerCompleted += Worker_RunWorkerCompleted;
-            _functionArg = functionArg;
 
             // Start the task
-            worker.RunWorkerAsync(_functionArg);
+            worker.RunWorkerAsync(functionArg);
         }
         public override void Cleanup() { }
 
@@ -50,9 +49,6 @@ namespace PhotoGalleryApp.ViewModels
             Progress = e.ProgressPercentage;
         }
 
-
-        // Argument to the work function
-        object? _functionArg;
 
         // Return value from the work function
         object? _result = null;

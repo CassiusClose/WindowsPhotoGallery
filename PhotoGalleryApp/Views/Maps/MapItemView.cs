@@ -36,7 +36,7 @@ namespace PhotoGalleryApp.Views.Maps
             DataContext = context;
 
             _map = map;
-            _map.MouseLeftButtonClick += Map_Click;
+            _map.AddLeftButtonClickHandler(Map_Click);
 
             // Put this before bindings, because they can depend on MainMapItem properties
             Init_MainMapItem();

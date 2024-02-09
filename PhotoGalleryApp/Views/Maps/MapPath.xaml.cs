@@ -24,6 +24,7 @@ using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Animation;
 using System.Windows.Media.Imaging;
+using System.Windows.Media.Media3D;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
 
@@ -48,13 +49,21 @@ namespace PhotoGalleryApp.Views.Maps
             map.MouseUp += Map_MouseUp;
             // Use preview to disable zoom on double click
             map.PreviewMouseDoubleClick += Map_DoubleClick;
+            map.MapView.ViewChangeOnFrame += MapView_ViewChangeOnFrame;
 
             BindingOperations.SetBinding(this, LocationsProperty, new Binding("Points"));
             BindingOperations.SetBinding(this, SelectionRangeProperty, new Binding("SelectionRange"));
             BindingOperations.SetBinding(this, OverrideStrokeThicknessProperty, new Binding("OverrideStrokeThickness"));
             BindingOperations.SetBinding(this, OverridePathColorProperty, new Binding("OverridePathColor"));
-        }
 
+            Binding b = new Binding("IsInView");
+            b.Mode = BindingMode.OneWayToSource;
+            BindingOperations.SetBinding(this, IsInViewProperty, b);
+
+            b = new Binding("BoundingBox");
+            b.Mode = BindingMode.OneWay;
+            BindingOperations.SetBinding(this, BoundingBoxProperty, b);
+        }
 
         /**
          * Removes all components from any MapLayers
@@ -147,9 +156,7 @@ namespace PhotoGalleryApp.Views.Maps
             get { return (LocationCollection)GetValue(LocationsProperty); }
             set {
                 SetValue(LocationsProperty, value);
-                PathLine.Locations = value;
-                if (EditMode)
-                    RebuildSelection();
+                LocationsChanged();
             }
         }
 
@@ -160,13 +167,22 @@ namespace PhotoGalleryApp.Views.Maps
             if(e.OldValue != null && e.OldValue is LocationCollection)
                 ((LocationCollection)e.OldValue).CollectionChanged -= control.Locations_CollectionChanged;
 
-            if(e.NewValue != null && e.NewValue is LocationCollection)
-                ((LocationCollection)e.NewValue).CollectionChanged += control.Locations_CollectionChanged;
+            control.LocationsChanged();
+        }
 
-            control.PathLine.Locations = control.Locations;
+        private void LocationsChanged()
+        {
+            Locations.CollectionChanged += Locations_CollectionChanged;
+            PathLine.Locations = Locations;
 
-            if (control.EditMode)
-                control.RebuildSelection();
+            if (EditMode)
+                RebuildSelection();
+
+            // The map will not redraw if the Locations property is reset, so
+            // trigger reset
+            MapPolyline line = new MapPolyline();
+            _map.MapView.Children.Add(line);
+            _map.MapView.Children.Remove(line);
         }
 
 
@@ -234,6 +250,7 @@ namespace PhotoGalleryApp.Views.Maps
                                 _selectionLine.Locations[i] = Locations[j];
                         }
                     }
+
                     break;
 
                 case NotifyCollectionChangedAction.Reset:
@@ -241,6 +258,7 @@ namespace PhotoGalleryApp.Views.Maps
                     // rebuild the whole selection
                     if (EditMode)
                         RebuildSelection();
+
                     break;
             }
         }
@@ -250,6 +268,81 @@ namespace PhotoGalleryApp.Views.Maps
 
         #endregion Locations Property
 
+
+
+        #region Is In View Property
+
+        public static readonly DependencyProperty IsInViewProperty = DependencyProperty.Register("IsInView", typeof(bool), typeof(MapPath));
+ 
+
+        /// <summary>
+        /// Whether the path is visible in the current map viewport
+        /// </summary>
+        public bool IsInView 
+        {
+            get { return (bool)GetValue(IsInViewProperty); }
+            set { 
+                if(IsInView != value)
+                    SetValue(IsInViewProperty, value); 
+            }
+        }
+
+
+        private void MapView_ViewChangeOnFrame(object? sender, MapEventArgs e)
+        {
+            UpdateIsInView();
+        }
+
+        private void UpdateIsInView()
+        {
+            if (Locations.Count == 0)
+                return;
+
+            Size viewportSize = _map.MapView.ViewportSize;
+
+            Point topLeft = _map.MapView.LocationToViewportPoint(new Location(BoundingBox.Bottom, BoundingBox.Left));
+            Point bottomRight = _map.MapView.LocationToViewportPoint(new Location(BoundingBox.Top, BoundingBox.Right));
+
+            bool val = false;
+            // If the map viewport intersects with the path bounding box
+            if(topLeft.X < viewportSize.Width && bottomRight.X > 0 && topLeft.Y > 0 && bottomRight.Y < viewportSize.Height)
+            {
+                val = true;
+            }
+
+            IsInView = val;
+        }
+
+        #endregion Is In View Property
+
+
+        #region Bounding Box Property
+
+        public static readonly DependencyProperty BoundingBoxProperty = DependencyProperty.Register("BoundingBox", typeof(RectangleD), typeof(MapPath),
+            new FrameworkPropertyMetadata(BoundingBoxPropertyChanged));
+
+        /**
+         * Rectangular bounding box around the path. Used to determine whether
+         * the path is in view or not
+         */
+        public RectangleD BoundingBox
+        {
+            get { return (RectangleD)GetValue(BoundingBoxProperty); }
+            set 
+            { 
+                SetValue(BoundingBoxProperty, value);
+                UpdateIsInView();
+            }
+        }
+
+
+        private static void BoundingBoxPropertyChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
+        {
+            MapPath path = (MapPath)d;
+            path.UpdateIsInView();
+        }
+
+        #endregion Bounding Box Property
 
 
         #region Selection

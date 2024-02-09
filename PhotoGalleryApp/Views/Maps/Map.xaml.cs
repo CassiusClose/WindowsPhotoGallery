@@ -51,7 +51,6 @@ namespace PhotoGalleryApp.Views.Maps
             _clickBehavior.MouseLeftButtonClick += MapView_Click;
             Interaction.GetBehaviors(MapView).Add(_clickBehavior);
 
-
             // If a polyline exists in the ItemsSource when the control is created, it will not
             // be displayed until the map coordinates are recalculated (by zooming, panning, etc.)
             // According to the following link, this is a bug with BingMaps' Map control. So once the
@@ -68,7 +67,6 @@ namespace PhotoGalleryApp.Views.Maps
             SelectedPinLayer.ItemsSource = _selectedPins;
             PreviewLayer.ItemsSource = _previews;
         }
-
 
 
         public static readonly DependencyProperty ItemsSourceProperty = DependencyProperty.Register("ItemsSource", typeof(ObservableCollection<MapItemViewModel>), typeof(Map),
@@ -110,7 +108,6 @@ namespace PhotoGalleryApp.Views.Maps
         {
             RefreshItems();
         }
-
 
 
         private void RefreshItems()
@@ -290,11 +287,15 @@ namespace PhotoGalleryApp.Views.Maps
          * Expose the event so that children of the map can hook into the click (children of the map should
          * have transparent backgrounds that don't detect clicks)
          */
-        public MouseButtonEventHandler? MouseLeftButtonClick
+        public void AddLeftButtonClickHandler(MouseButtonEventHandler handler)
         {
-            get { return _clickBehavior.MouseLeftButtonClick; }
-            set { _clickBehavior.MouseLeftButtonClick += value; }
-        }  
+            _clickBehavior.MouseLeftButtonClick += handler;
+        }
+
+        public void RemoveLeftButtonClickHandler(MouseButtonEventHandler handler) 
+        { 
+            _clickBehavior.MouseLeftButtonClick -= handler;
+        }
 
         private void MapView_Click(object sender, MouseEventArgs e)
         {
@@ -309,7 +310,7 @@ namespace PhotoGalleryApp.Views.Maps
         {
             e.Handled = true;
         }
-        
+
         #endregion Clicks
     }
 }

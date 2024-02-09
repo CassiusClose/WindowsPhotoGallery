@@ -17,7 +17,7 @@ namespace PhotoGalleryApp.ViewModels
     /// </summary>
     public class LoadPathsFileResultsPopupViewModel : PopupViewModel
     {
-        public LoadPathsFileResultsPopupViewModel(List<MapPath> paths, BackgroundWorker worker)
+        public LoadPathsFileResultsPopupViewModel(List<MapPath> paths, Map map, BackgroundWorker worker)
         {
             _checkAllCommand = new RelayCommand(CheckAllClicked);
 
@@ -25,7 +25,7 @@ namespace PhotoGalleryApp.ViewModels
 
             _pathsView = new ModelVMView<MapPath, PathFileResultsPathViewModel>(_paths, _createPathViewModel, _getPathFromViewModel);
 
-            FindOverlaps(worker);
+            FindOverlaps(map, worker);
         }
 
         public override void Cleanup() { }
@@ -128,7 +128,7 @@ namespace PhotoGalleryApp.ViewModels
         /**
          * This is an async task, so report progress with the BackgroundWorker
          */
-        private void FindOverlaps(BackgroundWorker worker)
+        private void FindOverlaps(Map map, BackgroundWorker worker)
         {
             float tot = MapPaths.Count;
             int count = 0;
@@ -154,7 +154,7 @@ namespace PhotoGalleryApp.ViewModels
 
 
                 // Make a list of all the existing MapPaths in the map
-                List<MapItem> mapPaths = MainWindow.GetCurrentSession().Map.ToList();
+                List<MapItem> mapPaths = map.ToList();
                 for(int i = 0; i < mapPaths.Count; i++)
                 {
                     if (mapPaths[i] is not MapPath)
