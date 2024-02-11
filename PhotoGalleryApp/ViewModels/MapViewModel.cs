@@ -153,7 +153,14 @@ namespace PhotoGalleryApp.ViewModels
             {
                 MapLocation loc = new MapLocation(args.Name, args.Location);
                 _map.Add(loc);
+
+                foreach(MapItemViewModel vm in MapItems)
+                {
+                    if (vm.GetModel() == loc)
+                        EditableMapItem = vm;
+                }
             }
+
         }
 
 

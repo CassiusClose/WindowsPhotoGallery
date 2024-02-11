@@ -35,6 +35,12 @@
                 Grid.Row="0" 
                 Content="Maps"
                 />
+
+            <Button
+                Content="Toggle Satellite"
+                Click="ToggleSatellite"
+                />
+
             <Button 
                 Content="Add Location"
                 Command="{Binding AddLocationCommand}"

@@ -312,5 +312,18 @@ namespace PhotoGalleryApp.Views.Maps
         }
 
         #endregion Clicks
+
+        private void ToggleSatellite(object sender, RoutedEventArgs e)
+        {
+            if(MapView.Mode is AerialMode)
+            {
+                if (((AerialMode)MapView.Mode).Labels)
+                    MapView.Mode = new RoadMode();
+                else
+                    MapView.Mode = new AerialMode(true);
+            }
+            else
+                MapView.Mode = new AerialMode();
+        }
     }
 }
