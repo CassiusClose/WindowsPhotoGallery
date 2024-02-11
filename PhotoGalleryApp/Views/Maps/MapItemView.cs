@@ -165,7 +165,7 @@ namespace PhotoGalleryApp.Views.Maps
 
 
         protected abstract void OpenPreview();
-        protected void ClosePreview()
+        protected virtual void ClosePreview()
         {
             if (_preview != null)
             {

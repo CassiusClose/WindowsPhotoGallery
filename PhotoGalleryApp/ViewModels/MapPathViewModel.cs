@@ -103,7 +103,6 @@ namespace PhotoGalleryApp.ViewModels
 
         private void _path_PropertyChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs e)
         {
-            Trace.WriteLine(e.PropertyName);
             if(e.PropertyName == nameof(MapPath.BoundingBox))
             {
                 OnPropertyChanged(nameof(BoundingBox));
@@ -465,11 +464,14 @@ namespace PhotoGalleryApp.ViewModels
 
         protected override void EditModeChanged()
         {
-            OnPropertyChanged(nameof(Points));
-
             // Don't save the selection when leaving edit mode
             if(!EditMode)
                 ClearSelection();
+
+            // Put this after the above, so that the selection line is disabled
+            // before the path changes. Otherwise, it tries to rebuild the
+            // selection line with the new path
+            OnPropertyChanged(nameof(Points));
         }
 
 

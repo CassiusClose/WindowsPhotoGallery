@@ -405,7 +405,7 @@ namespace PhotoGalleryApp.Views.Maps
         private void CreateSelectionLine()
         {
             _selectionLine = new MapPolyline();
-            _selectionLine.Stroke = new SolidColorBrush(Colors.Blue);
+            _selectionLine.Stroke = SelectionColorBrush;
             _selectionLine.StrokeThickness = 6;
             _selectionLine.Locations = new LocationCollection();
             _selectionLine.MouseDown += SelectionLine_MouseDown;
@@ -648,20 +648,25 @@ namespace PhotoGalleryApp.Views.Maps
             else
                 OriginalColorBrush = new SolidColorBrush(DefaultColor);
 
-            PathLine.Stroke = OriginalColorBrush;
+            if(!PreviewOpen)
+                PathLine.Stroke = OriginalColorBrush;
         }
 
         public Color DefaultColor = Colors.Red;
         public SolidColorBrush OriginalColorBrush = new SolidColorBrush(Colors.Red);
         public SolidColorBrush FadedColorBrush = new SolidColorBrush(Colors.DarkRed);
+        public SolidColorBrush SelectionColorBrush = new SolidColorBrush(Colors.Blue);
 
 
         protected override void FadedColorChanged()
         {
-            if (FadedColor)
-                PathLine.Stroke = FadedColorBrush;
-            else
-                PathLine.Stroke = OriginalColorBrush;
+            if(!PreviewOpen)
+            {
+                if (FadedColor)
+                    PathLine.Stroke = FadedColorBrush;
+                else
+                    PathLine.Stroke = OriginalColorBrush;
+            }
         }
 
         #endregion Path Style
@@ -696,8 +701,32 @@ namespace PhotoGalleryApp.Views.Maps
                     Location previewLoc = MapUtils.GetClosestLocationOnPath(Locations, _lastPathClickPos, _map.MapView);
                     MapLayer.SetPosition(_preview, previewLoc);
                 }
+
+                _map.LineLayer_Remove(PathLine);
+                PathLine.Stroke = SelectionColorBrush;
+                _map.SelectedLineLayer_Add(PathLine);
             }
         }
+
+        protected override void ClosePreview()
+        {
+            if(_preview != null)
+            {
+                if(!EditMode)
+                {
+                    _map.SelectedLineLayer_Remove(PathLine);
+                    _map.LineLayer_Add(PathLine);
+                }
+
+                if (FadedColor)
+                    PathLine.Stroke = FadedColorBrush;
+                else
+                    PathLine.Stroke = OriginalColorBrush;
+            }
+
+            base.ClosePreview();
+        }
+
 
         protected override void EditModeChanged()
         {
@@ -706,8 +735,11 @@ namespace PhotoGalleryApp.Views.Maps
             // Show the path line above all other lines
             if(EditMode)
             {
-                _map.LineLayer_Remove(PathLine);
-                _map.SelectedLineLayer_Add(PathLine);
+                if(!PreviewOpen)
+                {
+                    _map.LineLayer_Remove(PathLine);
+                    _map.SelectedLineLayer_Add(PathLine);
+                }
             }
 
             // If leaving edit mode, remove all edit-mode related components
@@ -717,8 +749,11 @@ namespace PhotoGalleryApp.Views.Maps
                 RemoveSelectionPin();
                 RemoveNearbyPin();
 
-                _map.SelectedLineLayer_Remove(PathLine);
-                _map.LineLayer_Add(PathLine);
+                if(!PreviewOpen)
+                {
+                    _map.SelectedLineLayer_Remove(PathLine);
+                    _map.LineLayer_Add(PathLine);
+                }
             }
         }
 
