@@ -23,7 +23,7 @@ namespace PhotoGalleryApp.ViewModels
 
             _paths = new ObservableCollection<MapPath>(paths);
 
-            _pathsView = new ModelVMView<MapPath, PathFileResultsPathViewModel>(_paths, _createPathViewModel, _getPathFromViewModel);
+            _pathsView = new LoadMapPathResultsView(_paths);
 
             FindOverlaps(map, worker);
         }
@@ -46,15 +46,7 @@ namespace PhotoGalleryApp.ViewModels
         }
 
 
-        ModelVMView<MapPath, PathFileResultsPathViewModel> _pathsView;
-        private PathFileResultsPathViewModel _createPathViewModel(MapPath path) 
-        { 
-            PathFileResultsPathViewModel vm = new PathFileResultsPathViewModel(path);
-            vm.PropertyChanged += PathVM_PropertyChanged;
-            return vm;
-        }
-
-        private MapPath _getPathFromViewModel(PathFileResultsPathViewModel vm) { return vm.Path; }
+        LoadMapPathResultsView _pathsView;
 
         #endregion Potential Paths
 

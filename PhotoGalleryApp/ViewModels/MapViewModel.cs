@@ -36,7 +36,7 @@ namespace PhotoGalleryApp.ViewModels
             _newTrackFromSelectedCommand = new RelayCommand(NewTrackFromSelected);
             _splitTrackAtSelectedCommand = new RelayCommand(SplitTrackAtSelected);
 
-            _mapItems = new ModelVMView<MapItem, MapItemViewModel>(_map, CreateMapItemViewModel, _getMapItemModel);
+            _mapItems = new MapItemView(_map, this);
         }
 
         public override void Cleanup()
@@ -55,7 +55,7 @@ namespace PhotoGalleryApp.ViewModels
 
 
         // Maintains a list of ViewModels
-        private ModelVMView<MapItem, MapItemViewModel> _mapItems;
+        private MapItemView _mapItems;
 
         // Expose the View list
         public ObservableCollection<MapItemViewModel> MapItems { 

@@ -6,33 +6,39 @@ using System.Collections.ObjectModel;
 using System.Collections.Specialized;
 using System.Diagnostics;
 using System.Linq;
+using System.Security.Permissions;
 using System.Text;
 using System.Threading.Tasks;
 
 namespace PhotoGalleryApp.Utils
 {
     /// <summary>
-    /// A View-type class that maintains a list of ViewModel objects based on a changing list of Model objects.
+    /// A View-type class that maintains a list of ViewModel objects based on a
+    /// changing list of Model objects. This class is abstract. Subclasses
+    /// should be created for each pair of model & view model and should
+    /// implement functions that deal with model & view-model specific
+    /// implementations.
     /// </summary>
-    public class ModelVMView<ModelType, ViewModelType> where ViewModelType : ViewModelBase
+    public abstract class ModelVMView<ModelType, ViewModelType> where ViewModelType : ViewModelBase
     {
         /// <summary>
         /// </summary>
         /// <param name="modelColl">The collection of model items to reference</param>
-        /// <param name="createVM">A function that creates a ViewModel object from a given Model object</param>
-        /// <param name="getModel">A function that returns the Model object from an associated ViewModel</param>
-        public ModelVMView(ObservableCollection<ModelType> modelColl, CreateViewModelDelegate createVM, GetModelDelegate getModel)
+        /// <param name="expand">Whether to expand collections of items</param>
+        /// <param name="refresh">Whether to initially refresh the collection. Subclasses can pass false if they need to do more initialization before refreshing</param>
+        public ModelVMView(ObservableCollection<ModelType> modelColl, bool expand=false, bool refresh=true)
         {
-            CreateViewModel = createVM;
-            GetModel = getModel;
+            _expand = expand;
 
             View = new ObservableCollection<ViewModelType>();
 
             _modelColl = modelColl;
             _modelColl.CollectionChanged += _modelColl_CollectionChanged;
 
-            CollectionChanged_Reset();
+            if (refresh)
+                Refresh();
         }
+
 
         public void Cleanup()
         {
@@ -50,34 +56,118 @@ namespace PhotoGalleryApp.Utils
 
 
 
+        // If Model items are collections, whether or not to create a single
+        // ViewModel for the collection or two create a ViewModel for each item
+        // within the collection.
+        private bool _expand;
+
+
+
+
+        /**
+         * Completely rebuilds the list of ViewModels
+         */
+        public void Refresh()
+        {
+            CollectionChanged_Reset();
+        }
+
+
+
+
         /// <summary>
         /// Given a Model object, returns a new ViewModel object associated with it.
         /// </summary>
-        /// <param name="m">The Model to create a ViewModel for</param>
-        /// <returns>The associated ViewModel</returns>
-        public delegate ViewModelType CreateViewModelDelegate(ModelType m);
-        private CreateViewModelDelegate CreateViewModel;
-
-        private ViewModelType _createViewModel(ModelType m)
-        {
-            ViewModelType vm = CreateViewModel(m);
-            return vm;
-        }
+        protected abstract ViewModelType CreateViewModel(ModelType item);
 
 
         /// <summary>
         /// Given a ViewModel object, returns the associated Model object
         /// </summary>
-        /// <param name="vm">A ViewModelType object</param>
-        /// <returns>The associated ModelType object</returns>
-        public delegate ModelType GetModelDelegate(ViewModelType vm);
-        private GetModelDelegate GetModel;
+        protected abstract ModelType GetModel(ViewModelType vm);
+
+
+
+
+        /// <summary>
+        /// Given a Model object, returns whether it is a collection
+        /// </summary>
+        protected abstract bool IsCollection(ModelType item);
+
+        /// <summary>
+        /// Given a collection Model object, returns a List of the collection.
+        /// This will only be called on Model objects that return true when
+        /// passed to IsCollection().
+        /// </summary>
+        protected abstract IList GetCollection(ModelType item);
+
+        /// <summary>
+        /// Adds the given CollectionChanged handler to the given Model's
+        /// collection. This should not attach the CollectionChanged handler to
+        /// any children of the collection - that will be handled by this
+        /// class.
+        /// </summary>
+        protected abstract void AddCollectionChangedListener(ModelType model, NotifyCollectionChangedEventHandler func);
+
+
+        /**
+         * Attaches this class' CollectionChanged handler to the given Model
+         * object. If collections should be expanded, add to all its children
+         * too.
+         */
+        private void _addCollectionChangedListener(ModelType model)
+        {
+            AddCollectionChangedListener(model, _modelColl_CollectionChanged);
+
+            if(_expand && IsCollection(model))
+            {
+                foreach(ModelType i in GetCollection(model))
+                {
+                    if(IsCollection(i))
+                        _addCollectionChangedListener(i);
+                }
+            }
+        }
+
+
+        /// <summary>
+        /// Removes the given CollectionChanged handler from the given Model's
+        /// collection. This should not remove the CollectionChanged handler
+        /// from any children of the collection - that will be handled by this
+        /// class.
+        /// </summary>
+        protected abstract void RemoveCollectionChangedListener(ModelType model, NotifyCollectionChangedEventHandler func);
+
+        /**
+         * Removes this class' CollectionChanged handler from the given Model
+         * object. If collections should be expanded, remove from all its
+         * children too.
+         */
+        private void _removeCollectionChangedListener(ModelType model)
+        {
+            RemoveCollectionChangedListener(model, _modelColl_CollectionChanged);
+
+            if(_expand && IsCollection(model))
+            {
+                foreach(ModelType i in GetCollection(model))
+                {
+                    if(IsCollection(i))
+                        _removeCollectionChangedListener(i);
+                }
+            }
+        }
 
 
         /** Adds an item to the view */
-        private void AddItem(ViewModelType vm)
+        private void AddItem(ModelType item)
         {
-            View.Add(vm);
+            if(_expand && IsCollection(item))
+            {
+                foreach (ModelType i in GetCollection(item))
+                    AddItem(i);
+            }
+            else
+                View.Add(CreateViewModel(item));
         }
 
 
@@ -114,7 +204,9 @@ namespace PhotoGalleryApp.Utils
         {
             foreach(ModelType m in newItems)
             {
-                AddItem(_createViewModel(m));
+                if(_expand && IsCollection(m))
+                    _addCollectionChangedListener(m);
+                AddItem(m);
             }
         }
 
@@ -122,6 +214,9 @@ namespace PhotoGalleryApp.Utils
         {
             foreach(ModelType c in oldItems)
             {
+                if(_expand && IsCollection(c))
+                    _removeCollectionChangedListener(c);
+
                 int i;
                 for(i = 0; i < View.Count; i++)
                 {
@@ -138,6 +233,30 @@ namespace PhotoGalleryApp.Utils
         }
 
 
+        private void RemoveItem(ModelType item)
+        {
+            int i;
+            for(i = 0; i < View.Count; i++)
+            {
+                ModelType m = GetModel(View[i]);
+                if (m.Equals(item))
+                {
+                    View.RemoveAt(i);
+                    break;
+                }
+            }
+            if(i == View.Count)
+                throw new Exception("Error: Can't find item when removing from MediaView");
+
+            if(_expand && IsCollection(item))
+            {
+                foreach(ModelType child in GetCollection(item))
+                    RemoveItem(child);
+            }
+        }
+
+
+
         private void CollectionChanged_Replace(IList newItems, IList oldItems)
         {
             CollectionChanged_Remove(oldItems);
@@ -149,7 +268,11 @@ namespace PhotoGalleryApp.Utils
         {
             View.Clear();
             foreach (ModelType m in _modelColl)
-                View.Add(CreateViewModel(m));
+            {
+                if(_expand && IsCollection(m))
+                    _addCollectionChangedListener(m);
+                AddItem(m);
+            }
         }
     }
 }

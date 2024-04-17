@@ -101,7 +101,7 @@ namespace PhotoGalleryApp.ViewModels
                 return new MapPathViewModel(MainWindow.GetNavigator(), (MapPath)item, map);
 
             else
-                return new MapLocationViewModel(MainWindow.GetNavigator(), (MapLocation)item);
+                return new MapLocationViewModel(MainWindow.GetNavigator(), (MapLocation)item, map);
         }
 
     }
