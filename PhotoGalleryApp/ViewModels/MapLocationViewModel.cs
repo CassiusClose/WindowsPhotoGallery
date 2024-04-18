@@ -1,7 +1,10 @@
 ﻿using Microsoft.Maps.MapControl.WPF;
 using PhotoGalleryApp.Models;
+using PhotoGalleryApp.Utils;
 using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
+using System.Diagnostics;
 using System.Linq;
 using System.Security.Permissions;
 using System.Text;
@@ -15,22 +18,27 @@ namespace PhotoGalleryApp.ViewModels
     /// </summary>
     public class MapLocationViewModel : MapItemViewModel
     {
-        public MapLocationViewModel(NavigatorViewModel nav, MapLocation location)
+        public MapLocationViewModel(NavigatorViewModel nav, MapLocation location, MapViewModel map) : base(map)
         {
             _openPageCommand = new RelayCommand(OpenPage);
 
             PreviewType = typeof(PhotoGalleryApp.Views.Maps.MapLocationPreview);
 
             _nav = nav;
+
             _location = location;
+            _location.PropertyChanged += _location_PropertyChanged;
         }
 
-        public override void Cleanup() { }
+        public override void Cleanup() 
+        {
+            _location.PropertyChanged -= _location_PropertyChanged;
+        }
 
 
         private NavigatorViewModel _nav;
         private MapLocation _location;
-        
+
 
         public Location Location
         {
@@ -43,6 +51,15 @@ namespace PhotoGalleryApp.ViewModels
         }
 
 
+        /// <summary>
+        /// Whether or not this item is part of the family tree of the item
+        /// that is currently being edited. This will be set by MapViewModel.
+        /// </summary>
+        public bool PartOfEditTree
+        {
+            get; set;
+        }
+        
 
         public override MapItem GetModel()
         {
@@ -59,6 +76,12 @@ namespace PhotoGalleryApp.ViewModels
         public void OpenPage()
         {
             _nav.NewPage(new LocationPageViewModel(_location));
+        }
+
+        private void _location_PropertyChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs e)
+        {
+            if(e.PropertyName == nameof(MapLocation.Location))
+                OnPropertyChanged(nameof(Location));
         }
     }
 }

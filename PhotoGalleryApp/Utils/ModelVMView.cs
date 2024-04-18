@@ -49,7 +49,7 @@ namespace PhotoGalleryApp.Utils
 
 
         // The list of Model items to base the ViewModel list on
-        private ObservableCollection<ModelType> _modelColl;
+        protected ObservableCollection<ModelType> _modelColl;
 
         // The list of ViewModels
         public ObservableCollection<ViewModelType> View { get; }
@@ -158,8 +158,18 @@ namespace PhotoGalleryApp.Utils
         }
 
 
+
+        /// <summary>
+        /// Cleans up the given ViewModel object before it is removed from the
+        /// View. This lets subclasses remove any event handlers that they
+        /// installed.
+        /// </summary>
+        protected abstract void PrepareForRemoval(ViewModelType vm);
+
+
+
         /** Adds an item to the view */
-        private void AddItem(ModelType item)
+        protected void AddItem(ModelType item)
         {
             if(_expand && IsCollection(item))
             {
@@ -233,22 +243,23 @@ namespace PhotoGalleryApp.Utils
         }
 
 
-        private void RemoveItem(ModelType item)
+        protected void RemoveItem(ModelType item, bool removeChildren=true)
         {
             int i;
             for(i = 0; i < View.Count; i++)
             {
                 ModelType m = GetModel(View[i]);
-                if (m.Equals(item))
+                if (ReferenceEquals(m, item))
                 {
+                    PrepareForRemoval(View[i]);
                     View.RemoveAt(i);
                     break;
                 }
             }
-            if(i == View.Count)
+            if(i == View.Count+1)
                 throw new Exception("Error: Can't find item when removing from MediaView");
 
-            if(_expand && IsCollection(item))
+            if(removeChildren && _expand && IsCollection(item))
             {
                 foreach(ModelType child in GetCollection(item))
                     RemoveItem(child);

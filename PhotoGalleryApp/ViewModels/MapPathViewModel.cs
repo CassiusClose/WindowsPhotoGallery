@@ -20,7 +20,7 @@ namespace PhotoGalleryApp.ViewModels
     /// </summary>
     public class MapPathViewModel : MapItemViewModel
     {
-        public MapPathViewModel(NavigatorViewModel nav, MapPath path, MapViewModel map)
+        public MapPathViewModel(NavigatorViewModel nav, MapPath path, MapViewModel map) : base(map)
         {
             _openPageCommand = new RelayCommand(OpenPage);
 
@@ -31,9 +31,6 @@ namespace PhotoGalleryApp.ViewModels
             _path = path;
             _path.PropertyChanged += _path_PropertyChanged;
 
-            _map = map;
-            _map.PropertyChanged += _map_PropertyChanged;
-
             Points.CollectionChanged += Points_CollectionChanged;
         }
 
@@ -43,7 +40,6 @@ namespace PhotoGalleryApp.ViewModels
 
         private NavigatorViewModel _nav;
         private MapPath _path;
-        private MapViewModel _map;
 
 
         // The current zoom level to show the path at. Zoom from 1-21
@@ -109,21 +105,13 @@ namespace PhotoGalleryApp.ViewModels
             }
         }
 
-        private void _map_PropertyChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs e)
+        protected override void ZoomLevelChanged()
         {
-            if (sender is not MapViewModel)
-                return;
-
-            if (e.PropertyName == nameof(MapViewModel.ZoomLevel))
+            int newLevel = (int)Math.Ceiling(_mapZoomLevel);
+            if(newLevel != _zoomLevel)
             {
-                MapViewModel vm = (MapViewModel)sender;
-                int newLevel = (int)Math.Ceiling(vm.ZoomLevel);
-
-                if(newLevel != _zoomLevel)
-                {
-                    _zoomLevel = newLevel;
-                    OnPropertyChanged(nameof(Points));
-                }
+                _zoomLevel = newLevel;
+                OnPropertyChanged(nameof(Points));
             }
         }
 

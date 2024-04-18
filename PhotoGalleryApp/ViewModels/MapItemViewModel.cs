@@ -15,6 +15,34 @@ namespace PhotoGalleryApp.ViewModels
     /// </summary>
     public abstract class MapItemViewModel : ViewModelBase
     {
+        public MapItemViewModel(MapViewModel map)
+        {
+            _map = map;
+            _map.PropertyChanged += Map_PropertyChanged;
+        }
+
+
+        protected MapViewModel _map;
+
+        /** Call function when map level changes */
+        protected void Map_PropertyChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs e)
+        {
+            if (sender is not MapViewModel)
+                throw new ArgumentException();
+
+            if(e.PropertyName == nameof(MapViewModel.ZoomLevel))
+            {
+                _mapZoomLevel = ((MapViewModel)sender).ZoomLevel;
+                ZoomLevelChanged();
+            }
+        }
+
+
+        protected double _mapZoomLevel;
+
+        protected virtual void ZoomLevelChanged() { }
+
+
         /// <summary>
         /// Returns the model that the ViewModel is associated with
         /// </summary>

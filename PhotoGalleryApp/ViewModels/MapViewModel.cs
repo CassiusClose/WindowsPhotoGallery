@@ -37,10 +37,12 @@ namespace PhotoGalleryApp.ViewModels
             _splitTrackAtSelectedCommand = new RelayCommand(SplitTrackAtSelected);
 
             _mapItems = new MapItemView(_map, this);
+            MapItems.CollectionChanged += MapItems_CollectionChanged;
         }
 
         public override void Cleanup()
         {
+            MapItems.CollectionChanged -= MapItems_CollectionChanged;
             _mapItems.Cleanup();
         }
 
@@ -54,12 +56,51 @@ namespace PhotoGalleryApp.ViewModels
         private PhotoGalleryApp.Models.Map _map;
 
 
+
+
+
         // Maintains a list of ViewModels
         private MapItemView _mapItems;
 
         // Expose the View list
         public ObservableCollection<MapItemViewModel> MapItems { 
             get { return _mapItems.View; }
+        }
+
+        private void MapItems_CollectionChanged(object? sender, System.Collections.Specialized.NotifyCollectionChangedEventArgs e)
+        {
+            // When an item is added & an item is being edited, make all new items faded too
+            switch(e.Action)
+            {
+                case System.Collections.Specialized.NotifyCollectionChangedAction.Add:
+                case System.Collections.Specialized.NotifyCollectionChangedAction.Replace:
+                    if (e.NewItems == null)
+                        throw new ArgumentException();
+
+                    if(EditableMapItem != null)
+                    {
+                        foreach(MapItemViewModel vm in e.NewItems)
+                        {
+                            if (!ReferenceEquals(vm, EditableMapItem))
+                                vm.FadedColor = true;
+                        }
+                    }
+
+                    break;
+
+                default:
+                    if(EditableMapItem != null)
+                    {
+                        foreach(MapItemViewModel vm in MapItems)
+                        {
+                            if (ReferenceEquals(vm, EditableMapItem))
+                                vm.FadedColor = false;
+                            else
+                                vm.FadedColor = true;
+                        }
+                    }
+                    break;
+            }
         }
 
 
@@ -407,6 +448,12 @@ namespace PhotoGalleryApp.ViewModels
                 {
                     _editableMapItem.PropertyChanged -= _editableMapItem_PropertyChanged;
                     _editableMapItem.EditMode = false;
+
+                    foreach(MapItemViewModel item in MapItems)
+                    {
+                        if(item is MapLocationViewModel)
+                            ((MapLocationViewModel)item).PartOfEditTree = false;
+                    }
                 }
 
                 _editableMapItem = value;
@@ -425,12 +472,46 @@ namespace PhotoGalleryApp.ViewModels
                         else
                             vm.FadedColor = true;
                     }
+
+
+                    // Mark any currently displayed MapItems that are in the
+                    // same tree as the edited item as so. This prevents
+                    // zooming from collapsing & thus hiding the currently
+                    // edited location
+                    if(_editableMapItem is MapLocationViewModel)
+                    {
+                        // The highest parent of the edited item
+                        MapLocation parent = (MapLocation)((MapLocationViewModel)_editableMapItem).GetModel();
+                        while (parent.Parent != null)
+                            parent = parent.Parent;
+
+                        foreach(MapItemViewModel vm in MapItems)
+                        {
+                            if (vm is not MapLocationViewModel) 
+                                continue;
+                            MapLocation loc = (MapLocation)((MapLocationViewModel)vm).GetModel();
+
+                            // Find the highest parent of the current item
+                            MapLocation par = loc;
+                            while (par.Parent != null)
+                                par = par.Parent;
+
+                            // If this item & the edited item have the same
+                            // parent, they're part of the same tree
+                            if (ReferenceEquals(parent, par))
+                                ((MapLocationViewModel)vm).PartOfEditTree = true;
+                        }
+                    }
                 }
                 else
                 {
                     // Unfade all items
                     foreach(MapItemViewModel vm in MapItems)
                         vm.FadedColor = false;
+
+                    // If editing has finished, then refresh the list for
+                    // accurate MapLocation expansions
+                    _mapItems.Refresh();
                 }
 
                 OnPropertyChanged();

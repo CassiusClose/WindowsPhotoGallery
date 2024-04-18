@@ -54,7 +54,9 @@ namespace PhotoGalleryApp.Views.Maps
             Pin = new Pushpin();
             Pin.Background = OriginalColorBrush;
 
-            SetBinding(LocationProperty, new Binding("Location"));
+            Binding b = new Binding("Location");
+            b.Mode = BindingMode.TwoWay;
+            SetBinding(LocationProperty, b);
 
             _map.PinLayer_Add(Pin);
         }

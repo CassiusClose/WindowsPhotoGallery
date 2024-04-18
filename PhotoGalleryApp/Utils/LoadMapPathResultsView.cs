@@ -44,6 +44,8 @@ namespace PhotoGalleryApp.Utils
             return false;
         }
 
+        protected override void PrepareForRemoval(PathFileResultsPathViewModel vm) { }
+
         protected override void RemoveCollectionChangedListener(MapPath model, NotifyCollectionChangedEventHandler func)
         {
             throw new ArgumentException();
