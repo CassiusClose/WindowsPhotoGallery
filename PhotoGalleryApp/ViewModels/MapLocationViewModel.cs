@@ -49,16 +49,6 @@ namespace PhotoGalleryApp.ViewModels
                 OnPropertyChanged();
             }
         }
-
-
-        /// <summary>
-        /// Whether or not this item is part of the family tree of the item
-        /// that is currently being edited. This will be set by MapViewModel.
-        /// </summary>
-        public bool PartOfEditTree
-        {
-            get; set;
-        }
         
 
         public override MapItem GetModel()

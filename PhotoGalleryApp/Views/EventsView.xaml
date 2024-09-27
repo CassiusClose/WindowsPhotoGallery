@@ -16,6 +16,6 @@
             Content="View Entire Gallery"
             Command="{Binding OpenGalleryCommand}"
             ></Button>
-        <local:FolderList ItemsSource="{Binding Folders}"/>
+        <local:FolderTree ItemsSource="{Binding Folders}"/>
     </StackPanel>
 </UserControl>

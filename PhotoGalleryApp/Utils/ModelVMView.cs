@@ -78,7 +78,9 @@ namespace PhotoGalleryApp.Utils
         /// <summary>
         /// Given a Model object, returns a new ViewModel object associated with it.
         /// </summary>
-        protected abstract ViewModelType CreateViewModel(ModelType item);
+        protected abstract ViewModelType? CreateViewModel(ModelType item);
+
+        protected virtual void PostCreation(ViewModelType vm) {}
 
 
         /// <summary>
@@ -164,20 +166,27 @@ namespace PhotoGalleryApp.Utils
         /// View. This lets subclasses remove any event handlers that they
         /// installed.
         /// </summary>
-        protected abstract void PrepareForRemoval(ViewModelType vm);
+        protected virtual void PrepareForRemoval(ViewModelType vm) {}
 
 
 
         /** Adds an item to the view */
         protected void AddItem(ModelType item)
         {
-            if(_expand && IsCollection(item))
+            if (_expand && IsCollection(item))
             {
                 foreach (ModelType i in GetCollection(item))
                     AddItem(i);
             }
-            else
-                View.Add(CreateViewModel(item));
+            else 
+            {
+                ViewModelType? vm = CreateViewModel(item);
+                if (vm != null)
+                {
+                    PostCreation(vm);
+                    View.Add((ViewModelType)vm);
+                }
+            }
         }
 
 
@@ -280,8 +289,7 @@ namespace PhotoGalleryApp.Utils
             View.Clear();
             foreach (ModelType m in _modelColl)
             {
-                if(_expand && IsCollection(m))
-                    _addCollectionChangedListener(m);
+                _addCollectionChangedListener(m);
                 AddItem(m);
             }
         }

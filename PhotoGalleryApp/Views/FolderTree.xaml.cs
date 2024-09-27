@@ -18,20 +18,20 @@ using System.Windows.Shapes;
 namespace PhotoGalleryApp.Views
 {
     /// <summary>
-    /// Interaction logic for FolderList.xaml
+    /// Interaction logic for FolderTree.xaml
     /// </summary>
-    public partial class FolderList : UserControl
+    public partial class FolderTree : UserControl
     {
-        public FolderList()
+        public FolderTree()
         {
             InitializeComponent();
         }
 
-        public static readonly DependencyProperty ItemsSourceProperty = DependencyProperty.Register("ItemsSource", typeof(ObservableCollection<FolderLabelViewModel>), typeof(FolderList));
+        public static readonly DependencyProperty ItemsSourceProperty = DependencyProperty.Register("ItemsSource", typeof(ObservableCollection<FolderViewModel>), typeof(FolderTree));
 
-        public ObservableCollection<FolderLabelViewModel> ItemsSource
+        public ObservableCollection<EventFolderViewModel> ItemsSource
         {
-            get { return (ObservableCollection<FolderLabelViewModel>)GetValue(ItemsSourceProperty); }
+            get { return (ObservableCollection<EventFolderViewModel>)GetValue(ItemsSourceProperty); }
             set { SetValue(ItemsSourceProperty, value); }
         }
 

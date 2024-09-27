@@ -23,21 +23,21 @@ namespace PhotoGalleryApp.ViewModels
 
             _createEventCommand = new RelayCommand(CreateEvent);
 
-            _folders = new FolderView(coll, false);
-            _folders.FolderOpened += FolderChosen;
+            _folders = new YearMonthFolderTree(coll, false);
+            _folders.FolderClicked += FolderChosen;
         }
         public override void Cleanup()
         {
             _folders.Cleanup();
-            _folders.FolderOpened -= FolderChosen;
+            _folders.FolderClicked -= FolderChosen;
         }
 
 
         private NavigatorViewModel _nav;
         private MediaCollection _collection;
-        private FolderView _folders;
+        private YearMonthFolderTree _folders;
 
-        public ObservableCollection<FolderLabelViewModel> Folders 
+        public ObservableCollection<FolderViewModel> Folders 
         {
             get { return _folders.Folders; }
         }
@@ -68,8 +68,12 @@ namespace PhotoGalleryApp.ViewModels
         /**
          * When an event is chosen, find the event instance and close the popup
          */
-        private void FolderChosen(FolderLabelViewModel folder) 
-        { 
+        private void FolderChosen(FolderViewModel folderVM)
+        {
+            if (folderVM is not EventFolderViewModel)
+                throw new Exception("EventSelectionPopup FolderViewModel is not FolderLabelViewModel");
+
+            EventFolderViewModel folder = (EventFolderViewModel)folderVM;
             // If it's an event, open the event's collection
             if (folder.Timestamp.Precision == TimeRange.Second)
             {

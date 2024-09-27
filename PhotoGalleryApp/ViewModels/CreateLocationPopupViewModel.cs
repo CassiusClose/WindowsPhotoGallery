@@ -1,26 +1,26 @@
 ﻿using Microsoft.Maps.MapControl.WPF;
+using PhotoGalleryApp.Models;
+using PhotoGalleryApp.Utils;
 using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
 namespace PhotoGalleryApp.ViewModels
 {
-    /**
-     * ViewModel for the Popup Window to create a new MapLocation.
-     */
+    /// <summary>
+    /// ViewModel for the Popup Window to create a new MapLocation.
+    /// </summary>
     public class CreateLocationPopupViewModel : PopupViewModel
     {
-        public CreateLocationPopupViewModel() {
-            _latitudeText = "0.0000";
-            _longitudeText = "0.0000";
-        }
-
-        public CreateLocationPopupViewModel(Location l)
+        public CreateLocationPopupViewModel(Location l, PhotoGalleryApp.Models.Map map)
         {
             _latitudeText = l.Latitude.ToString();
             _longitudeText = l.Longitude.ToString();
+
+            LocationChooser = new MapLocationChooserViewModel(map);
         }
 
         public override void Cleanup() {}
@@ -68,6 +68,12 @@ namespace PhotoGalleryApp.ViewModels
             }
         }
 
+        public MapLocationChooserViewModel LocationChooser
+        {
+            get; internal set;
+        }
+
+
 
         public override PopupReturnArgs GetPopupResults()
         {
@@ -78,10 +84,14 @@ namespace PhotoGalleryApp.ViewModels
             double lon;
             bool lonGood = double.TryParse(_longitudeText, out lon);
 
-            if(latGood && lonGood)
-                return new CreateLocationPopupReturnArgs(Name, new Location(lat, lon));
+            if(!latGood || !lonGood)
+                return new CreateLocationPopupReturnArgs();
 
-            return new CreateLocationPopupReturnArgs();
+            MapLocation? loc = null;
+            if(LocationChooser.SelectedFolder != null || LocationChooser.SelectedFolder is MapLocationFolderViewModel)
+                loc = ((MapLocationFolderViewModel)LocationChooser.SelectedFolder).GetModel();
+
+            return new CreateLocationPopupReturnArgs(Name, new Location(lat, lon), loc);
         }
 
 
@@ -128,12 +138,14 @@ namespace PhotoGalleryApp.ViewModels
     {
         public CreateLocationPopupReturnArgs() {}
 
-        public CreateLocationPopupReturnArgs(string name, Location l) { 
+        public CreateLocationPopupReturnArgs(string name, Location l, MapLocation? parent = null) { 
             Name = name;
             Location = l;
+            Parent = parent;
         }
 
         public string? Name;
         public Location? Location;
+        public MapLocation? Parent;
     }
 }

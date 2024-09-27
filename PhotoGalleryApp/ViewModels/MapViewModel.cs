@@ -81,7 +81,7 @@ namespace PhotoGalleryApp.ViewModels
                     {
                         foreach(MapItemViewModel vm in e.NewItems)
                         {
-                            if (!ReferenceEquals(vm, EditableMapItem))
+                            if (!ReferenceEquals(vm.GetModel(), EditableMapItem))
                                 vm.FadedColor = true;
                         }
                     }
@@ -93,7 +93,7 @@ namespace PhotoGalleryApp.ViewModels
                     {
                         foreach(MapItemViewModel vm in MapItems)
                         {
-                            if (ReferenceEquals(vm, EditableMapItem))
+                            if (ReferenceEquals(vm.GetModel(), EditableMapItem))
                                 vm.FadedColor = false;
                             else
                                 vm.FadedColor = true;
@@ -186,22 +186,20 @@ namespace PhotoGalleryApp.ViewModels
                 throw new ArgumentException("AddLocation argument must be the location to add at");
 
             // Show the user the popup to create a location
-            CreateLocationPopupViewModel popup = new CreateLocationPopupViewModel((Location)parameter);
+            CreateLocationPopupViewModel popup = new CreateLocationPopupViewModel((Location)parameter, _map);
             CreateLocationPopupReturnArgs args = (CreateLocationPopupReturnArgs)_nav.OpenPopup(popup);
 
             // If not cancelled, then create the location
             if (args.PopupAccepted)
             {
                 MapLocation loc = new MapLocation(args.Name, args.Location);
-                _map.Add(loc);
+                if (args.Parent == null) 
+                    _map.Add(loc);
+                else
+                    args.Parent.Children.Add(loc);
 
-                foreach(MapItemViewModel vm in MapItems)
-                {
-                    if (vm.GetModel() == loc)
-                        EditableMapItem = vm;
-                }
+                EditableMapItem = loc;
             }
-
         }
 
 
@@ -234,12 +232,7 @@ namespace PhotoGalleryApp.ViewModels
             {
                 MapPath path = new MapPath(args.Text);
                 _map.Add(path);
-
-                foreach (MapItemViewModel vm in MapItems)
-                {
-                    if (vm.GetModel() == path)
-                        EditableMapItem = vm;
-                }
+                EditableMapItem = path;
             }
         }
 
@@ -427,13 +420,13 @@ namespace PhotoGalleryApp.ViewModels
         private bool _disableEditMode = false;
 
 
-        private MapItemViewModel? _editableMapItem = null;
+        private MapItem? _editableMapItem = null;
         /**
          * The MapItemViewModel that is currently being edited, or null if none
          * are being edited. When this is set, it takes care of setting the EditMode
          * property on the view model, and also handles closing all preview windows.
          */
-        public MapItemViewModel? EditableMapItem
+        public MapItem? EditableMapItem
         {
             get { return _editableMapItem; }
             set
@@ -446,65 +439,48 @@ namespace PhotoGalleryApp.ViewModels
 
                 if (_editableMapItem != null)
                 {
-                    _editableMapItem.PropertyChanged -= _editableMapItem_PropertyChanged;
-                    _editableMapItem.EditMode = false;
+                    MapItemViewModel? vm = GetViewModel(_editableMapItem);
+                    if (vm == null)
+                        throw new Exception("Old EditableMapItem not found in VM list");
 
-                    foreach(MapItemViewModel item in MapItems)
-                    {
-                        if(item is MapLocationViewModel)
-                            ((MapLocationViewModel)item).PartOfEditTree = false;
-                    }
+                    vm.PropertyChanged -= _editableMapItem_PropertyChanged;
+                    vm.EditMode = false;
                 }
 
                 _editableMapItem = value;
 
                 if (_editableMapItem != null)
                 {
-                    _editableMapItem.EditMode = true;
-                    _editableMapItem.PropertyChanged += _editableMapItem_PropertyChanged;
-                    CloseAllPreviews();
-
-                    // All items should be faded except for the editable one
-                    foreach(MapItemViewModel vm in MapItems)
-                    {
-                        if (vm == _editableMapItem)
-                            vm.FadedColor = false;
-                        else
-                            vm.FadedColor = true;
-                    }
-
-
                     // Mark any currently displayed MapItems that are in the
                     // same tree as the edited item as so. This prevents
                     // zooming from collapsing & thus hiding the currently
                     // edited location
-                    if(_editableMapItem is MapLocationViewModel)
+                    if(_editableMapItem is MapLocation)
                     {
-                        // The highest parent of the edited item
-                        MapLocation parent = (MapLocation)((MapLocationViewModel)_editableMapItem).GetModel();
-                        while (parent.Parent != null)
-                            parent = parent.Parent;
+                        _mapItems.ClearFrozen();
+                        _mapItems.FreezeMapLocationLevel((MapLocation)_editableMapItem);
+                    }
 
-                        foreach(MapItemViewModel vm in MapItems)
-                        {
-                            if (vm is not MapLocationViewModel) 
-                                continue;
-                            MapLocation loc = (MapLocation)((MapLocationViewModel)vm).GetModel();
+                    MapItemViewModel? vm = GetViewModel(_editableMapItem);
+                    if (vm == null)
+                        throw new Exception("New EditableMapItem not found in VM list");
 
-                            // Find the highest parent of the current item
-                            MapLocation par = loc;
-                            while (par.Parent != null)
-                                par = par.Parent;
+                    vm.EditMode = true;
+                    vm.PropertyChanged += _editableMapItem_PropertyChanged;
+                    CloseAllPreviews();
 
-                            // If this item & the edited item have the same
-                            // parent, they're part of the same tree
-                            if (ReferenceEquals(parent, par))
-                                ((MapLocationViewModel)vm).PartOfEditTree = true;
-                        }
+                    // All items should be faded except for the editable one
+                    foreach(MapItemViewModel i in MapItems)
+                    {
+                        if (ReferenceEquals(i.GetModel(), _editableMapItem))
+                            i.FadedColor = false;
+                        else
+                            i.FadedColor = true;
                     }
                 }
                 else
                 {
+                    _mapItems.ClearFrozen();
                     // Unfade all items
                     foreach(MapItemViewModel vm in MapItems)
                         vm.FadedColor = false;
@@ -543,7 +519,7 @@ namespace PhotoGalleryApp.ViewModels
             if (parameter is not MapItemViewModel)
                 throw new ArgumentException("Argument to Delete Map Item command must be MapObjectViewModel");
 
-            EditableMapItem = (MapItemViewModel)parameter;
+            EditableMapItem = ((MapItemViewModel)parameter).GetModel();
         }
 
 
@@ -557,9 +533,12 @@ namespace PhotoGalleryApp.ViewModels
         private void FinishEditing()
         {
             // If the user is editing a path
-            if (EditableMapItem is MapPathViewModel)
+            if (EditableMapItem is MapPath)
             {
-                MapPathViewModel vm = (MapPathViewModel)EditableMapItem;
+                MapPathViewModel? vm = (MapPathViewModel?)GetViewModel(EditableMapItem);
+                if (vm == null)
+                    throw new Exception("Currently edited VM not found");
+
                 // If the path has no points, then prompt user to either delete
                 // the path or stay in edit mode
                 if (vm.Points.Count == 0)
@@ -569,7 +548,7 @@ namespace PhotoGalleryApp.ViewModels
 
                     if (args.PopupAccepted)
                     {
-                        _map.Remove(EditableMapItem.GetModel());
+                        _map.Remove(EditableMapItem);
                         EditableMapItem = null;
                     }
                 }
@@ -609,10 +588,13 @@ namespace PhotoGalleryApp.ViewModels
         {
             get
             {
-                if (EditableMapItem is not MapPathViewModel)
+                if (EditableMapItem is not MapPath)
                     return false;
 
-                return ((MapPathViewModel)EditableMapItem).SinglePointSelected;
+                MapPathViewModel? vm = (MapPathViewModel?)GetViewModel(EditableMapItem);
+                if(vm == null)
+                    throw new Exception("Currently edited VM not found");
+                return vm.SinglePointSelected;
             }
         }
 
@@ -624,10 +606,12 @@ namespace PhotoGalleryApp.ViewModels
         {
             get
             {
-                if (EditableMapItem is not MapPathViewModel)
+                if (EditableMapItem is not MapPath)
                     return false;
 
-                MapPathViewModel vm = (MapPathViewModel)EditableMapItem;
+                MapPathViewModel? vm = (MapPathViewModel?)GetViewModel(EditableMapItem);
+                if(vm == null)
+                    throw new Exception("Currently edited VM not found");
                 return vm.IsSelection && !vm.SinglePointSelected;
             }
         }
@@ -642,10 +626,12 @@ namespace PhotoGalleryApp.ViewModels
          */
         public void SplitTrackAtSelected()
         {
-            if (EditableMapItem is not MapPathViewModel)
+            if (EditableMapItem is not MapPath)
                 throw new ArgumentException();
 
-            MapPathViewModel vm = (MapPathViewModel)EditableMapItem;
+            MapPathViewModel? vm = (MapPathViewModel?)GetViewModel(EditableMapItem);
+            if(vm == null)
+                throw new Exception("Currently edited VM not found");
 
             MapPath newPath = new MapPath(((MapPath)vm.GetModel()).Name + " (2)");
 
@@ -676,10 +662,12 @@ namespace PhotoGalleryApp.ViewModels
          */
         public void NewTrackFromSelected()
         {
-            if (EditableMapItem is not MapPathViewModel)
+            if (EditableMapItem is not MapPath)
                 throw new ArgumentException();
 
-            MapPathViewModel vm = (MapPathViewModel)EditableMapItem;
+            MapPathViewModel? vm = (MapPathViewModel?)GetViewModel(EditableMapItem);
+            if(vm == null)
+                throw new Exception("Currently edited VM not found");
 
             int nameInd = 1;
 
@@ -725,6 +713,17 @@ namespace PhotoGalleryApp.ViewModels
         {
             foreach (MapItemViewModel vm in MapItems)
                 vm.PreviewOpen = false;
+        }
+
+
+        private MapItemViewModel? GetViewModel(MapItem model)
+        {
+            foreach (MapItemViewModel vm in MapItems)
+            {
+                if (ReferenceEquals(vm.GetModel(), model))
+                    return vm;
+            }
+            return null;
         }
     }
 }

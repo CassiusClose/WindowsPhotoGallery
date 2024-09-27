@@ -11,9 +11,9 @@ using System.Threading.Tasks;
 
 namespace PhotoGalleryApp.Utils
 {
-    /**
-     * Maintains a list of ViewModels for each path found when loading a track file
-     */
+    /// <summary>
+    /// Maintains a list of ViewModels for each path found when loading a track file
+    /// </summary>
     class LoadMapPathResultsView : ModelVMView<MapPath, PathFileResultsPathViewModel>
     {
         public LoadMapPathResultsView(ObservableCollection<MapPath> modelColl) : base(modelColl) { } 
@@ -43,8 +43,6 @@ namespace PhotoGalleryApp.Utils
         {
             return false;
         }
-
-        protected override void PrepareForRemoval(PathFileResultsPathViewModel vm) { }
 
         protected override void RemoveCollectionChangedListener(MapPath model, NotifyCollectionChangedEventHandler func)
         {

@@ -138,6 +138,48 @@ namespace PhotoGalleryApp.Models
         }
 
 
+
+
+        public string DisplayString()
+        {
+            string s = Name;
+            MapLocation? curr = Parent;
+            while (curr != null)
+            {
+                s = s + ", " + curr.Name;
+                curr = curr.Parent;
+            }
+            return s;
+        }
+
+        /**
+         * Returns the root node of the MapLocation tree this is contained in
+         */
+        public MapLocation GetRootNode()
+        {
+            MapLocation parent = this;
+            while (parent.Parent != null)
+                parent = parent.Parent;
+            return parent;
+
+        }
+
+        /**
+         * How many levels down is this MapLocation from the root node of the
+         * MapLocation tree. If this is the root node, returns 0.
+         */
+        public uint GetTreeDepth()
+        {
+            uint depth = 0;
+            MapLocation parent = this;
+            while (parent.Parent != null)
+            {
+                depth++;
+                parent = parent.Parent;
+            }
+            return depth;
+        }
+
         public static bool FarApart(MapLocation loc, double zoomLevel)
         {
             if (loc.Children.Count == 0)

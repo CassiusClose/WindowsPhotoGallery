@@ -32,13 +32,13 @@ namespace PhotoGalleryApp.ViewModels
             _nav = nav; 
             _collection = coll;
 
-            _folders = new FolderView(coll);
-            _folders.FolderOpened += FolderOpened;
+            _folders = new YearMonthFolderTree(coll);
+            _folders.FolderClicked += FolderOpened;
         }
 
         public override void Cleanup()
         {
-            _folders.FolderOpened -= FolderOpened;
+            _folders.FolderClicked -= FolderOpened;
             _folders.Cleanup();
         }
 
@@ -46,12 +46,12 @@ namespace PhotoGalleryApp.ViewModels
         private NavigatorViewModel _nav;
 
         private MediaCollection _collection;
-        private FolderView _folders;
+        private YearMonthFolderTree _folders;
 
         /// <summary>
         /// A list of folders, one for each year that contains media
         /// </summary>
-        public ObservableCollection<FolderLabelViewModel> Folders
+        public ObservableCollection<FolderViewModel> Folders
         { get { return _folders.Folders; } }
 
 
@@ -60,8 +60,14 @@ namespace PhotoGalleryApp.ViewModels
         /**
          * When one of the folders is opened, they will call this
          */
-        private void FolderOpened(FolderLabelViewModel folder)
+        private void FolderOpened(FolderViewModel folderVM)
         {
+            if (folderVM is not EventFolderViewModel)
+                return;
+
+            EventFolderViewModel folder = (EventFolderViewModel)folderVM;
+
+
             // If it's an event, open the event's collection
             if (folder.Timestamp.Precision == TimeRange.Second)
             {
@@ -83,7 +89,7 @@ namespace PhotoGalleryApp.ViewModels
         }
 
         //TODO Where does this belong?
-        public static Event? GetEventFromFolder(FolderLabelViewModel folder, MediaCollection coll)
+        public static Event? GetEventFromFolder(EventFolderViewModel folder, MediaCollection coll)
         {
             foreach(ICollectable c in coll)
             {

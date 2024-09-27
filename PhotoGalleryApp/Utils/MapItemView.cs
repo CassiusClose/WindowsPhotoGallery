@@ -27,6 +27,8 @@ namespace PhotoGalleryApp.Utils
             _map = map;
             _map.PropertyChanged += _map_PropertyChanged;
 
+            _frozenTrees = new Dictionary<MapLocation, uint>();
+
             // pass false to the base class so it doesn't call refresh until the map is set.
             Refresh();
         }
@@ -57,9 +59,18 @@ namespace PhotoGalleryApp.Utils
             if (item is MapPath)
                 return false;
 
-
             MapLocation loc = (MapLocation)item;
-            return MapLocation.FarApart(loc, _map.ZoomLevel);
+            MapLocation topLevelParent = loc.GetRootNode();
+
+            if (!_frozenTrees.ContainsKey(topLevelParent))
+                return MapLocation.FarApart(loc, _map.ZoomLevel);
+
+
+            uint locDepth = loc.GetTreeDepth();
+            if (locDepth < _frozenTrees[topLevelParent] && loc.Children.Count > 0)
+                return true;
+
+            return false;
         }
 
         protected override IList GetCollection(MapItem item)
@@ -75,6 +86,9 @@ namespace PhotoGalleryApp.Utils
             if (model is not MapLocation)
                 throw new ArgumentException();
 
+            // There was a bug where the listener was getting added twice. Not
+            // exactly sure why, but this prevents it.
+            ((MapLocation)model).Children.CollectionChanged -= func;
             ((MapLocation)model).Children.CollectionChanged += func;
         }
 
@@ -103,6 +117,9 @@ namespace PhotoGalleryApp.Utils
          */
         private void RecalcZoom(MapLocation loc)
         {
+            if (_frozenTrees.ContainsKey(loc.GetRootNode()))
+                return;
+
             if(loc.Parent != null)
             {
                 // Are any of the parents are too close to each other?
@@ -154,9 +171,7 @@ namespace PhotoGalleryApp.Utils
                 MapLocationViewModel vm = (MapLocationViewModel)item;
                 if(ReferenceEquals(vm.GetModel(), loc))
                 {
-                    if (!vm.PartOfEditTree)
-                        RecalcZoom(loc);
-
+                    RecalcZoom(loc);
                     return;
                 }
             }
@@ -178,13 +193,64 @@ namespace PhotoGalleryApp.Utils
                         continue;
 
                     MapLocationViewModel vm = (MapLocationViewModel)item;
-                    if (vm.PartOfEditTree)
-                        continue;
-
                     MapLocation loc = (MapLocation)vm.GetModel();
-
                     RecalcZoom(loc);
 
+                }
+            }
+        }
+
+
+        /**
+         * Maintains a list of which MapLocation trees to be frozen, i.e.
+         * displayed at a certain depth no matter the zoom level. Root nodes
+         * should be stored here with a depth integer.
+         */
+        private Dictionary<MapLocation, uint> _frozenTrees;
+
+        /// <summary>
+        /// Unfreezes all MapLocation trees.
+        /// </summary>
+        public void ClearFrozen()
+        {
+            List<MapLocation> parents = _frozenTrees.Keys.ToList();
+            foreach (MapLocation p in parents)
+                RemoveAllItemsWithRootNode(p);
+
+            _frozenTrees.Clear();
+
+            foreach (MapLocation p in parents)
+                AddItem(p);
+        }
+
+        /// <summary>
+        /// Freezes the tree of the given MapLocation at the given
+        /// MapLocation's depth
+        /// </summary>
+        public void FreezeMapLocationLevel(MapLocation loc)
+        {
+            MapLocation parent = loc.GetRootNode();
+            RemoveAllItemsWithRootNode(parent);
+            _frozenTrees[loc.GetRootNode()] = loc.GetTreeDepth();
+            AddItem(parent);
+        }
+
+        /**
+         * Removes any ViewModels from the View that have the given MapLocation
+         * as their root node.
+         */
+        private void RemoveAllItemsWithRootNode(MapLocation parent) 
+        {
+            for(int i = 0; i < View.Count; i++) 
+            {
+                if (View[i] is not MapLocationViewModel)
+                    continue;
+
+                MapLocation l = (MapLocation)View[i].GetModel();
+                if (ReferenceEquals(l.GetRootNode(), parent))
+                {
+                    RemoveItem(l);
+                    i--;
                 }
             }
         }

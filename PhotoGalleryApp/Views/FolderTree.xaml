@@ -1,4 +1,4 @@
-﻿<UserControl x:Class="PhotoGalleryApp.Views.FolderList"
+﻿<UserControl x:Class="PhotoGalleryApp.Views.FolderTree"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
@@ -13,7 +13,7 @@
     <UserControl.Resources>
         <converters:BoolToVisibilityConverter x:Key="BoolToVisConverter"/>
 
-        <DataTemplate DataType="{x:Type vms:FolderLabelViewModel}">
+        <DataTemplate DataType="{x:Type vms:FolderViewModel}">
             <StackPanel Margin="20,10,10,0">
                 <StackPanel Orientation="Horizontal">
                     <ToggleButton 
@@ -40,9 +40,18 @@
                     <Label Content="{Binding Label}">
                         <ei:Interaction.Triggers>
                             <ei:EventTrigger EventName="MouseDown">
-                                <ei:CallMethodAction TargetObject="{Binding}" MethodName="OpenFolder"/>
+                                <ei:CallMethodAction TargetObject="{Binding}" MethodName="ClickFolder"/>
                             </ei:EventTrigger>
                         </ei:Interaction.Triggers>
+                        <Label.Style>
+                            <Style TargetType="Label">
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding IsSelected}" Value="True">
+                                        <Setter Property="FontWeight" Value="Bold"/>
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </Label.Style>
                         
                     </Label>
                 </StackPanel>
@@ -58,6 +67,6 @@
     </UserControl.Resources>
 
     <Border>
-        <ItemsControl ItemsSource="{Binding ItemsSource, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType={x:Type local:FolderList}}}"/>
+        <ItemsControl ItemsSource="{Binding ItemsSource, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType={x:Type local:FolderTree}}}"/>
     </Border>
 </UserControl>
