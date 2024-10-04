@@ -33,6 +33,12 @@ namespace PhotoGalleryApp.Utils
             Refresh();
         }
 
+        public override void Cleanup()
+        {
+            base.Cleanup();
+            _map.PropertyChanged -= _map_PropertyChanged;
+        }
+
         private MapViewModel _map;
 
         protected override MapItemViewModel CreateViewModel(MapItem item)

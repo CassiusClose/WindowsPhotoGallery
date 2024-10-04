@@ -200,6 +200,8 @@ namespace PhotoGalleryApp.ViewModels
 
                 EditableMapItem = loc;
             }
+
+            popup.Cleanup();
         }
 
 
@@ -234,6 +236,8 @@ namespace PhotoGalleryApp.ViewModels
                 _map.Add(path);
                 EditableMapItem = path;
             }
+
+            popup.Cleanup();
         }
 
 
@@ -541,7 +545,7 @@ namespace PhotoGalleryApp.ViewModels
 
                 // If the path has no points, then prompt user to either delete
                 // the path or stay in edit mode
-                if (vm.Points.Count == 0)
+                /*if (vm.Points.Count == 0)
                 {
                     YNPopupViewModel popup = new YNPopupViewModel("The path you are editing has no points. It will be deleted.");
                     PopupReturnArgs args = _nav.OpenPopup(popup);
@@ -552,7 +556,7 @@ namespace PhotoGalleryApp.ViewModels
                         EditableMapItem = null;
                     }
                 }
-                else
+                else*/
                     EditableMapItem = null;
             }
             else

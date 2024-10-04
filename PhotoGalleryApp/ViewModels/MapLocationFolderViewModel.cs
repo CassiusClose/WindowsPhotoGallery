@@ -4,6 +4,7 @@ using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Collections.Specialized;
+using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -32,9 +33,9 @@ namespace PhotoGalleryApp.ViewModels
         public override void Cleanup()
         {
             _model.PropertyChanged -= _model_PropertyChanged;
+            _childrenView.FolderClicked -= _clickFolder;
+            _childrenView.Cleanup();
             Children.CollectionChanged -= Children_CollectionChanged;
-            foreach (MapLocationFolderViewModel vm in Children)
-                vm.Cleanup();
         }
 
         private MapLocation _model;

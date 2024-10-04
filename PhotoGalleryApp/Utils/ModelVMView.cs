@@ -40,7 +40,7 @@ namespace PhotoGalleryApp.Utils
         }
 
 
-        public void Cleanup()
+        public virtual void Cleanup()
         {
             _modelColl.CollectionChanged -= _modelColl_CollectionChanged;
             foreach(ViewModelType vm in View)
@@ -184,7 +184,7 @@ namespace PhotoGalleryApp.Utils
                 if (vm != null)
                 {
                     PostCreation(vm);
-                    View.Add((ViewModelType)vm);
+                    View.Add(vm);
                 }
             }
         }

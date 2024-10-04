@@ -65,6 +65,16 @@ namespace PhotoGalleryApp.Views.Maps
             BindingOperations.SetBinding(this, BoundingBoxProperty, b);
         }
 
+        public override void Cleanup()
+        {
+            base.Cleanup();
+            Locations.CollectionChanged -= Locations_CollectionChanged;
+            _map.MouseMove -= Map_MouseMove;
+            _map.MouseUp -= Map_MouseUp;
+            _map.PreviewMouseDoubleClick -= Map_DoubleClick;
+            _map.MapView.ViewChangeOnFrame -= MapView_ViewChangeOnFrame;
+        }
+
         /**
          * Removes all components from any MapLayers
          */
@@ -384,6 +394,17 @@ namespace PhotoGalleryApp.Views.Maps
             if(_selectionPin != null)
             {
                 _map.SelectedPinLayer_Remove(_selectionPin);
+                _selectionPin.MouseDown -= SelectionPin_MouseDown;
+                foreach(var behavior in Microsoft.Xaml.Behaviors.Interaction.GetBehaviors(_selectionPin))
+                {
+                    if(behavior is  MapItemClickDragBehavior)
+                    {
+                        MapItemClickDragBehavior b = (MapItemClickDragBehavior)behavior;
+                        b.MouseDrag -= Selection_MouseDrag;
+                        b.MouseLeftButtonClick -= Selection_Click;
+                        break;
+                    }
+                }
                 _selectionPin = null;
             }
         }
@@ -427,6 +448,17 @@ namespace PhotoGalleryApp.Views.Maps
             if(_selectionLine != null)
             {
                 _map.SelectedLineLayer_Remove(_selectionLine);
+                _selectionLine.MouseDown -= SelectionLine_MouseDown;
+                foreach(var behavior in Microsoft.Xaml.Behaviors.Interaction.GetBehaviors(_selectionLine))
+                {
+                    if(behavior is  MapItemClickDragBehavior)
+                    {
+                        MapItemClickDragBehavior b = (MapItemClickDragBehavior)behavior;
+                        b.MouseDrag -= Selection_MouseDrag;
+                        b.MouseLeftButtonClick -= Selection_Click;
+                        break;
+                    }
+                }
                 _selectionLine = null;
             }
         }
@@ -521,6 +553,16 @@ namespace PhotoGalleryApp.Views.Maps
             if(_nearbyPin != null)
             {
                 _map.SelectedPinLayer_Remove(_nearbyPin);
+                _nearbyPin.MouseDown -= NearbyPin_MouseDown;
+                foreach(var behavior in Microsoft.Xaml.Behaviors.Interaction.GetBehaviors(_nearbyPin))
+                {
+                    if(behavior is  MapItemClickDragBehavior)
+                    {
+                        MapItemClickDragBehavior b = (MapItemClickDragBehavior)behavior;
+                        b.MouseDrag -= NearbyPin_MouseDrag;
+                        break;
+                    }
+                }
                 _nearbyPin = null;
             }
         }

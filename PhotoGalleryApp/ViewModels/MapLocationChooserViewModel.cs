@@ -3,6 +3,7 @@ using PhotoGalleryApp.Utils;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -25,6 +26,7 @@ namespace PhotoGalleryApp.ViewModels
         }
         public override void Cleanup()
         {
+            _view.FolderClicked -= FolderClicked;
             _view.Cleanup();
         }
 

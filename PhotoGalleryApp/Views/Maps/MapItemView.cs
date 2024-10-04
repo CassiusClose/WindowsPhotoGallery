@@ -45,11 +45,23 @@ namespace PhotoGalleryApp.Views.Maps
             BindingOperations.SetBinding(this, PreviewOpenProperty, new Binding("PreviewOpen"));
             BindingOperations.SetBinding(this, FadedColorProperty, new Binding("FadedColor"));
 
-            MapItemClickDragBehavior b = new MapItemClickDragBehavior(_map.MapView);
-            b.MouseLeftButtonClick += MainMapItem_Click;
-            b.MouseDrag += MainMapItem_Drag;
-            Interaction.GetBehaviors(GetMainMapItem()).Add(b);
+            _clickDragBehavior = new MapItemClickDragBehavior(_map.MapView);
+            _clickDragBehavior.MouseLeftButtonClick += MainMapItem_Click;
+            _clickDragBehavior.MouseDrag += MainMapItem_Drag;
+            _clickDragBehavior.Attach(GetMainMapItem());
         }
+
+        private MapItemClickDragBehavior _clickDragBehavior;
+
+        public virtual void Cleanup()
+        {
+            RemoveAll();
+            _map.RemoveLeftButtonClickHandler(Map_Click);
+            _clickDragBehavior.MouseLeftButtonClick -= MainMapItem_Click;
+            _clickDragBehavior.MouseDrag -= MainMapItem_Drag;
+            _clickDragBehavior.Detach();
+        }
+
 
         /**
          * Removes all components from any MapLayers

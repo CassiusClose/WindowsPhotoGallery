@@ -23,7 +23,10 @@ namespace PhotoGalleryApp.ViewModels
             LocationChooser = new MapLocationChooserViewModel(map);
         }
 
-        public override void Cleanup() {}
+        public override void Cleanup() 
+        {
+            LocationChooser.Cleanup();
+        }
 
         private string _name = "";
         /// <summary>

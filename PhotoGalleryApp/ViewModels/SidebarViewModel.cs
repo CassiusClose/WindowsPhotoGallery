@@ -60,7 +60,7 @@ namespace PhotoGalleryApp.ViewModels
         /// </summary>
         public void OpenMap(object parameter)
         {
-            if (_nav.CurrentPage.GetType() != typeof(MapViewModel))
+            if (_nav.CurrentPage == null || _nav.CurrentPage.GetType() != typeof(MapViewModel))
                 _nav.NewPage(new MapViewModel(_nav, _session.Map));
         }
 
