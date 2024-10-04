@@ -19,6 +19,12 @@ namespace PhotoGalleryApp.ViewModels
         {
             _map = map;
             _map.PropertyChanged += Map_PropertyChanged;
+            _mapZoomLevel = map.ZoomLevel;
+        }
+
+        public override void Cleanup()
+        {
+            _map.PropertyChanged -= Map_PropertyChanged;
         }
 
 

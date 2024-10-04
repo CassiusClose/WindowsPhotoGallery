@@ -24,11 +24,11 @@ namespace PhotoGalleryApp.Models
     {
         public MapPath(string name) : base(name)
         {
-            _locations = new LocationCollection();
+            Locations = new LocationCollection();
         }
 
 
-        private LocationCollection _locations = new LocationCollection();
+        private LocationCollection _locations;
         /// <summary>
         /// The list of Locations that make up the path
         /// </summary>
@@ -342,13 +342,33 @@ namespace PhotoGalleryApp.Models
                     }
                 }
 
-                // Always add the last point
-                coll.Add(Locations[Locations.Count-1]);
+                // The above loop will quit before the last pixel is added, so
+                // add it here
+                if(currPixelList.Count > 0)
+                {
+                    // Currently, just pick the first pixel in the list.
+                    // Later, this should probably be chosen to avoid a
+                    // super sharp angle, if possible
+                    coll.Add(currPixelList[0]);
+                }
+
+                if(Locations.Count > 1)
+                    // Always add the last point
+                    coll.Add(Locations[Locations.Count-1]);
 
                 newList.Add(coll);
             }
 
+            List<string> updates = new List<string>();
+            for(int i = 0; i < newList.Count; i++)
+            {
+                if(_locationsByZoom.Count <= i || !newList[i].SequenceEqual(_locationsByZoom[i]))
+                    updates.Add(nameof(LocationsByZoom) + i);
+            }
+
             _locationsByZoom = newList;
+            foreach(string s in updates)
+                OnPropertyChanged(s);
         }
 
 

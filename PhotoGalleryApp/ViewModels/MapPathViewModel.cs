@@ -7,6 +7,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Drawing;
 using System.Linq;
+using System.Net.NetworkInformation;
 using System.Security.Permissions;
 using System.Text;
 using System.Threading.Tasks;
@@ -31,11 +32,16 @@ namespace PhotoGalleryApp.ViewModels
             _path = path;
             _path.PropertyChanged += _path_PropertyChanged;
 
-            Points.CollectionChanged += Points_CollectionChanged;
+            _path.Locations.CollectionChanged += Points_CollectionChanged;
+            ZoomLevelChanged();
         }
 
-
-        public override void Cleanup() {}
+        public override void Cleanup() 
+        {
+            base.Cleanup();
+            _path.PropertyChanged -= _path_PropertyChanged;
+            _path.Locations.CollectionChanged -= Points_CollectionChanged;
+        }
 
 
         private NavigatorViewModel _nav;
@@ -56,15 +62,24 @@ namespace PhotoGalleryApp.ViewModels
             {
                 // If editing, show the entire path always
                 if (EditMode)
-                    return _path.LocationsByZoom[_path.LocationsByZoom.Count - 1];
+                {
+                    _currentZoomIndex = _path.LocationsByZoom.Count - 1;
+                    return _path.LocationsByZoom[_currentZoomIndex];
+                }
 
                 // If the path isn't visible, load the simplest possible path
-                if (!IsInView)
-                    return _path.LocationsByZoom[0];
+                if (!IsInView) 
+                {
+                    _currentZoomIndex = 0;
+                    return _path.LocationsByZoom[_currentZoomIndex];
+                }
 
-                return _path.LocationsByZoom[_zoomLevel-1]; 
+                _currentZoomIndex = _zoomLevel - 1;
+                return _path.LocationsByZoom[_currentZoomIndex];
             } 
         }
+
+        private int _currentZoomIndex = 0;
 
 
 
@@ -102,6 +117,10 @@ namespace PhotoGalleryApp.ViewModels
             if(e.PropertyName == nameof(MapPath.BoundingBox))
             {
                 OnPropertyChanged(nameof(BoundingBox));
+            }
+            if(e.PropertyName == (nameof(MapPath.LocationsByZoom) + _currentZoomIndex))
+            {
+                OnPropertyChanged(nameof(Points));
             }
         }
 
@@ -254,11 +273,12 @@ namespace PhotoGalleryApp.ViewModels
          */
         public void MovePoint(Location pointLoc, double latdiff, double longdiff)
         {
-            for(int i = 0; i < Points.Count; i++)
+            for(int i = 0; i < _path.Locations.Count; i++)
             {
-                if (Points[i] == pointLoc)
+                Location l = _path.Locations[i];
+                if (l == pointLoc)
                 {
-                    Points[i] = new Location(Points[i].Latitude + latdiff, Points[i].Longitude + longdiff);
+                    _path.Locations[i] = new Location(l.Latitude + latdiff, l.Longitude + longdiff);
                     return;
                 }
             }
@@ -270,9 +290,7 @@ namespace PhotoGalleryApp.ViewModels
         public void MoveSelection(double latdiff, double longdiff)
         {
             for(int i = SelectionRange.X; i < SelectionRange.Y; i++)
-            {
-                Points[i] = new Location(Points[i].Latitude + latdiff, Points[i].Longitude + longdiff);
-            }
+                _path.Locations[i] = new Location(_path.Locations[i].Latitude + latdiff, _path.Locations[i].Longitude + longdiff);
         }
 
 
@@ -281,11 +299,11 @@ namespace PhotoGalleryApp.ViewModels
          */
         public void RemovePoint(Location location)
         {
-            for(int i = 0; i < Points.Count; i++)
+            for(int i = 0; i < _path.Locations.Count; i++)
             {
-                if (Points[i] == location)
+                if (_path.Locations[i] == location)
                 {
-                    Points.RemoveAt(i);
+                    _path.Locations.RemoveAt(i);
                     return;
                 }
             }
@@ -297,8 +315,10 @@ namespace PhotoGalleryApp.ViewModels
          */
         public void RemoveSelection()
         {
-            while (SelectionRange.X < SelectionRange.Y)
-                Points.RemoveAt(SelectionRange.X);
+            int diff = SelectionRange.Y - SelectionRange.X;
+            int startInd = SelectionRange.X;
+            for (int i = 0; i < diff; i++)
+                _path.Locations.RemoveAt(startInd);
         }
 
 
@@ -310,19 +330,19 @@ namespace PhotoGalleryApp.ViewModels
         public void InsertPointAt(Location location, bool append)
         {
             if (append)
-                Points.Add(location);
+                _path.Locations.Add(location);
 
             else
             {
                 double minDist = double.PositiveInfinity;
                 int minInd = 0;
                 // Find the path segment closest to the new point
-                for (int i = 0; i < Points.Count - 1; i++)
+                for (int i = 0; i < _path.Locations.Count - 1; i++)
                 {
-                    double x2 = Points[i + 1].Latitude;
-                    double x1 = Points[i].Latitude;
-                    double y2 = Points[i + 1].Longitude;
-                    double y1 = Points[i].Longitude;
+                    double x2 = _path.Locations[i + 1].Latitude;
+                    double x1 = _path.Locations[i].Latitude;
+                    double y2 = _path.Locations[i + 1].Longitude;
+                    double y1 = _path.Locations[i].Longitude;
 
                     double dist;
 
@@ -347,7 +367,7 @@ namespace PhotoGalleryApp.ViewModels
                     }
                 }
 
-                Points.Insert(minInd+1, location);
+                _path.Locations.Insert(minInd+1, location);
             }
         }
 

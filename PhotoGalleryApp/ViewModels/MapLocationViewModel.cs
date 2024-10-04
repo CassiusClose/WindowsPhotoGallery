@@ -32,6 +32,7 @@ namespace PhotoGalleryApp.ViewModels
 
         public override void Cleanup() 
         {
+            base.Cleanup();
             _location.PropertyChanged -= _location_PropertyChanged;
         }
 

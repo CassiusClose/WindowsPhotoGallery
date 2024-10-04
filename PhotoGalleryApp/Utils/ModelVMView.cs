@@ -242,6 +242,8 @@ namespace PhotoGalleryApp.Utils
                     ModelType m = GetModel(View[i]);
                     if (m.Equals(c))
                     {
+                        PrepareForRemoval(View[i]);
+                        View[i].Cleanup();
                         View.RemoveAt(i);
                         return;
                     }
@@ -261,6 +263,7 @@ namespace PhotoGalleryApp.Utils
                 if (ReferenceEquals(m, item))
                 {
                     PrepareForRemoval(View[i]);
+                    View[i].Cleanup();
                     View.RemoveAt(i);
                     break;
                 }
@@ -286,10 +289,16 @@ namespace PhotoGalleryApp.Utils
 
         private void CollectionChanged_Reset()
         {
+            foreach(ViewModelType vm in View)
+            {
+                PrepareForRemoval(vm);
+                vm.Cleanup();
+            }
             View.Clear();
             foreach (ModelType m in _modelColl)
             {
-                _addCollectionChangedListener(m);
+                if(_expand && IsCollection(m))
+                    _addCollectionChangedListener(m);
                 AddItem(m);
             }
         }
