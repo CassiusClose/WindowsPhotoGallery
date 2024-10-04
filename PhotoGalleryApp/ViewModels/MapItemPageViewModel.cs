@@ -62,7 +62,11 @@ namespace PhotoGalleryApp.ViewModels
         public void OpenCollection()
         {
             NavigatorViewModel nav = MainWindow.GetNavigator();
-            nav.NewPage(new GalleryViewModel(_mapItem.Name, nav, MediaCollection.MediaCollectionModel, null));
+
+            FilterSet filters = new FilterSet(MediaCollection.MediaCollectionModel);
+            MapItemFilter filt = (MapItemFilter)filters.GetCriteriaByType(typeof(MapItemFilter));
+            filt.MapItemCriteria = _mapItem;
+            nav.NewPage(new GalleryViewModel(_mapItem.Name, nav, MediaCollection.MediaCollectionModel, Utils.TimeRange.Year, filters));
         }
 
 
