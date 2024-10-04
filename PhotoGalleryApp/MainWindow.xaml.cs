@@ -18,9 +18,16 @@ using System.Windows.Shapes;
 using System.Collections.ObjectModel;
 using System.IO;
 using System.Diagnostics;
+using PhotoGalleryApp.Debug;
+using PhotoGalleryApp.Views.Debug;
 
 namespace PhotoGalleryApp
 {
+    public static class Globals
+    {
+        public static Debug.ViewModelList ViewModelList = new Debug.ViewModelList();
+    }
+
     /// <summary>
     /// Interaction logic for MainWindow.xaml
     /// </summary>
@@ -28,11 +35,14 @@ namespace PhotoGalleryApp
     {
         // The main content of the app is this Navigator VM that controls how pages are
         // loaded on top of each other. Just display nav, and nav will display the rest.
-        private NavigatorViewModel _nav;
+        public NavigatorViewModel _nav;
 
         private SidebarViewModel _sidebar;
 
         public UserSession Session;
+
+        private DebugWindow? _debugWindow = null;
+
 
         public MainWindow()
         {
@@ -70,6 +80,16 @@ namespace PhotoGalleryApp
             Session.SaveSession();
         }
 
+
+        public void OpenDebugWindow(object sender, RoutedEventArgs e)
+        {
+            if(_debugWindow == null)
+            {
+                _debugWindow = new DebugWindow();
+                _debugWindow.DataContext = Globals.ViewModelList;
+            }
+            _debugWindow.Show();
+        }
 
         public static UserSession GetCurrentSession()
         {

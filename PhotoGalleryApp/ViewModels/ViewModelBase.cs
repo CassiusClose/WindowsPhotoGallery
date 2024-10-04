@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Diagnostics;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Text;
@@ -20,6 +21,19 @@ namespace PhotoGalleryApp.ViewModels
     /// </remarks>
     public abstract class ViewModelBase : NotifyPropertyChanged
     {
+        public ViewModelBase()
+        {
+            _viewModelID = Globals.ViewModelList.RegisterViewModel(this.GetType().Name);
+        }
+       
+        ~ViewModelBase()
+        {
+            App.Current.Dispatcher.Invoke(() =>
+            {
+                Globals.ViewModelList.RemoveViewModel(_viewModelID);
+            });
+        }
+
         /// <summary>
         /// Called by NavigatorViewModel when this ViewModel page is popped from the history stack.
         /// In other words, when the page is on top and the 'back' button is pressed. Used to clean
@@ -28,5 +42,7 @@ namespace PhotoGalleryApp.ViewModels
         public virtual void NavigatorLostFocus() { }
 
         public abstract void Cleanup();
+
+        private int _viewModelID;
     }
 }
