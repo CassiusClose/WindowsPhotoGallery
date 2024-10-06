@@ -110,11 +110,21 @@ namespace PhotoGalleryApp.Filtering
 
                 if (m.MapItem == MapItemCriteria)
                     return true;
+
+                if(m.MapItem is MapLocation && MapItemCriteria is MapLocation && ((MapLocation)m.MapItem).IsChildOf((MapLocation)MapItemCriteria))
+                    return true;
             }
             else if (c is Event)
             {
-                if(((Event)c).Collection.MapItems.Contains(MapItemCriteria))
-                    return true;
+                foreach(MapItem i in ((Event)c).Collection.MapItems)
+                {
+                    if (i == MapItemCriteria)
+                        return true;
+
+                    if(i is MapLocation && MapItemCriteria is MapLocation && ((MapLocation)i).IsChildOf((MapLocation)MapItemCriteria))
+                            return true;
+
+                }
             }
 
             return false;

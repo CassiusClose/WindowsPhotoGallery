@@ -182,6 +182,19 @@ namespace PhotoGalleryApp.Models
             return depth;
         }
 
+        public bool IsChildOf(MapLocation loc)
+        {
+            MapLocation? p = Parent;
+            while(p != null)
+            {
+                if (p == loc)
+                    return true;
+                p = p.Parent;
+            }
+            return false;
+        }
+
+
         public static bool FarApart(MapLocation loc, double zoomLevel)
         {
             if (loc.Children.Count == 0)
