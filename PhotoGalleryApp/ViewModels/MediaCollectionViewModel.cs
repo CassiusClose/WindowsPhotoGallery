@@ -138,12 +138,12 @@ namespace PhotoGalleryApp.ViewModels
 
 
         /// <summary>
-        /// A collection of all tags in the associated gallery.
+        /// A collection of all tags in the current user session.
         /// </summary>
         public ObservableCollection<string> AllTags 
         {
             get {
-                return MediaCollectionModel.Tags; 
+                return MainWindow.GetCurrentSession().Gallery.Collection.Tags;
             }
         }
 

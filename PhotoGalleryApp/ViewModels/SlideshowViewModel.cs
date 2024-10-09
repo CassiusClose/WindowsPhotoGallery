@@ -173,7 +173,7 @@ namespace PhotoGalleryApp.ViewModels
         {
             if(SidebarVisible)
             {
-                SidebarContent = new MediaInfoViewModel(CurrentMediaViewModel.Media, _gallery);
+                SidebarContent = new MediaInfoViewModel(CurrentMediaViewModel.Media);
             }
         }
 

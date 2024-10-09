@@ -27,7 +27,7 @@ namespace PhotoGalleryApp.ViewModels
         /// Initializes the VM to represent the given media.
         /// </summary>
         /// <param name="photo">The Photo from which to show information.</param>
-        public MediaInfoViewModel(Media photo, Models.MediaCollection gallery)
+        public MediaInfoViewModel(Media photo)
         {
             //Init commands
             _removeTagCommand = new RelayCommand(RemoveTag);
@@ -37,7 +37,6 @@ namespace PhotoGalleryApp.ViewModels
 
             _media = photo;
             _media.PropertyChanged += Media_PropertyChanged;
-            _gallery = gallery;
         }
 
 
@@ -51,7 +50,6 @@ namespace PhotoGalleryApp.ViewModels
 
         // The media & the containing gallery
         private Media _media;
-        private Models.MediaCollection _gallery;
 
 
         /// <summary>
@@ -86,7 +84,7 @@ namespace PhotoGalleryApp.ViewModels
         /// </summary>
         public ObservableCollection<string> AllTags
         {
-            get { return _gallery.Tags; }
+            get { return MainWindow.GetCurrentSession().Gallery.Collection.Tags; }
         }
 
         #endregion Fields and Properties
