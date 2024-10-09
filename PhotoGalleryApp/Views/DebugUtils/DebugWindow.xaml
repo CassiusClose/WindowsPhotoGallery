@@ -16,7 +16,7 @@
         </DataTemplate>
     </Window.Resources>
 
-    <StackPanel>
+    <ScrollViewer>
         <ListBox ItemsSource="{Binding ViewModels}" ItemTemplate="{StaticResource VMEntryTemplate}"/>
-    </StackPanel>
+    </ScrollViewer>
 </Window>
