@@ -72,9 +72,6 @@ namespace PhotoGalleryApp.Filtering
 
         public override bool Filter(ICollectable c)
         {
-            if (!IsFilterActive())
-                return true;
-
             PrecisionDateTime itemTime;
             if (c is Event)
                 itemTime = ((Event)c).StartTimestamp;

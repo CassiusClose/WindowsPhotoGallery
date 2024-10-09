@@ -49,7 +49,7 @@ namespace PhotoGalleryApp.Filtering
         {
             foreach (FilterCriteria crit in _criteria)
             {
-                if (!crit.Filter(c))
+                if(crit.IsFilterActive() && !crit.Filter(c))
                     return false;
             }
 
