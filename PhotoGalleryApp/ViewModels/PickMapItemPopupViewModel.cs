@@ -7,6 +7,43 @@ using System.Threading.Tasks;
 
 namespace PhotoGalleryApp.ViewModels
 {
+
+
+    /// <summary>
+    /// Only MapLocations are selectable
+    /// </summary>
+    class PickMapLocationPopupViewModel : PickMapItemPopupViewModel
+    {
+        public PickMapLocationPopupViewModel(NavigatorViewModel nav) : base(nav)
+        {
+            //TODO Make map grey out Paths
+        }
+
+        protected override void MapItemClick(MapItemViewModel vm)
+        {
+            if (vm is MapLocationViewModel)
+                ChosenItem = vm;
+        }
+    }
+    
+    /// <summary>
+    /// Only MapPaths are selectable
+    /// </summary>
+    class PickMapPathPopupViewModel : PickMapItemPopupViewModel
+    {
+        public PickMapPathPopupViewModel(NavigatorViewModel nav) : base(nav)
+        {
+            //TODO Make map grey out Paths
+        }
+
+        protected override void MapItemClick(MapItemViewModel vm)
+        {
+            if (vm is MapPathViewModel)
+                ChosenItem = vm;
+        }
+    }
+
+
     /// <summary>
     /// ViewModel for the popup that prompts the user to choose one MapItem.
     /// The Map is displayed, and when the user clicks on a MapItem, a Label
@@ -71,7 +108,7 @@ namespace PhotoGalleryApp.ViewModels
         /**
          * When the user clicks on an item, choose it
          */
-        private void MapItemClick(MapItemViewModel vm)
+        protected virtual void MapItemClick(MapItemViewModel vm)
         {
             ChosenItem = vm;
         }

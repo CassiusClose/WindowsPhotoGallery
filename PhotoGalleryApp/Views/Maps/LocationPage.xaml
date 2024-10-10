@@ -5,14 +5,55 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
              xmlns:local="clr-namespace:PhotoGalleryApp.Views.Maps"
              xmlns:views="clr-namespace:PhotoGalleryApp.Views"
+             xmlns:vms="clr-namespace:PhotoGalleryApp.ViewModels"
              mc:Ignorable="d" 
              d:DesignHeight="450" d:DesignWidth="800">
+
+    <UserControl.Resources>
+        <DataTemplate x:Key="MapLocationListTemplate" DataType="{x:Type vms:MapLocationNameViewModel}">
+            <Button
+                Content="{Binding Name}"
+                Command="{Binding DataContext.OpenLocationCommand, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType={x:Type local:LocationPage}}}"
+                CommandParameter="{Binding}"
+                />
+        </DataTemplate>
+
+        <ItemsPanelTemplate x:Key="MapLocationListPanel">
+            <StackPanel Orientation="Horizontal"/>
+        </ItemsPanelTemplate>
+    </UserControl.Resources>
+
+        
     <StackPanel>
-        <Label
-            Content="{Binding Name}"
-            />
-        <Label
-            Content="{Binding LocationString}"/>
+        <Label Content="{Binding Name}" />
+        <StackPanel Orientation="Horizontal">
+            <Label>Parents: </Label>
+            <ItemsControl
+                ItemsSource="{Binding Parents}"
+                ItemTemplate="{StaticResource MapLocationListTemplate}"
+                ItemsPanel="{StaticResource MapLocationListPanel}"
+                >
+            </ItemsControl>
+        </StackPanel>
+        <Label Content="{Binding LocationTreeString}"/>
+        <Label Content="{Binding LocationString}"/>
+        <StackPanel Orientation="Horizontal">
+            <Label Content="Children: "/>
+            <ItemsControl
+                ItemsSource="{Binding Children}"
+                ItemTemplate="{StaticResource MapLocationListTemplate}"
+                ItemsPanel="{StaticResource MapLocationListPanel}"
+                >
+            </ItemsControl>
+        </StackPanel>
+        <StackPanel Orientation="Horizontal">
+            <Button 
+                Content="Set Parent"
+                Command="{Binding SetParentCommand}"
+                Width="100"
+                />
+        </StackPanel>
+
 
         <views:MediaCollection
                 DataContext="{Binding MediaCollection}"

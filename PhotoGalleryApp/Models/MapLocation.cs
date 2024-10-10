@@ -27,7 +27,10 @@ namespace PhotoGalleryApp.Models
         public Location Location
         {
             get { return _location; }
-            set { _location = value; }
+            set { 
+                _location = value;
+                OnPropertyChanged();
+            }
         }
 
 
@@ -45,10 +48,21 @@ namespace PhotoGalleryApp.Models
         public MapLocation? Parent
         {
             get { return _parent; }
-            protected set { _parent = value; }
+            set { 
+                _parent = value;
+                OnPropertyChanged();
+            }
+        }
+
+        public void SetParent(MapLocation newParent)
+        {
+            if(Parent != null)
+                Parent.Children.Remove(this);
+            newParent.Children.Add(this);
         }
 
 
+        private ObservableCollection<MapLocation> _children;
         [DataMember]
         public ObservableCollection<MapLocation> Children
         {

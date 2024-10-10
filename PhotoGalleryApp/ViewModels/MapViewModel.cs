@@ -115,7 +115,7 @@ namespace PhotoGalleryApp.ViewModels
         }
 
 
-        private double _zoomLevel;
+        private double _zoomLevel = 1;
         /// <summary>
         /// The zoom level of the map.
         /// </summary>
