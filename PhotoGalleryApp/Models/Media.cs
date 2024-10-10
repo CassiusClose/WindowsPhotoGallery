@@ -39,7 +39,6 @@ namespace PhotoGalleryApp.Models
                 Tags = new ObservableCollection<string>();
             else
                 Tags = tags;
-            Tags.CollectionChanged += Tags_CollectionChanged;
         }
 
 
@@ -161,11 +160,23 @@ namespace PhotoGalleryApp.Models
 
 
 
+        private ObservableCollection<string> _tags;
         /// <summary>
         /// A collection of tags associated with the image, used for easier sorting & filtering of images.
         /// </summary>
         [DataMember]
-        public ObservableCollection<string> Tags { get; private set; }
+        public ObservableCollection<string> Tags
+        {
+            get { return _tags; }
+            internal set
+            {
+                if (_tags != null)
+                    _tags.CollectionChanged -= Tags_CollectionChanged;
+                _tags = value;
+                if (_tags != null)
+                    _tags.CollectionChanged += Tags_CollectionChanged;
+            }
+        }
 
         /**
          * Attaching directly to Tags.CollectionChanged from the outside gives no sense of what
@@ -174,7 +185,7 @@ namespace PhotoGalleryApp.Models
          */
         public NotifyCollectionChangedEventHandler TagsChanged;
 
-        private void Tags_CollectionChanged(object sender, NotifyCollectionChangedEventArgs e)
+        private void Tags_CollectionChanged(object? sender, NotifyCollectionChangedEventArgs e)
         {
             if (TagsChanged != null)
                 TagsChanged(this, e);

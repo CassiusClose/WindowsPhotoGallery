@@ -21,7 +21,6 @@ namespace PhotoGalleryApp.Models
         {
             _location = coordinates;
             Children = new ObservableCollection<MapLocation>();
-            Children.CollectionChanged += Children_CollectionChanged;
         }
 
         private Location _location;
@@ -53,7 +52,15 @@ namespace PhotoGalleryApp.Models
         [DataMember]
         public ObservableCollection<MapLocation> Children
         {
-            get; internal set;
+            get { return _children; }
+            internal set
+            {
+                if(_children != null)
+                    _children.CollectionChanged -= Children_CollectionChanged;
+                _children = value;
+                if(_children != null)
+                    _children.CollectionChanged += Children_CollectionChanged;
+            }
         }
 
 

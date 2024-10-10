@@ -30,9 +30,7 @@ namespace PhotoGalleryApp.Models
         public Event(string name)
         {
             _name = name;
-
-            _collection = new MediaCollection();
-            ((INotifyPropertyChanged)_collection).PropertyChanged += Collection_PropertyChanged;
+            Collection = new MediaCollection();
         }
 
 
@@ -46,7 +44,14 @@ namespace PhotoGalleryApp.Models
         [DataMember]
         public MediaCollection Collection { 
             get { return _collection; }
-            set { _collection = value; }
+            set 
+            {
+                if (_collection != null)
+                    ((INotifyPropertyChanged)_collection).PropertyChanged -= Collection_PropertyChanged;
+                _collection = value; 
+                if (_collection != null)
+                    ((INotifyPropertyChanged)_collection).PropertyChanged += Collection_PropertyChanged;
+            }
         }
 
 
